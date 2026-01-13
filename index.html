@@ -1898,39 +1898,30 @@
                 handDiv.style.borderColor = '#818cf8';
                 handDiv.style.background = '#f5f3ff';
 
-                // Set hand image data immediately (will be path initially, then data URL when converted)
-                handImageData = handSrc;
+                // Set hand image for display immediately
                 handImage.src = handSrc;
                 console.log('Pre-loaded hand selected:', handSrc);
 
-                // Then convert to data URL in the background for better compatibility
-                const tempImg = new Image();
-                // Don't set crossOrigin for same-origin images
-                tempImg.onload = () => {
-                    try {
-                        const canvas = document.createElement('canvas');
-                        canvas.width = tempImg.width;
-                        canvas.height = tempImg.height;
-                        const ctx = canvas.getContext('2d');
-                        ctx.drawImage(tempImg, 0, 0);
-                        handImageData = canvas.toDataURL('image/png');
-                        console.log('Pre-loaded hand converted to data URL successfully');
-                        console.log('Data URL length:', handImageData.length);
-                        console.log('Data URL preview:', handImageData.substring(0, 50));
-                    } catch (error) {
-                        // If conversion fails (e.g., CORS issue), keep using original path
-                        console.error('Could not convert hand to data URL:', error);
-                        console.error('Image source was:', handSrc);
-                        console.log('Will use original path instead');
-                    }
-                };
-                tempImg.onerror = (error) => {
-                    // If loading fails, keep using original path
-                    console.error('Could not load hand image:', error);
-                    console.error('Failed source:', handSrc);
-                    console.log('Will use original path instead');
-                };
-                tempImg.src = handSrc;
+                // Convert to data URL using fetch (works better with same-origin)
+                fetch(handSrc)
+                    .then(response => response.blob())
+                    .then(blob => {
+                        const reader = new FileReader();
+                        reader.onloadend = () => {
+                            handImageData = reader.result;
+                            console.log('Pre-loaded hand converted to data URL successfully via fetch');
+                            console.log('Data URL length:', handImageData.length);
+                        };
+                        reader.onerror = (error) => {
+                            console.error('FileReader error:', error);
+                            handImageData = handSrc;
+                        };
+                        reader.readAsDataURL(blob);
+                    })
+                    .catch(error => {
+                        console.error('Fetch error converting hand to data URL:', error);
+                        handImageData = handSrc;
+                    });
 
                 // Reset upload area to show placeholder (don't show preview for pre-loaded hands)
                 if (handImagePreview && handUploadPlaceholder) {
@@ -2774,8 +2765,9 @@
                     img.src = url;
                 });
 
-                // Draw hand if it's a data URL (safe from CORS)
-                if (includeHand && progress > 0) {
+                // Draw hand (only if it's a data URL to avoid CORS tainting)
+                const isDataURL = handImageData && handImageData.startsWith('data:');
+                if (includeHand && progress > 0 && isDataURL) {
                     await new Promise((resolveHand) => {
                         const handImg = new Image();
                         handImg.onload = () => {
@@ -2828,9 +2820,10 @@
                             console.error('Error:', error);
                             resolveHand();
                         };
-                        console.log('Loading hand image for GIF frame:', handImageData.substring(0, 50));
                         handImg.src = handImageData;
                     });
+                } else if (includeHand && progress > 0 && !isDataURL) {
+                    console.warn(`Skipping hand for frame ${frameIndex} - not a data URL (would taint canvas)`);
                 }
 
                 images.push(canvas.toDataURL('image/png'));
