@@ -112,7 +112,10 @@
             border-radius: 12px;
             background: white;
             overflow: hidden;
-            height: 400px;
+            width: 100%;
+            max-width: 600px;
+            aspect-ratio: 3 / 2; /* Match canvas 600x400 */
+            margin: 0 auto;
         }
 
         #drawingCanvas {
@@ -402,7 +405,10 @@
             position: relative;
             background: #f9fafb;
             border-radius: 12px;
-            height: 400px;
+            width: 100%;
+            max-width: 600px;
+            aspect-ratio: 3 / 2; /* Match drawing canvas 600x400 */
+            margin: 0 auto;
             display: flex;
             overflow: hidden;
         }
@@ -2622,135 +2628,192 @@
                 throw new Error('Preview content not found');
             }
 
-            console.log('Starting GIF creation:', { totalFrames, animDuration, fps });
+            console.log('Pre-rendering animation frames:', { totalFrames, animDuration, fps });
 
-            // Reset all paths to initial state (hidden)
+            // Get SVG and paths
+            const svgElement = svgContainer.querySelector('svg');
             const paths = svgContainer.querySelectorAll('.svg-path');
-            paths.forEach(path => {
-                const length = path.getTotalLength();
-                path.style.transition = 'none';
-                path.style.strokeDasharray = length;
-                path.style.strokeDashoffset = length;
-            });
 
-            // Reset hand image
-            const handImg = document.getElementById('handImage');
-            if (handImg) {
-                handImg.style.display = 'none';
-                handImg.style.opacity = '0';
+            if (!svgElement || !paths || paths.length === 0) {
+                throw new Error('No SVG paths found to animate');
             }
 
-            // Force reflow to apply reset
-            void svgContainer.offsetWidth;
+            const rect = previewContent.getBoundingClientRect();
+            const bgColor = document.getElementById('bgColor')?.value || '#00ff00';
 
-            console.log('Paths reset, starting capture...');
+            // Calculate SVG positioning and use SVG dimensions for canvas to preserve aspect ratio
+            const svgRect = svgElement.getBoundingClientRect();
 
-            // Use a simpler sequential capture approach
-            return new Promise((resolve, reject) => {
-                const images = [];
-                let capturing = false;
+            // Use SVG viewBox to get proper dimensions
+            const svgViewBox = svgElement.viewBox.baseVal;
+            const aspectRatio = svgViewBox.width / svgViewBox.height;
 
-                // Start animation
-                setTimeout(() => {
-                    animateBtn.click();
-                }, 100);
+            // Set canvas size based on SVG rendered size (scaled down)
+            const scale = 0.6; // Slightly larger for better quality
+            const canvasWidth = Math.floor(svgRect.width * scale);
+            const canvasHeight = Math.floor(svgRect.height * scale);
 
-                // Capture frames sequentially with delays
-                async function captureAllFrames() {
-                    const startTime = Date.now();
+            // SVG will fill the entire canvas (no offset needed since we match its size)
+            const offsetX = 0;
+            const offsetY = 0;
+            const svgWidth = canvasWidth;
+            const svgHeight = canvasHeight;
 
-                    for (let i = 0; i < totalFrames; i++) {
-                        // Wait for the right time for this frame
-                        const targetTime = i * frameInterval;
-                        const currentTime = Date.now() - startTime;
-                        const waitTime = targetTime - currentTime;
+            // Check if hand should be included (only if it's a data URL to avoid CORS)
+            const handEnabled = handCheckbox && handCheckbox.checked && handImageData;
+            const isDataURL = handImageData && handImageData.startsWith('data:');
+            const includeHand = handEnabled && isDataURL;
 
-                        if (waitTime > 0) {
-                            await new Promise(resolve => setTimeout(resolve, waitTime));
-                        }
+            if (handEnabled && !isDataURL) {
+                console.warn('Hand pointer will not be included in GIF. Please upload a custom hand image to include it.');
+            }
 
-                        try {
-                            // Get hand info before hiding
-                            const handImg = document.getElementById('handImage');
-                            const handWasVisible = handImg && handImg.style.display !== 'none' && parseFloat(handImg.style.opacity || 1) > 0;
-                            const handPosition = handWasVisible ? {
-                                left: parseFloat(handImg.style.left) || 0,
-                                top: parseFloat(handImg.style.top) || 0,
-                                width: handImg.offsetWidth,
-                                height: handImg.offsetHeight
-                            } : null;
+            // Pre-render all frames
+            const images = [];
 
-                            // Hide hand temporarily
-                            if (handWasVisible) {
-                                handImg.style.visibility = 'hidden';
-                            }
+            for (let frameIndex = 0; frameIndex < totalFrames; frameIndex++) {
+                const progress = frameIndex / (totalFrames - 1); // 0 to 1
+                console.log(`Rendering frame ${frameIndex + 1}/${totalFrames} (${Math.round(progress * 100)}%)`);
 
-                            // Capture frame
-                            const canvas = await html2canvas(previewContent, {
-                                backgroundColor: document.getElementById('bgColor')?.value || '#00ff00',
-                                scale: 0.4,
-                                logging: false
-                            });
+                // Create canvas for this frame
+                const canvas = document.createElement('canvas');
+                canvas.width = canvasWidth;
+                canvas.height = canvasHeight;
+                const ctx = canvas.getContext('2d');
 
-                            // Restore hand
-                            if (handWasVisible) {
-                                handImg.style.visibility = 'visible';
+                // Draw background
+                ctx.fillStyle = bgColor;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-                                // Draw hand onto canvas
-                                if (handImageData) {
-                                    const ctx = canvas.getContext('2d');
-                                    const handImgElement = new Image();
-                                    await new Promise((resolveImg) => {
-                                        handImgElement.onload = () => {
-                                            const scale = 0.4;
-                                            ctx.drawImage(
-                                                handImgElement,
-                                                handPosition.left * scale,
-                                                handPosition.top * scale,
-                                                handPosition.width * scale,
-                                                handPosition.height * scale
-                                            );
-                                            resolveImg();
-                                        };
-                                        handImgElement.onerror = resolveImg;
-                                        handImgElement.src = handImageData;
-                                    });
-                                }
-                            }
+                // Clone SVG and modify paths to show partial drawing
+                const svgClone = svgElement.cloneNode(true);
+                const pathsClone = svgClone.querySelectorAll('.svg-path');
 
-                            images.push(canvas.toDataURL('image/png'));
-                            console.log(`Frame ${i + 1}/${totalFrames} captured`);
+                pathsClone.forEach((pathClone, index) => {
+                    const originalPath = paths[index];
+                    const length = originalPath.getTotalLength();
 
-                        } catch (error) {
-                            console.error(`Error capturing frame ${i}:`, error);
-                        }
+                    // Calculate how much of THIS path should be drawn
+                    const pathStart = index / paths.length;
+                    const pathEnd = (index + 1) / paths.length;
+
+                    let pathProgress = 0;
+                    if (progress >= pathEnd) {
+                        pathProgress = 1; // Fully drawn
+                    } else if (progress > pathStart) {
+                        pathProgress = (progress - pathStart) / (pathEnd - pathStart);
                     }
 
-                    // All frames captured, create GIF
-                    console.log('Creating GIF from', images.length, 'frames...');
-                    gifshot.createGIF({
-                        images: images,
-                        gifWidth: Math.floor(previewContent.offsetWidth * 0.4),
-                        gifHeight: Math.floor(previewContent.offsetHeight * 0.4),
-                        interval: 1 / fps,
-                        frameDuration: 1
-                    }, (obj) => {
-                        if (!obj.error) {
-                            console.log('GIF ready!');
-                            const a = document.createElement('a');
-                            a.href = obj.image;
-                            a.download = 'animation.gif';
-                            document.body.appendChild(a);
-                            a.click();
-                            document.body.removeChild(a);
-                            resolve();
-                        } else {
-                            reject(new Error(obj.error));
-                        }
+                    // Set stroke-dasharray and offset
+                    const dashOffset = length * (1 - pathProgress);
+                    pathClone.style.strokeDasharray = length;
+                    pathClone.style.strokeDashoffset = dashOffset;
+                    pathClone.style.transition = 'none';
+                });
+
+                // Convert SVG to image
+                await new Promise((resolveFrame, rejectFrame) => {
+                    const svgData = new XMLSerializer().serializeToString(svgClone);
+                    const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+                    const url = URL.createObjectURL(svgBlob);
+                    const img = new Image();
+
+                    img.onload = () => {
+                        ctx.drawImage(img, offsetX, offsetY, svgWidth, svgHeight);
+                        URL.revokeObjectURL(url);
+                        resolveFrame();
+                    };
+
+                    img.onerror = () => {
+                        URL.revokeObjectURL(url);
+                        rejectFrame(new Error('Failed to load SVG'));
+                    };
+
+                    img.src = url;
+                });
+
+                // Draw hand if it's a data URL (safe from CORS)
+                if (includeHand && progress > 0) {
+                    await new Promise((resolveHand) => {
+                        const handImg = new Image();
+                        handImg.onload = () => {
+                            try {
+                                // Calculate hand position based on which path is being drawn
+                                const currentPathIndex = Math.min(Math.floor(progress * paths.length), paths.length - 1);
+                                const currentPath = paths[currentPathIndex];
+
+                                // Get position along the current path
+                                const pathProgress = ((progress * paths.length) - currentPathIndex);
+                                const pathLength = currentPath.getTotalLength();
+                                const pointOnPath = currentPath.getPointAtLength(pathProgress * pathLength);
+
+                                // Transform SVG coordinates to canvas coordinates
+                                // Match the live animation calculation exactly
+                                const svgWidthAttr = parseFloat(svgElement.getAttribute('width'));
+                                const svgHeightAttr = parseFloat(svgElement.getAttribute('height'));
+
+                                // Scale from SVG coordinate system to canvas size
+                                const scaleX = canvasWidth / svgWidthAttr;
+                                const scaleY = canvasHeight / svgHeightAttr;
+
+                                // Convert point from SVG coordinates to canvas coordinates
+                                const canvasX = pointOnPath.x * scaleX;
+                                const canvasY = pointOnPath.y * scaleY;
+
+                                // Scale hand size for canvas
+                                const handWidthScaled = (handSizeValue || 50) * scale;
+                                const handHeightScaled = handWidthScaled * (handImg.height / handImg.width);
+
+                                // Apply hand offset (as percentage of hand size)
+                                const handOffsetXPercent = parseFloat(document.getElementById('handOffsetX')?.value || 0);
+                                const handOffsetYPercent = parseFloat(document.getElementById('handOffsetY')?.value || 0);
+                                const offsetXPixels = (handOffsetXPercent / 100) * handWidthScaled;
+                                const offsetYPixels = (handOffsetYPercent / 100) * handWidthScaled;
+
+                                // Position hand with offset applied
+                                const handX = canvasX - offsetXPixels;
+                                const handY = canvasY - offsetYPixels;
+
+                                ctx.drawImage(handImg, handX, handY, handWidthScaled, handHeightScaled);
+                            } catch (error) {
+                                console.warn('Error positioning hand:', error);
+                            }
+                            resolveHand();
+                        };
+                        handImg.onerror = () => {
+                            console.warn('Failed to load hand image for frame', frameIndex);
+                            resolveHand();
+                        };
+                        handImg.src = handImageData;
                     });
                 }
 
-                captureAllFrames().catch(reject);
+                images.push(canvas.toDataURL('image/png'));
+            }
+
+            // All frames rendered, create GIF
+            console.log('Creating GIF from', images.length, 'pre-rendered frames...');
+            return new Promise((resolve, reject) => {
+                gifshot.createGIF({
+                    images: images,
+                    gifWidth: canvasWidth,
+                    gifHeight: canvasHeight,
+                    interval: 1 / fps,
+                    frameDuration: 1
+                }, (obj) => {
+                    if (!obj.error) {
+                        console.log('GIF ready!');
+                        const a = document.createElement('a');
+                        a.href = obj.image;
+                        a.download = 'animation.gif';
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        resolve();
+                    } else {
+                        reject(new Error(obj.error));
+                    }
+                });
             });
         }
     </script>
