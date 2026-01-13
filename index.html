@@ -1894,9 +1894,33 @@
                 handDiv.style.borderColor = '#818cf8';
                 handDiv.style.background = '#f5f3ff';
 
-                // Set the hand image
-                handImageData = handSrc;
-                handImage.src = handSrc;
+                // Convert pre-loaded hand to data URL for GIF export compatibility
+                const tempImg = new Image();
+                tempImg.crossOrigin = 'anonymous'; // Try to avoid CORS issues when possible
+                tempImg.onload = () => {
+                    try {
+                        const canvas = document.createElement('canvas');
+                        canvas.width = tempImg.width;
+                        canvas.height = tempImg.height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(tempImg, 0, 0);
+                        handImageData = canvas.toDataURL('image/png');
+                        handImage.src = handImageData;
+                        console.log('Pre-loaded hand converted to data URL successfully');
+                    } catch (error) {
+                        // If conversion fails (e.g., CORS issue), use original path
+                        console.warn('Could not convert hand to data URL, using original path:', error);
+                        handImageData = handSrc;
+                        handImage.src = handSrc;
+                    }
+                };
+                tempImg.onerror = () => {
+                    // If loading fails, fall back to original path
+                    console.warn('Could not load hand image, using original path');
+                    handImageData = handSrc;
+                    handImage.src = handSrc;
+                };
+                tempImg.src = handSrc;
 
                 // Reset upload area to show placeholder (don't show preview for pre-loaded hands)
                 if (handImagePreview && handUploadPlaceholder) {
@@ -2648,8 +2672,8 @@
             const svgViewBox = svgElement.viewBox.baseVal;
             const aspectRatio = svgViewBox.width / svgViewBox.height;
 
-            // Set canvas size based on SVG rendered size (scaled down)
-            const scale = 0.6; // Slightly larger for better quality
+            // Set canvas size based on SVG rendered size (full size for better quality)
+            const scale = 1.0; // Full size for high quality
             const canvasWidth = Math.floor(svgRect.width * scale);
             const canvasHeight = Math.floor(svgRect.height * scale);
 
