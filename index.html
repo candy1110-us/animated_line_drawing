@@ -1894,11 +1894,12 @@
                 handDiv.style.borderColor = '#818cf8';
                 handDiv.style.background = '#f5f3ff';
 
-                // Convert pre-loaded hand to data URL for GIF export compatibility
-                // First set the hand image immediately for display
+                // Set hand image data immediately (will be path initially, then data URL when converted)
+                handImageData = handSrc;
                 handImage.src = handSrc;
+                console.log('Pre-loaded hand selected:', handSrc);
 
-                // Then convert to data URL in the background
+                // Then convert to data URL in the background for better compatibility
                 const tempImg = new Image();
                 // Don't set crossOrigin for same-origin images
                 tempImg.onload = () => {
@@ -1913,17 +1914,17 @@
                         console.log('Data URL length:', handImageData.length);
                         console.log('Data URL preview:', handImageData.substring(0, 50));
                     } catch (error) {
-                        // If conversion fails (e.g., CORS issue), use original path
+                        // If conversion fails (e.g., CORS issue), keep using original path
                         console.error('Could not convert hand to data URL:', error);
                         console.error('Image source was:', handSrc);
-                        handImageData = handSrc;
+                        console.log('Will use original path instead');
                     }
                 };
                 tempImg.onerror = (error) => {
-                    // If loading fails, fall back to original path
+                    // If loading fails, keep using original path
                     console.error('Could not load hand image:', error);
                     console.error('Failed source:', handSrc);
-                    handImageData = handSrc;
+                    console.log('Will use original path instead');
                 };
                 tempImg.src = handSrc;
 
