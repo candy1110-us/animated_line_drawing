@@ -1880,9 +1880,12 @@
 
         // Pre-loaded hand selection
         const preloadedHands = document.querySelectorAll('.preloaded-hand');
+        console.log('Found preloaded hands:', preloadedHands.length);
         preloadedHands.forEach(handDiv => {
             handDiv.addEventListener('click', () => {
+                console.log('PRE-LOADED HAND CLICKED!');
                 const handSrc = handDiv.getAttribute('data-hand');
+                console.log('Hand source:', handSrc);
 
                 // Remove active state from all hands
                 preloadedHands.forEach(h => {
