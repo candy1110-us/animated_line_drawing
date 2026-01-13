@@ -1910,15 +1910,19 @@
                         ctx.drawImage(tempImg, 0, 0);
                         handImageData = canvas.toDataURL('image/png');
                         console.log('Pre-loaded hand converted to data URL successfully');
+                        console.log('Data URL length:', handImageData.length);
+                        console.log('Data URL preview:', handImageData.substring(0, 50));
                     } catch (error) {
                         // If conversion fails (e.g., CORS issue), use original path
-                        console.warn('Could not convert hand to data URL, using original path:', error);
+                        console.error('Could not convert hand to data URL:', error);
+                        console.error('Image source was:', handSrc);
                         handImageData = handSrc;
                     }
                 };
-                tempImg.onerror = () => {
+                tempImg.onerror = (error) => {
                     // If loading fails, fall back to original path
-                    console.warn('Could not load hand image, using original path');
+                    console.error('Could not load hand image:', error);
+                    console.error('Failed source:', handSrc);
                     handImageData = handSrc;
                 };
                 tempImg.src = handSrc;
@@ -2689,8 +2693,16 @@
             const isDataURL = handImageData && handImageData.startsWith('data:');
             const includeHand = handEnabled && isDataURL;
 
+            console.log('GIF Export - Hand Debug:', {
+                handEnabled,
+                handImageData: handImageData ? (handImageData.substring(0, 30) + '...') : null,
+                isDataURL,
+                includeHand
+            });
+
             if (handEnabled && !isDataURL) {
                 console.warn('Hand pointer will not be included in GIF. Please upload a custom hand image to include it.');
+                console.warn('handImageData value:', handImageData);
             }
 
             // Pre-render all frames
