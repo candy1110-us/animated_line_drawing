@@ -2688,10 +2688,11 @@
             const svgWidth = canvasWidth;
             const svgHeight = canvasHeight;
 
-            // Check if hand should be included (only if it's a data URL to avoid CORS)
+            // Check if hand should be included
             const handEnabled = handCheckbox && handCheckbox.checked && handImageData;
             const isDataURL = handImageData && handImageData.startsWith('data:');
-            const includeHand = handEnabled && isDataURL;
+            // Try to include hand regardless - if it fails due to CORS, we'll catch the error
+            const includeHand = handEnabled;
 
             console.log('GIF Export - Hand Debug:', {
                 handEnabled,
@@ -2701,8 +2702,7 @@
             });
 
             if (handEnabled && !isDataURL) {
-                console.warn('Hand pointer will not be included in GIF. Please upload a custom hand image to include it.');
-                console.warn('handImageData value:', handImageData);
+                console.log('Attempting to include pre-loaded hand (not a data URL yet). This may work if served from same origin.');
             }
 
             // Pre-render all frames
