@@ -2817,10 +2817,13 @@
                             }
                             resolveHand();
                         };
-                        handImg.onerror = () => {
-                            console.warn('Failed to load hand image for frame', frameIndex);
+                        handImg.onerror = (error) => {
+                            console.error('Failed to load hand image for frame', frameIndex);
+                            console.error('handImageData was:', handImageData);
+                            console.error('Error:', error);
                             resolveHand();
                         };
+                        console.log('Loading hand image for GIF frame:', handImageData.substring(0, 50));
                         handImg.src = handImageData;
                     });
                 }
