@@ -486,6 +486,8 @@
             }
         }
     </style>
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gifshot@0.4.5/dist/gifshot.min.js"></script>
 </head>
 <body>
     <div class="container">
@@ -702,6 +704,11 @@
                             <p>Draw something or upload an image to get started!</p>
                         </div>
                     </div>
+                </div>
+                <div style="display: flex; justify-content: center; margin-top: 16px;">
+                    <button id="downloadGifBtn" class="btn-primary" style="display: none; padding: 8px 16px; font-size: 12px;">
+                        ⬇ Download as GIF
+                    </button>
                 </div>
             </div>
         </div>
@@ -2088,7 +2095,13 @@
             animateBtn.addEventListener('click', () => {
                 // Show the svg container
                 if (svgContainer) svgContainer.classList.add('has-content');
-                
+
+                // Show download button when animation starts
+                const downloadGifBtn = document.getElementById('downloadGifBtn');
+                if (downloadGifBtn) {
+                    downloadGifBtn.style.display = 'block';
+                }
+
                 // If we have drawn strokes, convert them to SVG first
                 if (allStrokes && allStrokes.length > 0) {
                     console.log('Animating drawn strokes');
@@ -2098,8 +2111,8 @@
                 else if (window.uploadedImagePaths && window.uploadedImageDimensions) {
                     console.log('Regenerating uploaded image SVG with', window.uploadedImagePaths.length, 'paths');
                     renderPathsAsSVG(
-                        window.uploadedImagePaths, 
-                        window.uploadedImageDimensions.width, 
+                        window.uploadedImagePaths,
+                        window.uploadedImageDimensions.width,
                         window.uploadedImageDimensions.height
                     );
                 }
@@ -2112,7 +2125,7 @@
                 else {
                     console.log('No content to animate!');
                 }
-                
+
                 // Small delay to allow browser to render/reflow before animating
                 // This ensures the hand positions are calculated correctly
                 setTimeout(() => {
@@ -2562,6 +2575,183 @@
             }
 
             requestAnimationFrame(updateHand);
+        }
+
+        // Download as GIF functionality
+        const downloadGifBtn = document.getElementById('downloadGifBtn');
+        if (downloadGifBtn) {
+            downloadGifBtn.addEventListener('click', async () => {
+                // Disable button and show loading state
+                downloadGifBtn.disabled = true;
+                downloadGifBtn.textContent = '⏳ Creating GIF...';
+
+                try {
+                    console.log('Download GIF button clicked');
+                    await captureAnimationAsGif();
+                    downloadGifBtn.textContent = '✓ GIF Downloaded!';
+                    setTimeout(() => {
+                        downloadGifBtn.textContent = '⬇ Download as GIF';
+                        downloadGifBtn.disabled = false;
+                    }, 2000);
+                } catch (error) {
+                    console.error('Error creating GIF:', error);
+                    console.error('Error stack:', error.stack);
+                    downloadGifBtn.textContent = '✗ ' + (error.message || 'Error creating GIF');
+                    setTimeout(() => {
+                        downloadGifBtn.textContent = '⬇ Download as GIF';
+                        downloadGifBtn.disabled = false;
+                    }, 3000);
+                }
+            });
+        }
+
+        async function captureAnimationAsGif() {
+            // Check if gifshot library is loaded
+            if (typeof gifshot === 'undefined') {
+                throw new Error('gifshot library not loaded');
+            }
+
+            const animDuration = parseFloat(duration.value);
+            const fps = 12; // Frames per second
+            const totalFrames = Math.floor(animDuration * fps);
+            const frameInterval = 1000 / fps;
+
+            // Get the preview content container
+            const previewContent = document.querySelector('.preview-content');
+            if (!previewContent) {
+                throw new Error('Preview content not found');
+            }
+
+            console.log('Starting GIF creation:', { totalFrames, animDuration, fps });
+
+            // Reset all paths to initial state (hidden)
+            const paths = svgContainer.querySelectorAll('.svg-path');
+            paths.forEach(path => {
+                const length = path.getTotalLength();
+                path.style.transition = 'none';
+                path.style.strokeDasharray = length;
+                path.style.strokeDashoffset = length;
+            });
+
+            // Reset hand image
+            const handImg = document.getElementById('handImage');
+            if (handImg) {
+                handImg.style.display = 'none';
+                handImg.style.opacity = '0';
+            }
+
+            // Force reflow to apply reset
+            void svgContainer.offsetWidth;
+
+            console.log('Paths reset, starting capture...');
+
+            // Use a simpler sequential capture approach
+            return new Promise((resolve, reject) => {
+                const images = [];
+                let capturing = false;
+
+                // Start animation
+                setTimeout(() => {
+                    animateBtn.click();
+                }, 100);
+
+                // Capture frames sequentially with delays
+                async function captureAllFrames() {
+                    const startTime = Date.now();
+
+                    for (let i = 0; i < totalFrames; i++) {
+                        // Wait for the right time for this frame
+                        const targetTime = i * frameInterval;
+                        const currentTime = Date.now() - startTime;
+                        const waitTime = targetTime - currentTime;
+
+                        if (waitTime > 0) {
+                            await new Promise(resolve => setTimeout(resolve, waitTime));
+                        }
+
+                        try {
+                            // Get hand info before hiding
+                            const handImg = document.getElementById('handImage');
+                            const handWasVisible = handImg && handImg.style.display !== 'none' && parseFloat(handImg.style.opacity || 1) > 0;
+                            const handPosition = handWasVisible ? {
+                                left: parseFloat(handImg.style.left) || 0,
+                                top: parseFloat(handImg.style.top) || 0,
+                                width: handImg.offsetWidth,
+                                height: handImg.offsetHeight
+                            } : null;
+
+                            // Hide hand temporarily
+                            if (handWasVisible) {
+                                handImg.style.visibility = 'hidden';
+                            }
+
+                            // Capture frame
+                            const canvas = await html2canvas(previewContent, {
+                                backgroundColor: document.getElementById('bgColor')?.value || '#00ff00',
+                                scale: 0.4,
+                                logging: false
+                            });
+
+                            // Restore hand
+                            if (handWasVisible) {
+                                handImg.style.visibility = 'visible';
+
+                                // Draw hand onto canvas
+                                if (handImageData) {
+                                    const ctx = canvas.getContext('2d');
+                                    const handImgElement = new Image();
+                                    await new Promise((resolveImg) => {
+                                        handImgElement.onload = () => {
+                                            const scale = 0.4;
+                                            ctx.drawImage(
+                                                handImgElement,
+                                                handPosition.left * scale,
+                                                handPosition.top * scale,
+                                                handPosition.width * scale,
+                                                handPosition.height * scale
+                                            );
+                                            resolveImg();
+                                        };
+                                        handImgElement.onerror = resolveImg;
+                                        handImgElement.src = handImageData;
+                                    });
+                                }
+                            }
+
+                            images.push(canvas.toDataURL('image/png'));
+                            console.log(`Frame ${i + 1}/${totalFrames} captured`);
+
+                        } catch (error) {
+                            console.error(`Error capturing frame ${i}:`, error);
+                        }
+                    }
+
+                    // All frames captured, create GIF
+                    console.log('Creating GIF from', images.length, 'frames...');
+                    gifshot.createGIF({
+                        images: images,
+                        gifWidth: Math.floor(previewContent.offsetWidth * 0.4),
+                        gifHeight: Math.floor(previewContent.offsetHeight * 0.4),
+                        interval: 1 / fps,
+                        frameDuration: 1
+                    }, (obj) => {
+                        if (!obj.error) {
+                            console.log('GIF ready!');
+                            const a = document.createElement('a');
+                            a.href = obj.image;
+                            a.download = 'animation.gif';
+                            document.body.appendChild(a);
+                            a.click();
+                            document.body.removeChild(a);
+                            resolve();
+                        } else {
+                            reject(new Error(obj.error));
+                        }
+                    });
+                }
+
+                captureAllFrames().catch(reject);
+            });
         }
     </script>
 </body>
