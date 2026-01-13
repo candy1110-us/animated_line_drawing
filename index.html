@@ -1895,8 +1895,12 @@
                 handDiv.style.background = '#f5f3ff';
 
                 // Convert pre-loaded hand to data URL for GIF export compatibility
+                // First set the hand image immediately for display
+                handImage.src = handSrc;
+
+                // Then convert to data URL in the background
                 const tempImg = new Image();
-                tempImg.crossOrigin = 'anonymous'; // Try to avoid CORS issues when possible
+                // Don't set crossOrigin for same-origin images
                 tempImg.onload = () => {
                     try {
                         const canvas = document.createElement('canvas');
@@ -1905,20 +1909,17 @@
                         const ctx = canvas.getContext('2d');
                         ctx.drawImage(tempImg, 0, 0);
                         handImageData = canvas.toDataURL('image/png');
-                        handImage.src = handImageData;
                         console.log('Pre-loaded hand converted to data URL successfully');
                     } catch (error) {
                         // If conversion fails (e.g., CORS issue), use original path
                         console.warn('Could not convert hand to data URL, using original path:', error);
                         handImageData = handSrc;
-                        handImage.src = handSrc;
                     }
                 };
                 tempImg.onerror = () => {
                     // If loading fails, fall back to original path
                     console.warn('Could not load hand image, using original path');
                     handImageData = handSrc;
-                    handImage.src = handSrc;
                 };
                 tempImg.src = handSrc;
 
