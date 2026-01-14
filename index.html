@@ -1784,48 +1784,73 @@
             const svgContainer = document.getElementById('svgContainer');
             const strokeColorValue = strokeColor.value;
             const bgColorValue = bgColor.value;
-            
+
             // Check if manual stroke width is enabled
             const uploadStrokeCheckbox = document.getElementById('uploadStrokeCheckbox');
             const uploadStrokeWidth = document.getElementById('uploadStrokeWidth');
             const useManualStroke = uploadStrokeCheckbox && uploadStrokeCheckbox.checked;
             const manualStrokeWidth = useManualStroke && uploadStrokeWidth ? parseFloat(uploadStrokeWidth.value) : null;
-            
+
             console.log(`Rendering ${paths.length} paths to SVG`);
-            
+
+            // Fixed canvas size to match drawing canvas
+            const CANVAS_WIDTH = 600;
+            const CANVAS_HEIGHT = 400;
+
+            // Calculate scale to fit image within fixed canvas while maintaining aspect ratio
+            const scaleX = CANVAS_WIDTH / width;
+            const scaleY = CANVAS_HEIGHT / height;
+            const scale = Math.min(scaleX, scaleY); // Use smaller scale to fit entirely
+
+            // Calculate centered offset
+            const scaledWidth = width * scale;
+            const scaledHeight = height * scale;
+            const offsetX = (CANVAS_WIDTH - scaledWidth) / 2;
+            const offsetY = (CANVAS_HEIGHT - scaledHeight) / 2;
+
+            console.log(`Scaling uploaded image: ${width}x${height} -> ${scaledWidth.toFixed(0)}x${scaledHeight.toFixed(0)} at offset (${offsetX.toFixed(0)}, ${offsetY.toFixed(0)})`);
+
             const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-            svg.setAttribute('width', width);
-            svg.setAttribute('height', height);
-            svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+            svg.setAttribute('width', CANVAS_WIDTH);
+            svg.setAttribute('height', CANVAS_HEIGHT);
+            svg.setAttribute('viewBox', `0 0 ${CANVAS_WIDTH} ${CANVAS_HEIGHT}`);
             svg.style.background = bgColorValue;
             
             let renderedCount = 0;
             paths.forEach((pathObj, index) => {
                 const path = pathObj.points;
                 if (path.length < 2) return;
-                
+
+                // Apply scale and offset to all points
+                const transformPoint = (p) => ({
+                    x: (p.x * scale) + offsetX,
+                    y: (p.y * scale) + offsetY
+                });
+
+                const transformedPath = path.map(transformPoint);
+
                 // Create smooth curve using quadratic bezier
-                let d = `M ${path[0].x} ${path[0].y}`;
-                
-                if (path.length === 2) {
+                let d = `M ${transformedPath[0].x} ${transformedPath[0].y}`;
+
+                if (transformedPath.length === 2) {
                     // Just a line for 2 points
-                    d += ` L ${path[1].x} ${path[1].y}`;
+                    d += ` L ${transformedPath[1].x} ${transformedPath[1].y}`;
                 } else {
                     // Use quadratic curves for smoother appearance
-                    for (let i = 1; i < path.length - 1; i++) {
-                        const curr = path[i];
-                        const next = path[i + 1];
-                        
+                    for (let i = 1; i < transformedPath.length - 1; i++) {
+                        const curr = transformedPath[i];
+                        const next = transformedPath[i + 1];
+
                         // Control point is the current point
                         // End point is midway to next point for smooth connection
                         const midX = (curr.x + next.x) / 2;
                         const midY = (curr.y + next.y) / 2;
-                        
+
                         d += ` Q ${curr.x} ${curr.y}, ${midX} ${midY}`;
                     }
-                    
+
                     // Final segment to last point
-                    const last = path[path.length - 1];
+                    const last = transformedPath[transformedPath.length - 1];
                     d += ` L ${last.x} ${last.y}`;
                 }
                 
@@ -2946,19 +2971,20 @@
             const svgViewBox = svgElement.viewBox.baseVal;
             const aspectRatio = svgViewBox.width / svgViewBox.height;
 
-            // Set canvas size based on SVG rendered size (full size for better quality)
-            const scale = 1.0; // Full size for high quality
-            const canvasWidth = Math.floor(svgRect.width * scale);
-            const canvasHeight = Math.floor(svgRect.height * scale);
-
-            // SVG will fill the entire canvas (no offset needed since we match its size)
-            const offsetX = 0;
-            const offsetY = 0;
-            const svgWidth = canvasWidth;
-            const svgHeight = canvasHeight;
-
             // Check if hand should be included
             const handEnabled = handCheckbox && handCheckbox.checked && handImageData;
+
+            // Set canvas size based on SVG rendered size (full size for better quality)
+            const scale = 1.0; // Full size for high quality
+            const handPadding = handEnabled ? 200 : 0; // Add padding for hand if enabled
+            const canvasWidth = Math.floor(svgRect.width * scale) + (handPadding * 2);
+            const canvasHeight = Math.floor(svgRect.height * scale) + (handPadding * 2);
+
+            // SVG will be centered in canvas with padding for hand
+            const offsetX = handPadding;
+            const offsetY = handPadding;
+            const svgWidth = Math.floor(svgRect.width * scale);
+            const svgHeight = Math.floor(svgRect.height * scale);
             const isDataURL = handImageData && handImageData.startsWith('data:');
             // Try to include hand regardless - if it fails due to CORS, we'll catch the error
             const includeHand = handEnabled;
@@ -3059,13 +3085,13 @@
                                 const svgWidthAttr = parseFloat(svgElement.getAttribute('width'));
                                 const svgHeightAttr = parseFloat(svgElement.getAttribute('height'));
 
-                                // Scale from SVG coordinate system to canvas size
-                                const scaleX = canvasWidth / svgWidthAttr;
-                                const scaleY = canvasHeight / svgHeightAttr;
+                                // Scale from SVG coordinate system to SVG rendered size (not full canvas)
+                                const scaleX = svgWidth / svgWidthAttr;
+                                const scaleY = svgHeight / svgHeightAttr;
 
-                                // Convert point from SVG coordinates to canvas coordinates
-                                const canvasX = pointOnPath.x * scaleX;
-                                const canvasY = pointOnPath.y * scaleY;
+                                // Convert point from SVG coordinates to canvas coordinates (with padding offset)
+                                const canvasX = (pointOnPath.x * scaleX) + offsetX;
+                                const canvasY = (pointOnPath.y * scaleY) + offsetY;
 
                                 // Scale hand size for canvas
                                 const handWidthScaled = (handSizeValue || 50) * scale;
