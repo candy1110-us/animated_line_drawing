@@ -111,12 +111,22 @@
             position: relative;
             border: 2px solid #c7d2fe;
             border-radius: 12px;
-            background: white;
             overflow: hidden;
             width: 100%;
             max-width: 600px;
             aspect-ratio: 3 / 2; /* Match canvas 600x400 */
             margin: 0 auto;
+        }
+
+        .canvas-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: white;
+            z-index: 0;
         }
 
         #drawingCanvas {
@@ -125,6 +135,14 @@
             height: 100%;
             cursor: crosshair;
             touch-action: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 2 !important;
+        }
+
+        #guideCanvas {
+            z-index: 1 !important;
         }
 
         .drawing-controls {
@@ -523,12 +541,45 @@
 
                 <!-- Drawing Section -->
                 <div class="drawing-section active" id="drawingSection">
-                    <div class="canvas-container" style="position: relative;">
-                        <div style="position: absolute; top: 12px; right: 12px; display: flex; gap: 8px; z-index: 10;">
-                            <button id="undoBtn" style="background: rgba(255, 255, 255, 0.95); border: none; padding: 8px 16px; cursor: pointer; font-size: 13px; font-weight: 600; color: #6366f1; border-radius: 8px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); transition: all 0.2s; backdrop-filter: blur(8px);" onmouseover="this.style.background='rgba(255, 255, 255, 1)'; this.style.boxShadow='0 4px 12px rgba(99, 102, 241, 0.2)'; this.style.transform='translateY(-1px)'" onmouseout="this.style.background='rgba(255, 255, 255, 0.95)'; this.style.boxShadow='0 2px 8px rgba(0, 0, 0, 0.1)'; this.style.transform='translateY(0)'">Undo</button>
-                            <button id="clearBtn" style="background: rgba(255, 255, 255, 0.95); border: none; padding: 8px 16px; cursor: pointer; font-size: 13px; font-weight: 600; color: #ef4444; border-radius: 8px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); transition: all 0.2s; backdrop-filter: blur(8px);" onmouseover="this.style.background='rgba(255, 255, 255, 1)'; this.style.boxShadow='0 4px 12px rgba(239, 68, 68, 0.2)'; this.style.transform='translateY(-1px)'" onmouseout="this.style.background='rgba(255, 255, 255, 0.95)'; this.style.boxShadow='0 2px 8px rgba(0, 0, 0, 0.1)'; this.style.transform='translateY(0)'">Clear</button>
+                    <!-- Guide Image Control -->
+                    <div style="margin-bottom: 12px; position: relative;">
+                        <div style="display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: #f9fafb; border-radius: 8px; cursor: pointer; width: fit-content;" id="guideImageToggle">
+                            <input type="checkbox" id="guideImageCheckbox" style="width: 18px; height: 18px; cursor: pointer; accent-color: #818cf8;">
+                            <span style="font-size: 12px; font-weight: 600; color: #374151;">Guide Image</span>
                         </div>
-                        <canvas id="drawingCanvas" width="600" height="400"></canvas>
+                        <!-- Guide image settings popup -->
+                        <div id="guideImagePopup" style="display: none; position: absolute; top: 100%; left: 0; margin-top: 8px; background: white; border-radius: 12px; padding: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); width: 280px; z-index: 1000;">
+                            <div style="margin-bottom: 12px;">
+                                <label style="display: block; font-size: 12px; font-weight: 600; color: #374151; margin-bottom: 6px;">
+                                    Opacity: <span id="guideOpacityDisplay" style="color: #818cf8;">30%</span>
+                                </label>
+                                <input type="range" id="guideOpacity" min="10" max="100" step="5" value="30" style="width: 100%; height: 4px; border-radius: 2px; background: #e0e7ff; outline: none; -webkit-appearance: none; cursor: pointer;">
+                            </div>
+                            <div>
+                                <label style="display: block; font-size: 12px; font-weight: 600; color: #374151; margin-bottom: 6px;">Upload Guide Image</label>
+                                <div style="border: 2px dashed #c7d2fe; border-radius: 8px; padding: 16px; text-align: center; background: #faf5ff; cursor: pointer; position: relative; min-height: 80px; display: flex; align-items: center; justify-content: center;" id="guideUploadArea">
+                                    <input type="file" id="guideImageUpload" accept="image/*" style="display: none;">
+                                    <div id="guideUploadPlaceholder" style="display: flex; flex-direction: column; align-items: center; gap: 4px;">
+                                        <span style="font-size: 11px; color: #6366f1;">🖼️ Click to upload</span>
+                                    </div>
+                                    <div id="guideImagePreview" style="display: none; flex-direction: column; align-items: center; gap: 8px;">
+                                        <img id="guidePreviewImg" style="max-width: 60px; max-height: 60px; object-fit: contain;" />
+                                        <span style="font-size: 10px; color: #6b7280;" id="guideImageName"></span>
+                                        <span style="font-size: 9px; color: #818cf8; cursor: pointer;" id="changeGuideImage">Change image</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="canvas-container" style="position: relative;">
+                        <canvas id="guideCanvas" width="600" height="400" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; opacity: 0.3; display: none; z-index: 1;"></canvas>
+                        <canvas id="drawingCanvas" width="600" height="400" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 2;"></canvas>
+                    </div>
+                    <!-- Undo/Clear buttons moved below canvas -->
+                    <div style="display: flex; justify-content: flex-start; margin-top: 16px; gap: 8px;">
+                        <button id="undoBtn" class="btn-primary">Undo</button>
+                        <button id="clearBtn" class="btn-primary" style="background: #a78bfa;">Clear</button>
                     </div>
                 </div>
 
@@ -565,18 +616,22 @@
                             <input type="range" id="duration" min="0.5" max="10" step="0.1" value="3" style="width: 100px; height: 4px; border-radius: 2px; background: #e0e7ff; outline: none; -webkit-appearance: none; cursor: pointer;">
                             <span class="value-display" id="durationDisplay" style="min-width: 45px;">3.0s</span>
                         </div>
-                        <div style="display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: #f9fafb; border-radius: 8px;" id="drawStrokeWidthContainer">
-                            <span style="font-size: 12px; font-weight: 600; color: #374151;">Stroke Width:</span>
-                            <input type="range" id="drawStrokeWidth" min="1" max="20" step="1" value="3" style="width: 80px; height: 4px; border-radius: 2px; background: #e0e7ff; outline: none; -webkit-appearance: none; cursor: pointer;">
-                            <span class="value-display" id="drawStrokeWidthDisplay" style="min-width: 35px;">3px</span>
-                        </div>
                         <div style="position: relative;">
                             <div style="display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: #f9fafb; border-radius: 8px; cursor: pointer;" id="strokeColorIndicator">
                                 <span style="font-size: 12px; font-weight: 600; color: #374151;">Stroke:</span>
                                 <div id="strokeColorPreview" style="width: 24px; height: 24px; border-radius: 4px; background: #000000; border: 2px solid #e5e7eb;"></div>
+                                <span style="font-size: 12px; font-weight: 600; color: #374151;" id="strokeWidthPreview">3px</span>
                             </div>
                             <!-- Stroke color popup -->
                             <div id="strokeColorPopup" style="display: none; position: absolute; top: 100%; right: 0; margin-top: 8px; background: white; border-radius: 12px; padding: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); width: 280px; z-index: 1000;">
+                                <!-- Stroke width slider (for draw mode) -->
+                                <div id="drawStrokeWidthSection" style="margin-bottom: 16px;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                        <span style="font-size: 12px; font-weight: 600; color: #374151;">Stroke Width</span>
+                                        <span class="value-display" id="popupStrokeWidthDisplay" style="font-size: 12px; font-weight: 600; color: #ffffff;">3px</span>
+                                    </div>
+                                    <input type="range" id="popupStrokeWidth" min="1" max="20" step="1" value="3" style="width: 100%; height: 6px; border-radius: 3px; background: #e0e7ff; outline: none; -webkit-appearance: none; cursor: pointer;">
+                                </div>
                                 <!-- Color square picker -->
                                 <div style="position: relative; width: 100%; height: 150px; background: linear-gradient(to right, white, red); border-radius: 8px; margin-bottom: 12px; cursor: crosshair; border: 2px solid #e5e7eb;" id="strokeColorSquare">
                                     <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(to bottom, transparent, black); border-radius: 6px;" id="strokeColorOverlay"></div>
@@ -591,10 +646,28 @@
                                 </div>
                                 
                                 <!-- Hex input -->
-                                <div style="display: flex; align-items: center; gap: 8px;">
+                                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px;">
                                     <span style="font-size: 12px; font-weight: 600; color: #374151;">Hex:</span>
                                     <input type="text" id="strokeColorHexInput" value="#000000" style="flex: 1; padding: 6px 10px; border: 2px solid #e5e7eb; border-radius: 6px; font-family: monospace; font-size: 13px;">
                                     <input type="color" id="strokeColor" value="#000000" style="width: 40px; height: 32px; border: 2px solid #e5e7eb; border-radius: 6px; cursor: pointer;">
+                                </div>
+
+                                <!-- Divider -->
+                                <div style="border-top: 1px solid #e5e7eb; margin-bottom: 16px;" id="uploadStrokeDivider"></div>
+
+                                <!-- Consistent Stroke Width (for upload mode) -->
+                                <div id="uploadStrokeSection" style="display: none;">
+                                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+                                        <input type="checkbox" id="uploadStrokeCheckbox" style="width: 18px; height: 18px; cursor: pointer; accent-color: #818cf8;">
+                                        <span style="font-size: 12px; font-weight: 600; color: #374151;">Consistent Stroke Width</span>
+                                    </div>
+                                    <div id="uploadStrokeWidthControl" style="display: none;">
+                                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                            <span style="font-size: 12px; font-weight: 600; color: #374151;">Stroke Width</span>
+                                            <span class="value-display" id="uploadStrokeWidthDisplay" style="font-size: 12px; font-weight: 600; color: #ffffff;">3px</span>
+                                        </div>
+                                        <input type="range" id="uploadStrokeWidth" min="0.5" max="20" step="0.5" value="3" style="width: 100%; height: 6px; border-radius: 3px; background: #e0e7ff; outline: none; -webkit-appearance: none; cursor: pointer;">
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -635,9 +708,9 @@
                             <div id="handSettingsPopup" style="display: none; position: absolute; top: 100%; right: 0; margin-top: 8px; background: white; border-radius: 12px; padding: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); width: 280px; z-index: 1000;">
                                 <div style="margin-bottom: 12px;">
                                     <label style="display: block; font-size: 12px; font-weight: 600; color: #374151; margin-bottom: 6px;">
-                                        Size: <span id="handSizeDisplay" style="color: #818cf8;">50px</span>
+                                        Size: <span id="handSizeDisplay" style="color: #818cf8;">200px</span>
                                     </label>
-                                    <input type="range" id="handSize" min="20" max="200" step="5" value="50" style="width: 100%; height: 4px; border-radius: 2px; background: #e0e7ff; outline: none; -webkit-appearance: none; cursor: pointer;">
+                                    <input type="range" id="handSize" min="50" max="300" step="5" value="200" style="width: 100%; height: 4px; border-radius: 2px; background: #e0e7ff; outline: none; -webkit-appearance: none; cursor: pointer;">
                                 </div>
                                 <div>
                                     <label style="display: block; font-size: 12px; font-weight: 600; color: #374151; margin-bottom: 6px;">Choose Hand</label>
@@ -666,7 +739,7 @@
 
                                     <!-- Upload custom image -->
                                     <div>
-                                        <div style="font-size: 10px; color: #6b7280; margin-bottom: 6px;">Or upload custom:</div>
+                                        <div style="font-size: 10px; color: #6b7280; margin-bottom: 6px;">Or upload custom (pen tip at top-left):</div>
                                         <div style="border: 2px dashed #c7d2fe; border-radius: 8px; padding: 16px; text-align: center; background: #faf5ff; cursor: pointer; position: relative; min-height: 80px; display: flex; align-items: center; justify-content: center;" id="handUploadArea">
                                             <input type="file" id="handImageUpload" accept="image/*" style="display: none;">
                                             <div id="handUploadPlaceholder" style="display: flex; flex-direction: column; align-items: center; gap: 4px;">
@@ -679,21 +752,6 @@
                                             </div>
                                         </div>
                                     </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div style="position: relative;">
-                            <div style="display: none; align-items: center; gap: 8px; padding: 8px 12px; background: #f9fafb; border-radius: 8px; cursor: pointer;" id="uploadStrokeToggle">
-                                <input type="checkbox" id="uploadStrokeCheckbox" style="width: 18px; height: 18px; cursor: pointer; accent-color: #818cf8;">
-                                <span style="font-size: 12px; font-weight: 600; color: #374151;">Consistent Stroke Width</span>
-                            </div>
-                            <!-- Manual stroke settings popup -->
-                            <div id="uploadStrokePopup" style="display: none; position: absolute; top: 100%; right: 0; margin-top: 8px; background: white; border-radius: 12px; padding: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); width: 220px; z-index: 1000;">
-                                <div>
-                                    <label style="display: block; font-size: 12px; font-weight: 600; color: #374151; margin-bottom: 6px;">
-                                        Stroke Width: <span id="uploadStrokeWidthDisplay" style="color: #818cf8;">3px</span>
-                                    </label>
-                                    <input type="range" id="uploadStrokeWidth" min="0.5" max="20" step="0.5" value="3" style="width: 100%; height: 4px; border-radius: 2px; background: #e0e7ff; outline: none; -webkit-appearance: none; cursor: pointer;">
                                 </div>
                             </div>
                         </div>
@@ -712,9 +770,9 @@
                         </div>
                     </div>
                 </div>
-                <div style="display: flex; justify-content: center; margin-top: 16px;">
-                    <button id="downloadGifBtn" class="btn-primary" style="display: none; padding: 8px 16px; font-size: 12px;">
-                        ⬇ Download as GIF
+                <div style="display: flex; justify-content: flex-start; margin-top: 16px;">
+                    <button id="downloadGifBtn" class="btn-primary" style="display: none;">
+                        Download as GIF
                     </button>
                 </div>
             </div>
@@ -746,11 +804,22 @@
             drawingSection.classList.add('active');
             uploadSection.classList.remove('active');
             
-            // Show draw stroke width, hide upload manual stroke
-            const drawStrokeWidthContainer = document.getElementById('drawStrokeWidthContainer');
-            const uploadStrokeToggle = document.getElementById('uploadStrokeToggle');
-            if (drawStrokeWidthContainer) drawStrokeWidthContainer.style.display = 'flex';
-            if (uploadStrokeToggle) uploadStrokeToggle.style.display = 'none';
+            // Show draw stroke width section, hide upload stroke section in popup
+            const drawStrokeWidthSection = document.getElementById('drawStrokeWidthSection');
+            const uploadStrokeSection = document.getElementById('uploadStrokeSection');
+            const uploadStrokeDivider = document.getElementById('uploadStrokeDivider');
+            const strokeWidthPreview = document.getElementById('strokeWidthPreview');
+            const popupStrokeWidth = document.getElementById('popupStrokeWidth');
+
+            if (drawStrokeWidthSection) drawStrokeWidthSection.style.display = 'block';
+            if (uploadStrokeSection) uploadStrokeSection.style.display = 'none';
+            if (uploadStrokeDivider) uploadStrokeDivider.style.display = 'none';
+
+            // Show stroke width preview with draw mode value
+            if (strokeWidthPreview && popupStrokeWidth) {
+                strokeWidthPreview.style.display = 'inline';
+                strokeWidthPreview.textContent = popupStrokeWidth.value + 'px';
+            }
             
             // Clear uploaded content
             if (svgContainer) {
@@ -774,11 +843,21 @@
             uploadSection.classList.add('active');
             drawingSection.classList.remove('active');
             
-            // Hide draw stroke width, show upload manual stroke
-            const drawStrokeWidthContainer = document.getElementById('drawStrokeWidthContainer');
-            const uploadStrokeToggle = document.getElementById('uploadStrokeToggle');
-            if (drawStrokeWidthContainer) drawStrokeWidthContainer.style.display = 'none';
-            if (uploadStrokeToggle) uploadStrokeToggle.style.display = 'flex';
+            // Hide draw stroke width section, show upload stroke section in popup
+            const drawStrokeWidthSection = document.getElementById('drawStrokeWidthSection');
+            const uploadStrokeSection = document.getElementById('uploadStrokeSection');
+            const uploadStrokeDivider = document.getElementById('uploadStrokeDivider');
+            const strokeWidthPreview = document.getElementById('strokeWidthPreview');
+            const uploadStrokeCheckbox = document.getElementById('uploadStrokeCheckbox');
+
+            if (drawStrokeWidthSection) drawStrokeWidthSection.style.display = 'none';
+            if (uploadStrokeSection) uploadStrokeSection.style.display = 'block';
+            if (uploadStrokeDivider) uploadStrokeDivider.style.display = 'block';
+
+            // Hide stroke width preview if checkbox is not checked
+            if (strokeWidthPreview && uploadStrokeCheckbox) {
+                strokeWidthPreview.style.display = uploadStrokeCheckbox.checked ? 'inline' : 'none';
+            }
             
             // Clear drawn content
             allStrokes = [];
@@ -786,9 +865,7 @@
             
             // Clear the canvas
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = 'white';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            
+
             // Clear SVG container and show placeholder
             if (svgContainer) {
                 svgContainer.tempSVG = null;
@@ -822,22 +899,23 @@
         let allStrokes = [];
         let strokeTimestamps = [];
 
-        // Set canvas background
-        ctx.fillStyle = 'white';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        // Canvas is transparent, white background comes from ::before pseudo-element
         ctx.strokeStyle = '#000000';  // Always draw in black on canvas
         ctx.lineWidth = 3;
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
 
-        // Draw stroke width control
-        const drawStrokeWidth = document.getElementById('drawStrokeWidth');
-        const drawStrokeWidthDisplay = document.getElementById('drawStrokeWidthDisplay');
-        if (drawStrokeWidth && drawStrokeWidthDisplay) {
-            drawStrokeWidth.addEventListener('input', (e) => {
+        // Popup stroke width control
+        const popupStrokeWidth = document.getElementById('popupStrokeWidth');
+        const popupStrokeWidthDisplay = document.getElementById('popupStrokeWidthDisplay');
+        const strokeWidthPreview = document.getElementById('strokeWidthPreview');
+
+        if (popupStrokeWidth && popupStrokeWidthDisplay && strokeWidthPreview) {
+            popupStrokeWidth.addEventListener('input', (e) => {
                 const width = parseInt(e.target.value);
-                // Don't change canvas line width - only affects animation
-                drawStrokeWidthDisplay.textContent = width + 'px';
+                // Update all displays
+                popupStrokeWidthDisplay.textContent = width + 'px';
+                strokeWidthPreview.textContent = width + 'px';
             });
         }
 
@@ -1043,10 +1121,9 @@
         // Clear button
         document.getElementById('clearBtn').addEventListener('click', () => {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = 'white';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
             allStrokes = [];
-            
+            userSetDuration = false; // Reset duration flag for new drawing
+
             document.getElementById('animateBtn').disabled = true;
         });
 
@@ -1063,11 +1140,8 @@
 
         function redrawCanvas() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            // Always use white background for drawing canvas
-            ctx.fillStyle = 'white';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            
+
+            // Canvas is transparent, white background comes from container
             // Always use black for canvas drawing
             ctx.strokeStyle = '#000000';
             
@@ -1106,9 +1180,15 @@
         
         // Update duration slider and display
         function setDuration(seconds) {
+            // Don't override if user has manually set duration
+            if (userSetDuration) {
+                console.log('User has set custom duration, skipping suggestion');
+                return;
+            }
+
             const durationSlider = document.getElementById('duration');
             const durationDisplay = document.getElementById('durationDisplay');
-            
+
             if (durationSlider) {
                 durationSlider.value = seconds;
             }
@@ -1123,9 +1203,9 @@
             const strokeColorValue = strokeColor.value;
             const bgColorValue = bgColor.value;
             
-            // Get current stroke width from slider for the animation
-            const drawStrokeWidth = document.getElementById('drawStrokeWidth');
-            const strokeWidth = drawStrokeWidth ? drawStrokeWidth.value : '3';
+            // Get current stroke width from popup slider for the animation
+            const popupStrokeWidth = document.getElementById('popupStrokeWidth');
+            const strokeWidth = popupStrokeWidth ? popupStrokeWidth.value : '3';
             
             console.log('Converting to SVG with stroke color:', strokeColorValue, 'width:', strokeWidth);
             
@@ -1154,12 +1234,17 @@
                 path.setAttribute('stroke-linecap', 'round');
                 path.setAttribute('stroke-linejoin', 'round');
                 path.setAttribute('data-path', index);
-                
+
+                // Hide path initially for animation
+                const length = path.getTotalLength();
+                path.style.strokeDasharray = length;
+                path.style.strokeDashoffset = length;
+
                 if (index === 0) {
                     console.log('First path stroke-width attribute:', path.getAttribute('stroke-width'));
                     console.log('First path computed style:', window.getComputedStyle(path).strokeWidth);
                 }
-                
+
                 svg.appendChild(path);
             });
             
@@ -1191,6 +1276,7 @@
             const file = e.target.files[0];
             if (!file) return;
 
+            userSetDuration = false; // Reset duration flag for new upload
             document.getElementById('animateBtn').disabled = false;
             
             // Show preview of uploaded image
@@ -1754,8 +1840,13 @@
                 pathElement.setAttribute('stroke-linecap', 'round');
                 pathElement.setAttribute('stroke-linejoin', 'round');
                 pathElement.setAttribute('data-path', index);
-                
+
                 svg.appendChild(pathElement);
+
+                // Hide path initially for animation (prevent flash) - must be called after appendChild
+                const length = pathElement.getTotalLength();
+                pathElement.style.strokeDasharray = length;
+                pathElement.style.strokeDashoffset = length;
                 renderedCount++;
             });
             
@@ -1784,13 +1875,28 @@
         const handSizeDisplay = document.getElementById('handSizeDisplay');
 
         let handImageData = null;
-        let handSizeValue = 50;
+        let handSizeValue = 200; // Default hand size matches slider default
         let handOffsetXPercent = 0;
         let handOffsetYPercent = 0;
+        let userSetDuration = false; // Track if user manually changed duration
 
         duration.addEventListener('input', (e) => {
             durationDisplay.textContent = parseFloat(e.target.value).toFixed(1) + 's';
+            userSetDuration = true; // User manually adjusted duration
         });
+
+        // Helper function to close all popups
+        function closeAllPopups() {
+            const popups = [
+                document.getElementById('handSettingsPopup'),
+                document.getElementById('guideImagePopup'),
+                document.getElementById('strokeColorPopup'),
+                document.getElementById('bgColorPopup')
+            ];
+            popups.forEach(popup => {
+                if (popup) popup.style.display = 'none';
+            });
+        }
 
         const handCheckbox = document.getElementById('handCheckbox');
         const handSettingsPopup = document.getElementById('handSettingsPopup');
@@ -1807,27 +1913,32 @@
             // Click on the toggle area toggles the popup
             handToggle.addEventListener('click', (e) => {
                 // If clicking the checkbox itself, don't toggle the popup
-                if (e.target === handCheckbox) return;
-                
-                e.stopPropagation();
-                const isVisible = handSettingsPopup.style.display === 'block';
-                handSettingsPopup.style.display = isVisible ? 'none' : 'block';
-                
-                // Close other popups
-                const strokeColorPopup = document.getElementById('strokeColorPopup');
-                const bgColorPopup = document.getElementById('bgColorPopup');
-                if (strokeColorPopup) strokeColorPopup.style.display = 'none';
-                if (bgColorPopup) bgColorPopup.style.display = 'none';
+                if (e.target !== handCheckbox) {
+                    const isVisible = handSettingsPopup.style.display === 'block';
+                    if (!isVisible) {
+                        closeAllPopups();
+                    }
+                    handSettingsPopup.style.display = isVisible ? 'none' : 'block';
+                }
             });
-            
-            // Prevent checkbox clicks from bubbling to handToggle
-            handCheckbox.addEventListener('click', (e) => {
-                e.stopPropagation();
+
+            // Close popup when clicking outside
+            document.addEventListener('click', (e) => {
+                if (handSettingsPopup && handToggle && !handToggle.contains(e.target) && !handSettingsPopup.contains(e.target)) {
+                    handSettingsPopup.style.display = 'none';
+                }
             });
-            
-            // Checkbox change only affects whether hand is enabled, not popup visibility
+
+            // Checkbox change toggles popup and hand visibility
             handCheckbox.addEventListener('change', (e) => {
-                if (!e.target.checked) {
+                // Open popup when checked, close when unchecked
+                if (e.target.checked && handSettingsPopup) {
+                    closeAllPopups();
+                    handSettingsPopup.style.display = 'block';
+                } else {
+                    if (handSettingsPopup) {
+                        handSettingsPopup.style.display = 'none';
+                    }
                     handImageData = null; // Disable hand when unchecked
                 }
             });
@@ -1864,6 +1975,10 @@
                     handImageData = event.target.result;
                     handImage.src = handImageData;
 
+                    // Reset offset for custom uploaded hand (pen tip at top-left corner)
+                    handOffsetXPercent = 0;
+                    handOffsetYPercent = 0;
+
                     // Show preview in popup
                     if (handPreviewImg && handImagePreview && handUploadPlaceholder && handImageName) {
                         handPreviewImg.src = handImageData;
@@ -1874,6 +1989,135 @@
 
                     // Auto-check the checkbox when image is uploaded
                     handCheckbox.checked = true;
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        // Guide image controls
+        const guideImageToggle = document.getElementById('guideImageToggle');
+        const guideImageCheckbox = document.getElementById('guideImageCheckbox');
+        const guideImagePopup = document.getElementById('guideImagePopup');
+        const guideCanvas = document.getElementById('guideCanvas');
+        const guideOpacity = document.getElementById('guideOpacity');
+        const guideOpacityDisplay = document.getElementById('guideOpacityDisplay');
+        const guideUploadArea = document.getElementById('guideUploadArea');
+        const guideImageUpload = document.getElementById('guideImageUpload');
+        const guidePreviewImg = document.getElementById('guidePreviewImg');
+        const guideImagePreview = document.getElementById('guideImagePreview');
+        const guideUploadPlaceholder = document.getElementById('guideUploadPlaceholder');
+        const guideImageName = document.getElementById('guideImageName');
+        const changeGuideImage = document.getElementById('changeGuideImage');
+        let guideImageData = null;
+
+        // Toggle popup and checkbox
+        if (guideImageToggle && guideImagePopup && guideImageCheckbox) {
+            guideImageToggle.addEventListener('click', (e) => {
+                if (e.target !== guideImageCheckbox) {
+                    const isVisible = guideImagePopup.style.display === 'block';
+                    if (!isVisible) {
+                        closeAllPopups();
+                    }
+                    guideImagePopup.style.display = isVisible ? 'none' : 'block';
+                }
+            });
+
+            // Close popup when clicking outside
+            document.addEventListener('click', (e) => {
+                if (guideImagePopup && guideImageToggle && !guideImageToggle.contains(e.target) && !guideImagePopup.contains(e.target)) {
+                    guideImagePopup.style.display = 'none';
+                }
+            });
+
+            // Toggle guide canvas visibility and show popup when checked
+            guideImageCheckbox.addEventListener('change', (e) => {
+                if (guideCanvas) {
+                    guideCanvas.style.display = e.target.checked && guideImageData ? 'block' : 'none';
+                }
+                // Open popup when checked, close when unchecked
+                if (e.target.checked && guideImagePopup) {
+                    closeAllPopups();
+                    guideImagePopup.style.display = 'block';
+                } else if (guideImagePopup) {
+                    guideImagePopup.style.display = 'none';
+                }
+            });
+        }
+
+        // Opacity control
+        if (guideOpacity && guideOpacityDisplay && guideCanvas) {
+            guideOpacity.addEventListener('input', (e) => {
+                const opacity = parseInt(e.target.value) / 100;
+                guideOpacityDisplay.textContent = e.target.value + '%';
+                guideCanvas.style.opacity = opacity;
+            });
+        }
+
+        // Upload area click
+        if (guideUploadArea && guideImageUpload) {
+            guideUploadArea.addEventListener('click', () => {
+                guideImageUpload.click();
+            });
+
+            if (changeGuideImage) {
+                changeGuideImage.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    guideImageUpload.click();
+                });
+            }
+        }
+
+        // Handle guide image upload
+        if (guideImageUpload && guideImageCheckbox) {
+            guideImageUpload.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    guideImageData = event.target.result;
+
+                    // Draw image on guide canvas
+                    const img = new Image();
+                    img.onload = () => {
+                        const canvasWidth = 600;
+                        const canvasHeight = 400;
+
+                        // Calculate scaling to fit image into canvas while maintaining aspect ratio
+                        const scaleX = canvasWidth / img.width;
+                        const scaleY = canvasHeight / img.height;
+                        const scale = Math.min(scaleX, scaleY);
+
+                        const scaledWidth = img.width * scale;
+                        const scaledHeight = img.height * scale;
+
+                        // Center the image
+                        const offsetX = (canvasWidth - scaledWidth) / 2;
+                        const offsetY = (canvasHeight - scaledHeight) / 2;
+
+                        // Draw guide image centered and scaled to fit
+                        const guideCtx = guideCanvas.getContext('2d');
+                        guideCtx.clearRect(0, 0, guideCanvas.width, guideCanvas.height);
+                        guideCtx.drawImage(img, offsetX, offsetY, scaledWidth, scaledHeight);
+
+                        // Show guide canvas if checkbox is checked
+                        if (guideImageCheckbox.checked) {
+                            guideCanvas.style.display = 'block';
+                        }
+
+                        // Auto-check the checkbox when image is uploaded
+                        guideImageCheckbox.checked = true;
+                        guideCanvas.style.display = 'block';
+                    };
+                    img.src = guideImageData;
+
+                    // Show preview in popup
+                    if (guidePreviewImg && guideImagePreview && guideUploadPlaceholder && guideImageName) {
+                        guidePreviewImg.src = guideImageData;
+                        guideImageName.textContent = file.name;
+                        guideUploadPlaceholder.style.display = 'none';
+                        guideImagePreview.style.display = 'flex';
+                    }
                 };
                 reader.readAsDataURL(file);
             });
@@ -1902,6 +2146,18 @@
                 handImage.src = handSrc;
                 console.log('Pre-loaded hand selected:', handSrc);
 
+                // For hand3, use hardcoded pen tip offset (adjusted for better visual alignment)
+                if (handSrc === 'hand3.png') {
+                    handOffsetXPercent = 0;      // Pen tip is at left edge (X=0)
+                    handOffsetYPercent = 35;     // Pen tip is at Y=35% from top
+                    console.log('Hand3 selected, using pen tip offset:', handOffsetXPercent.toFixed(2) + '%', handOffsetYPercent.toFixed(2) + '%');
+                } else {
+                    // Reset offset for other hands (pen tip at top-left corner)
+                    handOffsetXPercent = 0;
+                    handOffsetYPercent = 0;
+                    console.log('Other hand selected, offset reset to 0,0');
+                }
+
                 // Convert to data URL using fetch (works better with same-origin)
                 fetch(handSrc)
                     .then(response => response.blob())
@@ -1909,8 +2165,7 @@
                         const reader = new FileReader();
                         reader.onloadend = () => {
                             handImageData = reader.result;
-                            console.log('Pre-loaded hand converted to data URL successfully via fetch');
-                            console.log('Data URL length:', handImageData.length);
+                            console.log('Pre-loaded hand converted to data URL successfully');
                         };
                         reader.onerror = (error) => {
                             console.error('FileReader error:', error);
@@ -1950,34 +2205,36 @@
         });
 
         // Upload manual stroke width controls
-        const uploadStrokeToggle = document.getElementById('uploadStrokeToggle');
-        const uploadStrokePopup = document.getElementById('uploadStrokePopup');
         const uploadStrokeCheckbox = document.getElementById('uploadStrokeCheckbox');
         const uploadStrokeWidth = document.getElementById('uploadStrokeWidth');
         const uploadStrokeWidthDisplay = document.getElementById('uploadStrokeWidthDisplay');
-        
-        if (uploadStrokeToggle && uploadStrokePopup && uploadStrokeCheckbox) {
-            // Toggle popup on click
-            uploadStrokeToggle.addEventListener('click', (e) => {
-                if (e.target !== uploadStrokeCheckbox) {
-                    const isVisible = uploadStrokePopup.style.display === 'block';
-                    uploadStrokePopup.style.display = isVisible ? 'none' : 'block';
-                }
-            });
-            
-            // Close popup when clicking outside
-            document.addEventListener('click', (e) => {
-                if (uploadStrokePopup && uploadStrokeToggle && !uploadStrokeToggle.contains(e.target) && !uploadStrokePopup.contains(e.target)) {
-                    uploadStrokePopup.style.display = 'none';
+        const uploadStrokeWidthControl = document.getElementById('uploadStrokeWidthControl');
+
+        // Show/hide stroke width slider and preview when checkbox is toggled
+        if (uploadStrokeCheckbox && uploadStrokeWidthControl) {
+            uploadStrokeCheckbox.addEventListener('change', (e) => {
+                uploadStrokeWidthControl.style.display = e.target.checked ? 'block' : 'none';
+                // Update the stroke width preview indicator
+                if (strokeWidthPreview) {
+                    if (e.target.checked) {
+                        strokeWidthPreview.textContent = uploadStrokeWidth.value + 'px';
+                        strokeWidthPreview.style.display = 'inline';
+                    } else {
+                        strokeWidthPreview.style.display = 'none';
+                    }
                 }
             });
         }
-        
-        // Update stroke width display
+
+        // Update stroke width display and preview
         if (uploadStrokeWidth && uploadStrokeWidthDisplay) {
             uploadStrokeWidth.addEventListener('input', (e) => {
                 const width = parseFloat(e.target.value);
                 uploadStrokeWidthDisplay.textContent = width + 'px';
+                // Also update the preview indicator
+                if (strokeWidthPreview && uploadStrokeCheckbox && uploadStrokeCheckbox.checked) {
+                    strokeWidthPreview.textContent = width + 'px';
+                }
             });
         }
 
@@ -2124,6 +2381,9 @@
 
         if (animateBtn) {
             animateBtn.addEventListener('click', () => {
+                // Reset debug flag
+                window.handOffsetLogged = false;
+
                 // Show the svg container
                 if (svgContainer) svgContainer.classList.add('has-content');
 
@@ -2168,20 +2428,21 @@
         function animatePaths() {
             const paths = svgContainer.querySelectorAll('.svg-path');
             const animDuration = parseFloat(duration.value);
-            
-            // Reset all paths before animating
+
+            // Reset all paths before animating (hide them initially)
             paths.forEach(path => {
+                const length = path.getTotalLength();
                 path.style.transition = 'none';
-                path.style.strokeDasharray = '';
-                path.style.strokeDashoffset = '';
+                path.style.strokeDasharray = length;
+                path.style.strokeDashoffset = length; // Hide paths initially
             });
-            
+
             // Force reflow to apply the reset
             void svgContainer.offsetWidth;
-            
+
             // Check if we're animating user-drawn content
             const isUserDrawing = window.userDrawingData && window.userDrawingData.length > 0;
-            
+
             if (isUserDrawing) {
                 animateUserDrawing(animDuration);
             } else {
@@ -2296,6 +2557,12 @@
 
                 const offsetX = (handOffsetXPercent / 100) * handSizeValue;
                 const offsetY = (handOffsetYPercent / 100) * handSizeValue;
+
+                // Debug logging on first frame
+                if (animationPhase === 'entrance' && handOffsetXPercent > 0 && !window.handOffsetLogged) {
+                    console.log('Using hand offset:', offsetX.toFixed(2) + 'px', offsetY.toFixed(2) + 'px');
+                    window.handOffsetLogged = true;
+                }
 
                 if (animationPhase === 'entrance') {
                     // Entrance animation - move from bottom-right to first point
@@ -2505,6 +2772,12 @@
                 const offsetX = (handOffsetXPercent / 100) * handSizeValue;
                 const offsetY = (handOffsetYPercent / 100) * handSizeValue;
 
+                // Debug logging on first frame
+                if (animationPhase === 'entrance' && handOffsetXPercent > 0 && !window.handOffsetLogged) {
+                    console.log('Using hand offset:', offsetX.toFixed(2) + 'px', offsetY.toFixed(2) + 'px');
+                    window.handOffsetLogged = true;
+                }
+
                 if (animationPhase === 'entrance') {
                     // Entrance animation - move from bottom-right to first point
                     const entranceElapsed = timestamp - entranceStartTime;
@@ -2614,22 +2887,22 @@
             downloadGifBtn.addEventListener('click', async () => {
                 // Disable button and show loading state
                 downloadGifBtn.disabled = true;
-                downloadGifBtn.textContent = '⏳ Creating GIF...';
+                downloadGifBtn.textContent = 'Creating GIF...';
 
                 try {
                     console.log('Download GIF button clicked');
                     await captureAnimationAsGif();
-                    downloadGifBtn.textContent = '✓ GIF Downloaded!';
+                    downloadGifBtn.textContent = 'GIF Downloaded!';
                     setTimeout(() => {
-                        downloadGifBtn.textContent = '⬇ Download as GIF';
+                        downloadGifBtn.textContent = 'Download as GIF';
                         downloadGifBtn.disabled = false;
                     }, 2000);
                 } catch (error) {
                     console.error('Error creating GIF:', error);
                     console.error('Error stack:', error.stack);
-                    downloadGifBtn.textContent = '✗ ' + (error.message || 'Error creating GIF');
+                    downloadGifBtn.textContent = 'Error: ' + (error.message || 'Error creating GIF');
                     setTimeout(() => {
-                        downloadGifBtn.textContent = '⬇ Download as GIF';
+                        downloadGifBtn.textContent = 'Download as GIF';
                         downloadGifBtn.disabled = false;
                     }, 3000);
                 }

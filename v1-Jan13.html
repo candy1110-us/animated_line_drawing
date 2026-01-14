@@ -1,0 +1,2660 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Animated Line Drawing - Draw or Upload</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #e0e7ff 0%, #f3e7e9 100%);
+            background-attachment: fixed;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #818cf8 0%, #a78bfa 100%);
+            padding: 35px 30px;
+            text-align: center;
+            border-radius: 16px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(129, 140, 248, 0.25);
+        }
+
+        .header h1 {
+            font-size: 32px;
+            color: white;
+            margin-bottom: 8px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .header p {
+            color: rgba(255,255,255,0.9);
+            font-size: 15px;
+        }
+
+        .main-layout {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* TOP - Controls */
+        .sidebar {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        }
+
+        .sidebar h3 {
+            font-size: 16px;
+            color: #4f46e5;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        /* Mode Selection */
+        .mode-selection {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 24px;
+        }
+
+        .mode-btn {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #e0e7ff;
+            border-radius: 8px;
+            background: white;
+            color: #6366f1;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .mode-btn:hover {
+            border-color: #818cf8;
+            background: #f5f3ff;
+        }
+
+        .mode-btn.active {
+            border-color: #818cf8;
+            background: #818cf8;
+            color: white;
+        }
+
+        /* Drawing Canvas */
+        .drawing-section {
+            display: none;
+            margin-bottom: 24px;
+        }
+
+        .drawing-section.active {
+            display: block;
+        }
+
+        .canvas-container {
+            position: relative;
+            border: 2px solid #c7d2fe;
+            border-radius: 12px;
+            background: white;
+            overflow: hidden;
+            width: 100%;
+            max-width: 600px;
+            aspect-ratio: 3 / 2;
+            margin: 0 auto;
+        }
+
+        #drawingCanvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            cursor: crosshair;
+            touch-action: none;
+        }
+
+        .drawing-controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .drawing-controls button {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-clear {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-clear:hover {
+            background: #dc2626;
+        }
+
+        .btn-undo {
+            background: #f59e0b;
+            color: white;
+        }
+
+        .btn-undo:hover {
+            background: #d97706;
+        }
+
+        .btn-use-drawing {
+            background: #10b981;
+            color: white;
+            flex: 1;
+        }
+
+        .btn-use-drawing:hover {
+            background: #059669;
+        }
+
+        .btn-use-drawing:disabled {
+            background: #d1d5db;
+            cursor: not-allowed;
+        }
+
+        .upload-section {
+            display: none;
+            border: 2px dashed #c7d2fe;
+            border-radius: 12px;
+            padding: 30px 20px;
+            text-align: center;
+            margin-bottom: 24px;
+            background: #faf5ff;
+            cursor: pointer;
+            transition: all 0.2s;
+            height: 400px;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .upload-section.active {
+            display: flex;
+        }
+
+        .upload-section:hover {
+            border-color: #818cf8;
+            background: #f5f3ff;
+            transform: translateY(-2px);
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .upload-label {
+            font-size: 14px;
+            color: #6366f1;
+            font-weight: 600;
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .setting-group {
+            margin-bottom: 18px;
+        }
+
+        .setting-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 8px;
+        }
+
+        .setting-group input[type="range"] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #e0e7ff;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .setting-group input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #818cf8;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .setting-group input[type="range"]::-webkit-slider-thumb:hover {
+            background: #6366f1;
+            transform: scale(1.1);
+        }
+        
+        /* Duration slider in preview header */
+        #duration::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: #818cf8;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        #duration::-webkit-slider-thumb:hover {
+            background: #6366f1;
+            transform: scale(1.1);
+        }
+        
+        #duration::-moz-range-thumb {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: #818cf8;
+            cursor: pointer;
+            border: none;
+        }
+        
+        /* Hand size slider in popup */
+        #handSize::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: #818cf8;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        #handSize::-webkit-slider-thumb:hover {
+            background: #6366f1;
+            transform: scale(1.1);
+        }
+        
+        #handSize::-moz-range-thumb {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: #818cf8;
+            cursor: pointer;
+            border: none;
+        }
+
+        .setting-group input[type="number"],
+        .setting-group input[type="color"],
+        .setting-group select {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 13px;
+            background: white;
+            transition: all 0.2s;
+        }
+
+        .setting-group input[type="number"]:focus,
+        .setting-group select:focus {
+            border-color: #818cf8;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.1);
+        }
+
+        .setting-group input[type="color"] {
+            height: 40px;
+            padding: 4px;
+            cursor: pointer;
+        }
+
+        .value-display {
+            display: inline-block;
+            background: #818cf8;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+
+        .helper-text {
+            font-size: 11px;
+            color: #6b7280;
+            margin-top: 4px;
+            line-height: 1.4;
+        }
+
+
+        /* Action Buttons */
+        .action-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 24px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #818cf8 0%, #6366f1 100%);
+            color: white;
+            border: none;
+            padding: 14px 24px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #6366f1;
+            border: 2px solid #818cf8;
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-secondary:hover {
+            background: #f5f3ff;
+        }
+
+        /* BOTTOM - Preview */
+        .preview-section {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        }
+        
+        .preview-content {
+            position: relative;
+            background: #f9fafb;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 600px;
+            aspect-ratio: 3 / 2;
+            display: flex;
+            overflow: hidden;
+            margin: 0 auto;
+        }
+
+        .svg-container {
+            width: 100%;
+            height: 100%;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .svg-container.has-content {
+            display: flex;
+        }
+
+        .svg-container svg {
+            display: block;
+            max-width: 100%;
+            max-height: 100%;
+            width: auto;
+            height: auto;
+            object-fit: contain;
+        }
+
+        .svg-path {
+            fill: none;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .svg-fill {
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .svg-fill.visible {
+            opacity: 1;
+        }
+
+        .hand-image {
+            position: absolute;
+            width: 50px;
+            height: auto;
+            pointer-events: none;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s;
+            display: none;
+        }
+
+        .placeholder {
+            text-align: center;
+            color: #9ca3af;
+            margin: auto;
+        }
+
+        .placeholder svg {
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 16px;
+            opacity: 0.3;
+        }
+
+        @media (min-width: 1024px) {
+            .main-layout {
+                flex-direction: row;
+                align-items: stretch;
+            }
+
+            .sidebar {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+            }
+
+            .preview-section {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>✨ Animated Line Drawing</h1>
+            <p>Draw your own creation or upload an image to see it come to life with smooth animations</p>
+        </div>
+
+        <div class="main-layout">
+            <!-- LEFT - Controls -->
+            <div class="sidebar">
+                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+                    <div style="width: 32px; height: 32px; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 700; color: white; font-size: 16px; box-shadow: 0 4px 12px rgba(240, 147, 251, 0.4);">1</div>
+                    <h3 style="margin: 0; font-size: 18px; font-weight: 700; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">Choose or draw image</h3>
+                </div>
+                
+                <!-- Mode Selection -->
+                <div class="mode-selection">
+                    <button class="mode-btn active" id="drawModeBtn">
+                        ✏️ Draw
+                    </button>
+                    <button class="mode-btn" id="uploadModeBtn">
+                        📤 Upload
+                    </button>
+                </div>
+
+                <!-- Drawing Section -->
+                <div class="drawing-section active" id="drawingSection">
+                    <!-- Guide Image Control -->
+                    <div style="margin-bottom: 12px; position: relative;">
+                        <div style="display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: #f9fafb; border-radius: 8px; cursor: pointer; width: fit-content;" id="guideImageToggle">
+                            <input type="checkbox" id="guideImageCheckbox" style="width: 18px; height: 18px; cursor: pointer; accent-color: #818cf8;">
+                            <span style="font-size: 12px; font-weight: 600; color: #374151;">Guide Image</span>
+                        </div>
+                        <!-- Guide image settings popup -->
+                        <div id="guideImagePopup" style="display: none; position: absolute; top: 100%; left: 0; margin-top: 8px; background: white; border-radius: 12px; padding: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); width: 280px; z-index: 1000;">
+                            <div style="margin-bottom: 12px;">
+                                <label style="display: block; font-size: 12px; font-weight: 600; color: #374151; margin-bottom: 6px;">
+                                    Opacity: <span id="guideOpacityDisplay" style="color: #818cf8;">30%</span>
+                                </label>
+                                <input type="range" id="guideOpacity" min="10" max="100" step="5" value="30" style="width: 100%; height: 4px; border-radius: 2px; background: #e0e7ff; outline: none; -webkit-appearance: none; cursor: pointer;">
+                            </div>
+                            <div>
+                                <label style="display: block; font-size: 12px; font-weight: 600; color: #374151; margin-bottom: 6px;">Upload Guide Image</label>
+                                <div style="border: 2px dashed #c7d2fe; border-radius: 8px; padding: 16px; text-align: center; background: #faf5ff; cursor: pointer; position: relative; min-height: 80px; display: flex; align-items: center; justify-content: center;" id="guideUploadArea">
+                                    <input type="file" id="guideImageUpload" accept="image/*" style="display: none;">
+                                    <div id="guideUploadPlaceholder" style="display: flex; flex-direction: column; align-items: center; gap: 4px;">
+                                        <span style="font-size: 11px; color: #6366f1;">🖼️ Click to upload</span>
+                                    </div>
+                                    <div id="guideImagePreview" style="display: none; flex-direction: column; align-items: center; gap: 8px;">
+                                        <img id="guidePreviewImg" style="max-width: 60px; max-height: 60px; object-fit: contain;" />
+                                        <span style="font-size: 10px; color: #6b7280;" id="guideImageName"></span>
+                                        <span style="font-size: 9px; color: #818cf8; cursor: pointer;" id="changeGuideImage">Change image</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="canvas-container" style="position: relative;">
+                        <canvas id="guideCanvas" width="600" height="400" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; opacity: 0.3; display: none;"></canvas>
+                        <div style="position: absolute; top: 12px; right: 12px; display: flex; gap: 8px; z-index: 10;">
+                            <button id="undoBtn" style="background: rgba(255, 255, 255, 0.95); border: none; padding: 8px 16px; cursor: pointer; font-size: 13px; font-weight: 600; color: #6366f1; border-radius: 8px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); transition: all 0.2s; backdrop-filter: blur(8px);" onmouseover="this.style.background='rgba(255, 255, 255, 1)'; this.style.boxShadow='0 4px 12px rgba(99, 102, 241, 0.2)'; this.style.transform='translateY(-1px)'" onmouseout="this.style.background='rgba(255, 255, 255, 0.95)'; this.style.boxShadow='0 2px 8px rgba(0, 0, 0, 0.1)'; this.style.transform='translateY(0)'">Undo</button>
+                            <button id="clearBtn" style="background: rgba(255, 255, 255, 0.95); border: none; padding: 8px 16px; cursor: pointer; font-size: 13px; font-weight: 600; color: #ef4444; border-radius: 8px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); transition: all 0.2s; backdrop-filter: blur(8px);" onmouseover="this.style.background='rgba(255, 255, 255, 1)'; this.style.boxShadow='0 4px 12px rgba(239, 68, 68, 0.2)'; this.style.transform='translateY(-1px)'" onmouseout="this.style.background='rgba(255, 255, 255, 0.95)'; this.style.boxShadow='0 2px 8px rgba(0, 0, 0, 0.1)'; this.style.transform='translateY(0)'">Clear</button>
+                        </div>
+                        <canvas id="drawingCanvas" width="600" height="400"></canvas>
+                    </div>
+                </div>
+
+                <!-- Upload Section -->
+                <div class="upload-section" id="uploadSection">
+                    <input type="file" id="imageUpload" accept="image/*">
+                    <div id="uploadPlaceholder">
+                        <label for="imageUpload" class="upload-label">
+                            📁 Click to Upload Image
+                        </label>
+                        <div class="helper-text">
+                            Upload a PNG, JPG, or SVG file
+                        </div>
+                    </div>
+                    <div id="uploadPreview" style="display: none; text-align: center;">
+                        <img id="uploadPreviewImg" style="max-width: 150px; max-height: 150px; object-fit: contain; margin-bottom: 8px; border-radius: 8px;" />
+                        <div style="font-size: 12px; color: #374151; margin-bottom: 8px;" id="uploadImageName"></div>
+                        <label for="imageUpload" style="font-size: 11px; color: #818cf8; cursor: pointer; text-decoration: underline;">Change image</label>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- RIGHT - Preview -->
+            <div class="preview-section">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div style="width: 32px; height: 32px; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 700; color: white; font-size: 16px; box-shadow: 0 4px 12px rgba(240, 147, 251, 0.4);">2</div>
+                        <h3 style="margin: 0; font-size: 18px; font-weight: 700; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">Animate</h3>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+                        <div style="display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: #f9fafb; border-radius: 8px;">
+                            <span style="font-size: 12px; font-weight: 600; color: #374151;">Duration:</span>
+                            <input type="range" id="duration" min="0.5" max="10" step="0.1" value="3" style="width: 100px; height: 4px; border-radius: 2px; background: #e0e7ff; outline: none; -webkit-appearance: none; cursor: pointer;">
+                            <span class="value-display" id="durationDisplay" style="min-width: 45px;">3.0s</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: #f9fafb; border-radius: 8px;" id="drawStrokeWidthContainer">
+                            <span style="font-size: 12px; font-weight: 600; color: #374151;">Stroke Width:</span>
+                            <input type="range" id="drawStrokeWidth" min="1" max="20" step="1" value="3" style="width: 80px; height: 4px; border-radius: 2px; background: #e0e7ff; outline: none; -webkit-appearance: none; cursor: pointer;">
+                            <span class="value-display" id="drawStrokeWidthDisplay" style="min-width: 35px;">3px</span>
+                        </div>
+                        <div style="position: relative;">
+                            <div style="display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: #f9fafb; border-radius: 8px; cursor: pointer;" id="strokeColorIndicator">
+                                <span style="font-size: 12px; font-weight: 600; color: #374151;">Color:</span>
+                                <div id="strokeColorPreview" style="width: 24px; height: 24px; border-radius: 4px; background: #000000; border: 2px solid #e5e7eb;"></div>
+                            </div>
+                            <!-- Stroke color popup -->
+                            <div id="strokeColorPopup" style="display: none; position: absolute; top: 100%; right: 0; margin-top: 8px; background: white; border-radius: 12px; padding: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); width: 280px; z-index: 1000;">
+                                <!-- Color square picker -->
+                                <div style="position: relative; width: 100%; height: 150px; background: linear-gradient(to right, white, red); border-radius: 8px; margin-bottom: 12px; cursor: crosshair; border: 2px solid #e5e7eb;" id="strokeColorSquare">
+                                    <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(to bottom, transparent, black); border-radius: 6px;" id="strokeColorOverlay"></div>
+                                    <div id="strokeColorCursor" style="position: absolute; width: 12px; height: 12px; border: 2px solid white; border-radius: 50%; pointer-events: none; transform: translate(-50%, -50%); box-shadow: 0 0 3px rgba(0,0,0,0.5);"></div>
+                                </div>
+                                
+                                <!-- Hue slider -->
+                                <div style="margin-bottom: 12px;">
+                                    <div style="height: 20px; border-radius: 6px; background: linear-gradient(to right, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000); position: relative; cursor: pointer; border: 2px solid #e5e7eb;" id="strokeHueSlider">
+                                        <div id="strokeHueCursor" style="position: absolute; width: 4px; height: 24px; background: white; border: 2px solid #666; border-radius: 2px; top: -2px; transform: translateX(-50%); pointer-events: none;"></div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Hex input -->
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <span style="font-size: 12px; font-weight: 600; color: #374151;">Hex:</span>
+                                    <input type="text" id="strokeColorHexInput" value="#000000" style="flex: 1; padding: 6px 10px; border: 2px solid #e5e7eb; border-radius: 6px; font-family: monospace; font-size: 13px;">
+                                    <input type="color" id="strokeColor" value="#000000" style="width: 40px; height: 32px; border: 2px solid #e5e7eb; border-radius: 6px; cursor: pointer;">
+                                </div>
+                            </div>
+                        </div>
+                        <div style="position: relative;">
+                            <div style="display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: #f9fafb; border-radius: 8px; cursor: pointer;" id="bgColorIndicator">
+                                <span style="font-size: 12px; font-weight: 600; color: #374151;">Background:</span>
+                                <div id="bgColorPreview" style="width: 24px; height: 24px; border-radius: 4px; background: #00ff00; border: 2px solid #e5e7eb;"></div>
+                            </div>
+                            <!-- Background color popup -->
+                            <div id="bgColorPopup" style="display: none; position: absolute; top: 100%; right: 0; margin-top: 8px; background: white; border-radius: 12px; padding: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); width: 280px; z-index: 1000;">
+                                <!-- Color square picker -->
+                                <div style="position: relative; width: 100%; height: 150px; background: linear-gradient(to right, white, red); border-radius: 8px; margin-bottom: 12px; cursor: crosshair; border: 2px solid #e5e7eb;" id="bgColorSquare">
+                                    <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(to bottom, transparent, black); border-radius: 6px;" id="bgColorOverlay"></div>
+                                    <div id="bgColorCursor" style="position: absolute; width: 12px; height: 12px; border: 2px solid white; border-radius: 50%; pointer-events: none; transform: translate(-50%, -50%); box-shadow: 0 0 3px rgba(0,0,0,0.5);"></div>
+                                </div>
+                                
+                                <!-- Hue slider -->
+                                <div style="margin-bottom: 12px;">
+                                    <div style="height: 20px; border-radius: 6px; background: linear-gradient(to right, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000); position: relative; cursor: pointer; border: 2px solid #e5e7eb;" id="bgHueSlider">
+                                        <div id="bgHueCursor" style="position: absolute; width: 4px; height: 24px; background: white; border: 2px solid #666; border-radius: 2px; top: -2px; transform: translateX(-50%); pointer-events: none;"></div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Hex input -->
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <span style="font-size: 12px; font-weight: 600; color: #374151;">Hex:</span>
+                                    <input type="text" id="bgColorHexInput" value="#00ff00" style="flex: 1; padding: 6px 10px; border: 2px solid #e5e7eb; border-radius: 6px; font-family: monospace; font-size: 13px;">
+                                    <input type="color" id="bgColor" value="#00ff00" style="width: 40px; height: 32px; border: 2px solid #e5e7eb; border-radius: 6px; cursor: pointer;">
+                                </div>
+                            </div>
+                        </div>
+                        <div style="position: relative;">
+                            <div style="display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: #f9fafb; border-radius: 8px; cursor: pointer;" id="handToggle">
+                                <input type="checkbox" id="handCheckbox" style="width: 18px; height: 18px; cursor: pointer; accent-color: #818cf8;">
+                                <span style="font-size: 12px; font-weight: 600; color: #374151;">Hand/Pointer</span>
+                            </div>
+                            <!-- Hand settings popup -->
+                            <div id="handSettingsPopup" style="display: none; position: absolute; top: 100%; right: 0; margin-top: 8px; background: white; border-radius: 12px; padding: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); width: 280px; z-index: 1000;">
+                                <div style="margin-bottom: 12px;">
+                                    <label style="display: block; font-size: 12px; font-weight: 600; color: #374151; margin-bottom: 6px;">
+                                        Size: <span id="handSizeDisplay" style="color: #818cf8;">50px</span>
+                                    </label>
+                                    <input type="range" id="handSize" min="20" max="100" step="5" value="50" style="width: 100%; height: 4px; border-radius: 2px; background: #e0e7ff; outline: none; -webkit-appearance: none; cursor: pointer;">
+                                </div>
+                                <div>
+                                    <label style="display: block; font-size: 12px; font-weight: 600; color: #374151; margin-bottom: 6px;">Upload Image</label>
+                                    <div style="border: 2px dashed #c7d2fe; border-radius: 8px; padding: 16px; text-align: center; background: #faf5ff; cursor: pointer; position: relative; min-height: 80px; display: flex; align-items: center; justify-content: center;" id="handUploadArea">
+                                        <input type="file" id="handImageUpload" accept="image/*" style="display: none;">
+                                        <div id="handUploadPlaceholder" style="display: flex; flex-direction: column; align-items: center; gap: 4px;">
+                                            <span style="font-size: 11px; color: #6366f1;">🖐️ Click to upload</span>
+                                        </div>
+                                        <div id="handImagePreview" style="display: none; flex-direction: column; align-items: center; gap: 8px;">
+                                            <img id="handPreviewImg" style="max-width: 60px; max-height: 60px; object-fit: contain;" />
+                                            <span style="font-size: 10px; color: #6b7280;" id="handImageName"></span>
+                                            <span style="font-size: 9px; color: #818cf8; cursor: pointer;" id="changeHandImage">Change image</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div style="position: relative;">
+                            <div style="display: none; align-items: center; gap: 8px; padding: 8px 12px; background: #f9fafb; border-radius: 8px; cursor: pointer;" id="uploadStrokeToggle">
+                                <input type="checkbox" id="uploadStrokeCheckbox" style="width: 18px; height: 18px; cursor: pointer; accent-color: #818cf8;">
+                                <span style="font-size: 12px; font-weight: 600; color: #374151;">Manual Stroke Width</span>
+                            </div>
+                            <!-- Manual stroke settings popup -->
+                            <div id="uploadStrokePopup" style="display: none; position: absolute; top: 100%; right: 0; margin-top: 8px; background: white; border-radius: 12px; padding: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); width: 220px; z-index: 1000;">
+                                <div>
+                                    <label style="display: block; font-size: 12px; font-weight: 600; color: #374151; margin-bottom: 6px;">
+                                        Stroke Width: <span id="uploadStrokeWidthDisplay" style="color: #818cf8;">3px</span>
+                                    </label>
+                                    <input type="range" id="uploadStrokeWidth" min="0.5" max="20" step="0.5" value="3" style="width: 100%; height: 4px; border-radius: 2px; background: #e0e7ff; outline: none; -webkit-appearance: none; cursor: pointer;">
+                                </div>
+                            </div>
+                        </div>
+                        <button class="btn-primary" id="animateBtn" disabled style="padding: 10px 20px; font-size: 13px; margin-left: 8px;">▶ Animate</button>
+                    </div>
+                </div>
+                <div class="preview-content" style="position: relative;">
+                    <img class="hand-image" id="handImage" alt="Hand pointer">
+                    <div class="svg-container" id="svgContainer">
+                        <div class="placeholder">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                                <path d="M2 17l10 5 10-5M2 12l10 5 10-5"/>
+                            </svg>
+                            <p>Draw something or upload an image to get started!</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Helper function to convert HSL to Hex
+        function hslToHex(h, s, l) {
+            s /= 100;
+            l /= 100;
+            const k = n => (n + h / 30) % 12;
+            const a = s * Math.min(l, 1 - l);
+            const f = n => l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)));
+            const toHex = x => Math.round(x * 255).toString(16).padStart(2, '0');
+            return `#${toHex(f(0))}${toHex(f(8))}${toHex(f(4))}`;
+        }
+        
+        // Mode switching
+        const drawModeBtn = document.getElementById('drawModeBtn');
+        const uploadModeBtn = document.getElementById('uploadModeBtn');
+        const drawingSection = document.getElementById('drawingSection');
+        const uploadSection = document.getElementById('uploadSection');
+        const svgContainer = document.getElementById('svgContainer');
+
+        drawModeBtn.addEventListener('click', () => {
+            drawModeBtn.classList.add('active');
+            uploadModeBtn.classList.remove('active');
+            drawingSection.classList.add('active');
+            uploadSection.classList.remove('active');
+            
+            // Show draw stroke width, hide upload manual stroke
+            const drawStrokeWidthContainer = document.getElementById('drawStrokeWidthContainer');
+            const uploadStrokeToggle = document.getElementById('uploadStrokeToggle');
+            if (drawStrokeWidthContainer) drawStrokeWidthContainer.style.display = 'flex';
+            if (uploadStrokeToggle) uploadStrokeToggle.style.display = 'none';
+            
+            // Clear uploaded content
+            if (svgContainer) {
+                svgContainer.tempSVG = null;
+                svgContainer.innerHTML = '<div class="placeholder"><p>✨ Draw something or upload an image to get started!</p></div>';
+            }
+            
+            // Disable animate button until something is drawn
+            const animateBtn = document.getElementById('animateBtn');
+            if (animateBtn && (!allStrokes || allStrokes.length === 0)) {
+                animateBtn.disabled = true;
+                
+                // Hide svg container if no drawing
+                if (svgContainer) svgContainer.classList.remove('has-content');
+            }
+        });
+
+        uploadModeBtn.addEventListener('click', () => {
+            uploadModeBtn.classList.add('active');
+            drawModeBtn.classList.remove('active');
+            uploadSection.classList.add('active');
+            drawingSection.classList.remove('active');
+            
+            // Hide draw stroke width, show upload manual stroke
+            const drawStrokeWidthContainer = document.getElementById('drawStrokeWidthContainer');
+            const uploadStrokeToggle = document.getElementById('uploadStrokeToggle');
+            if (drawStrokeWidthContainer) drawStrokeWidthContainer.style.display = 'none';
+            if (uploadStrokeToggle) uploadStrokeToggle.style.display = 'flex';
+            
+            // Clear drawn content
+            allStrokes = [];
+            window.userDrawingData = null;
+            
+            // Clear the canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Clear SVG container and show placeholder
+            if (svgContainer) {
+                svgContainer.tempSVG = null;
+                svgContainer.innerHTML = '<div class="placeholder"><p>✨ Draw something or upload an image to get started!</p></div>';
+            }
+            
+            // Clear upload preview and show placeholder
+            const uploadPlaceholder = document.getElementById('uploadPlaceholder');
+            const uploadPreview = document.getElementById('uploadPreview');
+            if (uploadPlaceholder && uploadPreview) {
+                uploadPlaceholder.style.display = 'block';
+                uploadPreview.style.display = 'none';
+            }
+            
+            // Disable animate button until something is uploaded
+            const animateBtn = document.getElementById('animateBtn');
+            if (animateBtn) {
+                animateBtn.disabled = true;
+            }
+            
+            if (svgContainer) svgContainer.classList.remove('has-content');
+        });
+
+        // Drawing functionality
+        const canvas = document.getElementById('drawingCanvas');
+        const ctx = canvas.getContext('2d');
+        const strokeColor = document.getElementById('strokeColor');
+        const bgColor = document.getElementById('bgColor');
+        let isDrawing = false;
+        let currentStroke = [];
+        let allStrokes = [];
+        let strokeTimestamps = [];
+
+        // Set canvas background
+        ctx.fillStyle = 'white';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.strokeStyle = '#000000';  // Always draw in black on canvas
+        ctx.lineWidth = 3;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+
+        // Draw stroke width control
+        const drawStrokeWidth = document.getElementById('drawStrokeWidth');
+        const drawStrokeWidthDisplay = document.getElementById('drawStrokeWidthDisplay');
+        if (drawStrokeWidth && drawStrokeWidthDisplay) {
+            drawStrokeWidth.addEventListener('input', (e) => {
+                const width = parseInt(e.target.value);
+                // Don't change canvas line width - only affects animation
+                drawStrokeWidthDisplay.textContent = width + 'px';
+            });
+        }
+
+        // Update canvas stroke color when stroke color changes
+        const strokeColorPreview = document.getElementById('strokeColorPreview');
+        const strokeColorIndicator = document.getElementById('strokeColorIndicator');
+        const strokeColorPopup = document.getElementById('strokeColorPopup');
+        
+        // Toggle stroke color popup on click
+        if (strokeColorIndicator && strokeColorPopup && strokeColor) {
+            strokeColorIndicator.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const isVisible = strokeColorPopup.style.display === 'block';
+                strokeColorPopup.style.display = isVisible ? 'none' : 'block';
+                // Close other popups
+                const bgColorPopup = document.getElementById('bgColorPopup');
+                const handSettingsPopup = document.getElementById('handSettingsPopup');
+                if (bgColorPopup) bgColorPopup.style.display = 'none';
+                if (handSettingsPopup) handSettingsPopup.style.display = 'none';
+            });
+            
+            // Custom color picker interaction for stroke
+            const strokeColorSquare = document.getElementById('strokeColorSquare');
+            const strokeColorCursor = document.getElementById('strokeColorCursor');
+            const strokeHueSlider = document.getElementById('strokeHueSlider');
+            const strokeHueCursor = document.getElementById('strokeHueCursor');
+            const strokeColorHexInput = document.getElementById('strokeColorHexInput');
+            
+            let strokeHue = 120; // Start with green
+            let strokeSaturation = 100;
+            let strokeLightness = 50;
+            
+            function updateStrokeColor() {
+                const hsl = `hsl(${strokeHue}, ${strokeSaturation}%, ${strokeLightness}%)`;
+                const hex = hslToHex(strokeHue, strokeSaturation, strokeLightness);
+                strokeColor.value = hex;
+                strokeColorHexInput.value = hex;
+                strokeColor.dispatchEvent(new Event('input'));
+                
+                // Update square background with current hue
+                strokeColorSquare.style.background = `hsl(${strokeHue}, 100%, 50%)`;
+            }
+            
+            if (strokeColorSquare && strokeColorCursor) {
+                strokeColorSquare.addEventListener('mousedown', (e) => {
+                    function pickColor(event) {
+                        const rect = strokeColorSquare.getBoundingClientRect();
+                        const x = Math.max(0, Math.min(event.clientX - rect.left, rect.width));
+                        const y = Math.max(0, Math.min(event.clientY - rect.top, rect.height));
+                        
+                        strokeSaturation = (x / rect.width) * 100;
+                        strokeLightness = 100 - (y / rect.height) * 100;
+                        
+                        strokeColorCursor.style.left = x + 'px';
+                        strokeColorCursor.style.top = y + 'px';
+                        updateStrokeColor();
+                    }
+                    
+                    pickColor(e);
+                    
+                    function onMouseMove(event) { pickColor(event); }
+                    function onMouseUp() {
+                        document.removeEventListener('mousemove', onMouseMove);
+                        document.removeEventListener('mouseup', onMouseUp);
+                    }
+                    
+                    document.addEventListener('mousemove', onMouseMove);
+                    document.addEventListener('mouseup', onMouseUp);
+                });
+            }
+            
+            if (strokeHueSlider && strokeHueCursor) {
+                strokeHueSlider.addEventListener('mousedown', (e) => {
+                    function pickHue(event) {
+                        const rect = strokeHueSlider.getBoundingClientRect();
+                        const x = Math.max(0, Math.min(event.clientX - rect.left, rect.width));
+                        strokeHue = (x / rect.width) * 360;
+                        strokeHueCursor.style.left = x + 'px';
+                        updateStrokeColor();
+                    }
+                    
+                    pickHue(e);
+                    
+                    function onMouseMove(event) { pickHue(event); }
+                    function onMouseUp() {
+                        document.removeEventListener('mousemove', onMouseMove);
+                        document.removeEventListener('mouseup', onMouseUp);
+                    }
+                    
+                    document.addEventListener('mousemove', onMouseMove);
+                    document.addEventListener('mouseup', onMouseUp);
+                });
+            }
+            
+            if (strokeColorHexInput) {
+                strokeColorHexInput.addEventListener('input', (e) => {
+                    let hex = e.target.value;
+                    if (hex.match(/^#[0-9A-Fa-f]{6}$/)) {
+                        strokeColor.value = hex;
+                        strokeColor.dispatchEvent(new Event('input'));
+                    }
+                });
+            }
+            
+            // Native color picker fallback
+            strokeColor.addEventListener('input', (e) => {
+                strokeColorHexInput.value = e.target.value;
+            });
+        }
+        
+        if (strokeColor && strokeColorPreview && svgContainer) {
+            strokeColor.addEventListener('input', () => {
+                const color = strokeColor.value;
+                
+                // Update preview
+                if (strokeColorPreview) {
+                    strokeColorPreview.style.background = color;
+                }
+                
+                // Update existing SVG paths in animation panel only
+                const paths = svgContainer.querySelectorAll('.svg-path');
+                paths.forEach(path => {
+                    path.setAttribute('stroke', color);
+                });
+            });
+            
+            strokeColor.addEventListener('change', () => {
+                const color = strokeColor.value;
+                
+                // Update preview
+                if (strokeColorPreview) {
+                    strokeColorPreview.style.background = color;
+                }
+                
+                // Update existing SVG paths in animation panel only
+                const paths = svgContainer.querySelectorAll('.svg-path');
+                paths.forEach(path => {
+                    path.setAttribute('stroke', color);
+                });
+            });
+        }
+
+        function getCoordinates(e) {
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+
+            if (e.touches) {
+                return {
+                    x: (e.touches[0].clientX - rect.left) * scaleX,
+                    y: (e.touches[0].clientY - rect.top) * scaleY
+                };
+            }
+            return {
+                x: (e.clientX - rect.left) * scaleX,
+                y: (e.clientY - rect.top) * scaleY
+            };
+        }
+
+        function startDrawing(e) {
+            e.preventDefault();
+            isDrawing = true;
+            const pos = getCoordinates(e);
+            currentStroke = [{ x: pos.x, y: pos.y, time: Date.now() }];
+            ctx.beginPath();
+            ctx.moveTo(pos.x, pos.y);
+        }
+
+        function draw(e) {
+            if (!isDrawing) return;
+            e.preventDefault();
+            
+            const pos = getCoordinates(e);
+            currentStroke.push({ x: pos.x, y: pos.y, time: Date.now() });
+            
+            ctx.lineTo(pos.x, pos.y);
+            ctx.stroke();
+        }
+
+        function stopDrawing(e) {
+            if (!isDrawing) return;
+            e.preventDefault();
+            
+            isDrawing = false;
+            if (currentStroke.length > 1) {
+                allStrokes.push([...currentStroke]);
+                document.getElementById('animateBtn').disabled = false;
+            }
+            currentStroke = [];
+        }
+
+        // Mouse events
+        canvas.addEventListener('mousedown', startDrawing);
+        canvas.addEventListener('mousemove', draw);
+        canvas.addEventListener('mouseup', stopDrawing);
+        canvas.addEventListener('mouseleave', stopDrawing);
+
+        // Touch events
+        canvas.addEventListener('touchstart', startDrawing);
+        canvas.addEventListener('touchmove', draw);
+        canvas.addEventListener('touchend', stopDrawing);
+
+        // Clear button
+        document.getElementById('clearBtn').addEventListener('click', () => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            allStrokes = [];
+            
+            document.getElementById('animateBtn').disabled = true;
+        });
+
+        // Undo button
+        document.getElementById('undoBtn').addEventListener('click', () => {
+            if (allStrokes.length > 0) {
+                allStrokes.pop();
+                redrawCanvas();
+                if (allStrokes.length === 0) {
+                    document.getElementById('animateBtn').disabled = true;
+                }
+            }
+        });
+
+        function redrawCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Always use white background for drawing canvas
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Always use black for canvas drawing
+            ctx.strokeStyle = '#000000';
+            
+            allStrokes.forEach(stroke => {
+                ctx.beginPath();
+                ctx.moveTo(stroke[0].x, stroke[0].y);
+                stroke.forEach(point => {
+                    ctx.lineTo(point.x, point.y);
+                });
+                ctx.stroke();
+            });
+        }
+
+        // Suggest duration based on complexity (number of paths)
+        function suggestDuration(pathCount) {
+            // Simple: 1-10 paths → 1-2s
+            // Medium: 11-30 paths → 2-3s
+            // Complex: 31-60 paths → 3-4s
+            // Very complex: 61-100 paths → 4-5s
+            // Extremely complex: 100+ paths → 5-8s
+            
+            if (pathCount <= 10) {
+                return 1.5;
+            } else if (pathCount <= 30) {
+                return 2.5;
+            } else if (pathCount <= 60) {
+                return 3.5;
+            } else if (pathCount <= 100) {
+                return 4.5;
+            } else if (pathCount <= 150) {
+                return 6.0;
+            } else {
+                return 8.0;
+            }
+        }
+        
+        // Update duration slider and display
+        function setDuration(seconds) {
+            const durationSlider = document.getElementById('duration');
+            const durationDisplay = document.getElementById('durationDisplay');
+            
+            if (durationSlider) {
+                durationSlider.value = seconds;
+            }
+            if (durationDisplay) {
+                durationDisplay.textContent = seconds.toFixed(1) + 's';
+            }
+        }
+
+
+        function convertDrawingToSVG() {
+            const svgContainer = document.getElementById('svgContainer');
+            const strokeColorValue = strokeColor.value;
+            const bgColorValue = bgColor.value;
+            
+            // Get current stroke width from slider for the animation
+            const drawStrokeWidth = document.getElementById('drawStrokeWidth');
+            const strokeWidth = drawStrokeWidth ? drawStrokeWidth.value : '3';
+            
+            console.log('Converting to SVG with stroke color:', strokeColorValue, 'width:', strokeWidth);
+            
+            // Create SVG
+            const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            svg.setAttribute('width', canvas.width);
+            svg.setAttribute('height', canvas.height);
+            svg.setAttribute('viewBox', `0 0 ${canvas.width} ${canvas.height}`);
+            svg.style.background = bgColorValue;
+            
+            // Convert each stroke to a path
+            allStrokes.forEach((stroke, index) => {
+                if (stroke.length < 2) return;
+                
+                let d = `M ${stroke[0].x} ${stroke[0].y}`;
+                for (let i = 1; i < stroke.length; i++) {
+                    d += ` L ${stroke[i].x} ${stroke[i].y}`;
+                }
+                
+                const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                path.setAttribute('d', d);
+                path.setAttribute('class', 'svg-path');
+                path.setAttribute('stroke', strokeColorValue);
+                path.setAttribute('stroke-width', strokeWidth);
+                path.setAttribute('fill', 'none');
+                path.setAttribute('stroke-linecap', 'round');
+                path.setAttribute('stroke-linejoin', 'round');
+                path.setAttribute('data-path', index);
+                
+                // Hide path initially with opacity for animation
+                path.style.opacity = '0';
+                
+                if (index === 0) {
+                    console.log('First path stroke-width attribute:', path.getAttribute('stroke-width'));
+                    console.log('First path computed style:', window.getComputedStyle(path).strokeWidth);
+                }
+                
+                svg.appendChild(path);
+            });
+            
+            // Suggest duration based on complexity
+            const suggestedDuration = suggestDuration(allStrokes.length);
+            setDuration(suggestedDuration);
+            console.log(`Suggested duration for ${allStrokes.length} strokes: ${suggestedDuration}s`);
+            
+            svgContainer.innerHTML = '';
+            svgContainer.appendChild(svg);
+            
+            // Store the drawing data globally for animation
+            window.userDrawingData = allStrokes;
+        }
+
+        // Upload image functionality (existing code)
+        const imageUpload = document.getElementById('imageUpload');
+
+        if (uploadSection && imageUpload) {
+            uploadSection.addEventListener('click', () => {
+                console.log('Upload section clicked, triggering file input');
+                imageUpload.click();
+            });
+        }
+
+        if (imageUpload) {
+            imageUpload.addEventListener('change', async (e) => {
+            console.log('File selected:', e.target.files[0]?.name);
+            const file = e.target.files[0];
+            if (!file) return;
+
+            document.getElementById('animateBtn').disabled = false;
+            
+            // Show preview of uploaded image
+            const uploadPlaceholder = document.getElementById('uploadPlaceholder');
+            const uploadPreview = document.getElementById('uploadPreview');
+            const uploadPreviewImg = document.getElementById('uploadPreviewImg');
+            const uploadImageName = document.getElementById('uploadImageName');
+            
+            if (uploadPlaceholder && uploadPreview && uploadPreviewImg && uploadImageName) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    uploadPreviewImg.src = event.target.result;
+                    uploadImageName.textContent = file.name;
+                    uploadPlaceholder.style.display = 'none';
+                    uploadPreview.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            }
+
+            if (file.type === 'image/svg+xml') {
+                const text = await file.text();
+                const svgContainer = document.getElementById('svgContainer');
+                
+                // Store the SVG but don't display it yet
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = text;
+                const svg = tempDiv.querySelector('svg');
+                
+                if (svg) {
+                    svg.querySelectorAll('path, line, polyline, polygon, circle, ellipse, rect').forEach((el, i) => {
+                        el.classList.add('svg-path');
+                        el.setAttribute('data-path', i);
+                    });
+                    svgContainer.tempSVG = svg;
+                }
+            } else {
+                // Process raster image (existing code)
+                processRasterImage(file);
+            }
+        });
+        }
+
+        async function processRasterImage(file) {
+            const img = new Image();
+            const reader = new FileReader();
+
+            reader.onload = (e) => {
+                img.onload = () => {
+                    const tempCanvas = document.createElement('canvas');
+                    const tempCtx = tempCanvas.getContext('2d');
+                    
+                    // Scale image if too large
+                    const maxWidth = 500;
+                    const scale = Math.min(1, maxWidth / img.width);
+                    
+                    tempCanvas.width = img.width * scale;
+                    tempCanvas.height = img.height * scale;
+                    tempCtx.drawImage(img, 0, 0, tempCanvas.width, tempCanvas.height);
+
+                    const imageData = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
+                    const threshold = 128;
+                    const paths = tracePaths(imageData, threshold);
+                    
+                    // Store paths for regeneration when settings change
+                    window.uploadedImagePaths = paths;
+                    window.uploadedImageDimensions = { width: tempCanvas.width, height: tempCanvas.height };
+                    
+                    renderPathsAsSVG(paths, tempCanvas.width, tempCanvas.height);
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function tracePaths(imgData, threshold) {
+            const width = imgData.width;
+            const height = imgData.height;
+            const data = imgData.data;
+            
+            // Create binary image
+            const binary = new Uint8Array(width * height);
+            for (let i = 0; i < data.length; i += 4) {
+                const avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
+                binary[i / 4] = avg < threshold ? 1 : 0;
+            }
+            
+            // Measure stroke widths before thinning
+            const widthMap = measureStrokeWidths(binary, width, height);
+            
+            // Apply fast thinning to get centerlines
+            const thinned = fastThinning(binary, width, height);
+            
+            // Find centerline pixels and build spatial grid
+            const centerlines = [];
+            const cellSize = 10;
+            const grid = new Map();
+            
+            for (let y = 1; y < height - 1; y++) {
+                for (let x = 1; x < width - 1; x++) {
+                    const idx = y * width + x;
+                    if (thinned[idx] === 1) {
+                        const strokeWidth = widthMap[idx];
+                        const point = { x, y, width: strokeWidth };
+                        centerlines.push(point);
+                        
+                        // Add to spatial grid
+                        const gridX = Math.floor(x / cellSize);
+                        const gridY = Math.floor(y / cellSize);
+                        const gridKey = `${gridX},${gridY}`;
+                        if (!grid.has(gridKey)) {
+                            grid.set(gridKey, []);
+                        }
+                        grid.get(gridKey).push(point);
+                    }
+                }
+            }
+            
+            console.log(`Found ${centerlines.length} centerline points`);
+            
+            // Trace paths along centerlines
+            const paths = [];
+            const visited = new Set();
+            const maxDistance = 8;
+            
+            for (const point of centerlines) {
+                const key = `${point.x},${point.y}`;
+                if (visited.has(key)) continue;
+                
+                const path = [point];
+                visited.add(key);
+                let totalWidth = point.width;
+                
+                let changed = true;
+                let iterations = 0;
+                while (changed && path.length < 2000 && iterations < 1000) {
+                    iterations++;
+                    changed = false;
+                    const last = path[path.length - 1];
+                    
+                    let closestDist = Infinity;
+                    let closest = null;
+                    
+                    const gridX = Math.floor(last.x / cellSize);
+                    const gridY = Math.floor(last.y / cellSize);
+                    
+                    for (let dy = -2; dy <= 2; dy++) {
+                        for (let dx = -2; dx <= 2; dx++) {
+                            const gridKey = `${gridX + dx},${gridY + dy}`;
+                            const cellPoints = grid.get(gridKey);
+                            if (!cellPoints) continue;
+                            
+                            for (const candidate of cellPoints) {
+                                const candKey = `${candidate.x},${candidate.y}`;
+                                if (visited.has(candKey)) continue;
+                                
+                                const dist = Math.sqrt(
+                                    Math.pow(candidate.x - last.x, 2) + 
+                                    Math.pow(candidate.y - last.y, 2)
+                                );
+                                
+                                if (dist < maxDistance && dist < closestDist) {
+                                    closestDist = dist;
+                                    closest = { point: candidate, key: candKey };
+                                }
+                            }
+                        }
+                    }
+                    
+                    if (closest) {
+                        path.push(closest.point);
+                        totalWidth += closest.point.width;
+                        visited.add(closest.key);
+                        changed = true;
+                    }
+                }
+                
+                if (path.length > 1) {
+                    // Average width along the path
+                    const avgWidth = totalWidth / path.length;
+                    const strokeWidth = Math.max(0.5, Math.min(20, avgWidth));
+                    
+                    const smoothedPath = smoothPath(path.map(p => ({ x: p.x, y: p.y })));
+                    paths.push({ points: smoothedPath, strokeWidth });
+                }
+            }
+            
+            console.log(`Created ${paths.length} paths`);
+            return orderPathsNaturally(paths);
+        }
+        
+        function orderPathsNaturally(paths) {
+            if (paths.length === 0) return paths;
+            
+            // Calculate position for each path (top-leftmost point)
+            const pathsWithPos = paths.map(pathObj => {
+                const path = pathObj.points;
+                let minY = Infinity;
+                let minX = Infinity;
+                let maxY = -Infinity;
+                let maxX = -Infinity;
+                
+                path.forEach(point => {
+                    if (point.y < minY || (point.y === minY && point.x < minX)) {
+                        minY = point.y;
+                        minX = point.x;
+                    }
+                    maxY = Math.max(maxY, point.y);
+                    maxX = Math.max(maxX, point.x);
+                });
+                
+                const centerY = (minY + maxY) / 2;
+                const centerX = (minX + maxX) / 2;
+                
+                return { pathObj, path, y: minY, x: minX, centerY, centerX };
+            });
+            
+            // Start with the topmost-leftmost path
+            pathsWithPos.sort((a, b) => {
+                if (Math.abs(a.y - b.y) < 15) {
+                    return a.x - b.x;
+                }
+                return a.y - b.y;
+            });
+            
+            const ordered = [];
+            const remaining = [...pathsWithPos];
+            
+            let current = remaining.shift();
+            ordered.push(current.pathObj);
+            
+            while (remaining.length > 0) {
+                const lastPath = ordered[ordered.length - 1].points;
+                const lastPoint = lastPath[lastPath.length - 1];
+                
+                let bestPath = null;
+                let bestScore = Infinity;
+                
+                remaining.forEach((pathData, idx) => {
+                    const path = pathData.path;
+                    
+                    // Calculate distances to both ends of the path
+                    const startDist = Math.sqrt(
+                        Math.pow(path[0].x - lastPoint.x, 2) + 
+                        Math.pow(path[0].y - lastPoint.y, 2)
+                    );
+                    const endDist = Math.sqrt(
+                        Math.pow(path[path.length - 1].x - lastPoint.x, 2) + 
+                        Math.pow(path[path.length - 1].y - lastPoint.y, 2)
+                    );
+                    
+                    const minDist = Math.min(startDist, endDist);
+                    const shouldReverse = endDist < startDist;
+                    
+                    // Directional differences
+                    const deltaY = pathData.y - current.y;
+                    const deltaX = pathData.x - current.x;
+                    
+                    // Base score: prioritize left-to-right, top-to-bottom
+                    // Create a reading-order score (row by row)
+                    let score;
+                    
+                    // Very close paths - finish the object first (INCREASED RANGE)
+                    if (minDist < 80) {
+                        score = minDist * 0.1;  // Highest priority - finish nearby strokes
+                    }
+                    // Close paths in same object (INCREASED RANGE)
+                    else if (minDist < 200) {
+                        score = minDist * 0.3;  // High priority - complete object
+                    }
+                    // Medium distance - still prioritize nearby (NEW TIER)
+                    else if (minDist < 350) {
+                        score = minDist * 0.6;  // Medium priority - nearby objects
+                    }
+                    // Natural reading order: similar Y level, moving right
+                    else if (Math.abs(deltaY) < 40 && deltaX > 0) {
+                        score = 500 + Math.abs(deltaY) * 2 + deltaX * 0.5;  // Favor left-to-right on same row
+                    }
+                    // Moving down (next row), prefer leftmost
+                    else if (deltaY > 40) {
+                        score = 600 + deltaY * 0.8 + Math.abs(deltaX) * 0.3;  // Go to next row, start from left
+                    }
+                    // Going backwards (up or left significantly) - heavy penalty
+                    else if (deltaY < -30 || (Math.abs(deltaY) < 40 && deltaX < -100)) {
+                        score = 10000 + minDist;  // Avoid going backwards
+                    }
+                    // Default - use distance with position bias
+                    else {
+                        score = minDist * 0.8 + Math.abs(deltaY) * 0.5 + Math.max(0, -deltaX) * 2;
+                    }
+                    
+                    if (score < bestScore) {
+                        bestScore = score;
+                        bestPath = { data: pathData, idx, shouldReverse };
+                    }
+                });
+                
+                // Add the best path to ordered list
+                // Temporarily disabled reversal to debug
+                // if (bestPath.shouldReverse) {
+                //     bestPath.data.pathObj.points.reverse();
+                // }
+                
+                ordered.push(bestPath.data.pathObj);
+                current = bestPath.data;
+                remaining.splice(bestPath.idx, 1);
+            }
+            
+            console.log(`Ordered ${ordered.length} paths naturally`);
+            return ordered;
+        }
+
+        function measureStrokeWidths(binary, width, height) {
+            const widthMap = new Float32Array(width * height);
+            
+            for (let y = 1; y < height - 1; y++) {
+                for (let x = 1; x < width - 1; x++) {
+                    const idx = y * width + x;
+                    if (binary[idx] === 0) continue;
+                    
+                    // Measure horizontal width
+                    let leftDist = 0, rightDist = 0;
+                    for (let dx = 1; dx < 30 && x - dx >= 0; dx++) {
+                        if (binary[y * width + (x - dx)] === 1) leftDist = dx;
+                        else break;
+                    }
+                    for (let dx = 1; dx < 30 && x + dx < width; dx++) {
+                        if (binary[y * width + (x + dx)] === 1) rightDist = dx;
+                        else break;
+                    }
+                    
+                    // Measure vertical width
+                    let upDist = 0, downDist = 0;
+                    for (let dy = 1; dy < 30 && y - dy >= 0; dy++) {
+                        if (binary[(y - dy) * width + x] === 1) upDist = dy;
+                        else break;
+                    }
+                    for (let dy = 1; dy < 30 && y + dy < height; dy++) {
+                        if (binary[(y + dy) * width + x] === 1) downDist = dy;
+                        else break;
+                    }
+                    
+                    const hWidth = leftDist + rightDist + 1;
+                    const vWidth = upDist + downDist + 1;
+                    widthMap[idx] = Math.min(hWidth, vWidth);
+                }
+            }
+            
+            return widthMap;
+        }
+
+        function fastThinning(binary, width, height) {
+            const thinned = new Uint8Array(binary);
+            let hasChanged = true;
+            let iterations = 0;
+            const maxIterations = 15;
+            
+            while (hasChanged && iterations < maxIterations) {
+                hasChanged = false;
+                iterations++;
+                const toDelete = [];
+                
+                // Sub-iteration 1
+                for (let y = 1; y < height - 1; y++) {
+                    for (let x = 1; x < width - 1; x++) {
+                        const idx = y * width + x;
+                        if (thinned[idx] === 0) continue;
+                        
+                        const p2 = thinned[idx - width];
+                        const p3 = thinned[idx - width + 1];
+                        const p4 = thinned[idx + 1];
+                        const p5 = thinned[idx + width + 1];
+                        const p6 = thinned[idx + width];
+                        const p7 = thinned[idx + width - 1];
+                        const p8 = thinned[idx - 1];
+                        const p9 = thinned[idx - width - 1];
+                        
+                        const neighbors = [p2, p3, p4, p5, p6, p7, p8, p9];
+                        const b = neighbors.reduce((sum, val) => sum + val, 0);
+                        
+                        if (b < 2 || b > 6) continue;
+                        
+                        let a = 0;
+                        for (let i = 0; i < 8; i++) {
+                            if (neighbors[i] === 0 && neighbors[(i + 1) % 8] === 1) a++;
+                        }
+                        
+                        if (a !== 1) continue;
+                        
+                        if (p2 * p4 * p6 === 0 && p4 * p6 * p8 === 0) {
+                            toDelete.push(idx);
+                            hasChanged = true;
+                        }
+                    }
+                }
+                
+                toDelete.forEach(idx => thinned[idx] = 0);
+                toDelete.length = 0;
+                
+                // Sub-iteration 2
+                for (let y = 1; y < height - 1; y++) {
+                    for (let x = 1; x < width - 1; x++) {
+                        const idx = y * width + x;
+                        if (thinned[idx] === 0) continue;
+                        
+                        const p2 = thinned[idx - width];
+                        const p3 = thinned[idx - width + 1];
+                        const p4 = thinned[idx + 1];
+                        const p5 = thinned[idx + width + 1];
+                        const p6 = thinned[idx + width];
+                        const p7 = thinned[idx + width - 1];
+                        const p8 = thinned[idx - 1];
+                        const p9 = thinned[idx - width - 1];
+                        
+                        const neighbors = [p2, p3, p4, p5, p6, p7, p8, p9];
+                        const b = neighbors.reduce((sum, val) => sum + val, 0);
+                        
+                        if (b < 2 || b > 6) continue;
+                        
+                        let a = 0;
+                        for (let i = 0; i < 8; i++) {
+                            if (neighbors[i] === 0 && neighbors[(i + 1) % 8] === 1) a++;
+                        }
+                        
+                        if (a !== 1) continue;
+                        
+                        if (p2 * p4 * p8 === 0 && p2 * p6 * p8 === 0) {
+                            toDelete.push(idx);
+                            hasChanged = true;
+                        }
+                    }
+                }
+                
+                toDelete.forEach(idx => thinned[idx] = 0);
+            }
+            
+            console.log(`Thinning completed in ${iterations} iterations`);
+            return thinned;
+        }
+
+        function smoothPath(path, iterations = 5) {
+            if (path.length < 3) return path;
+            
+            let smoothed = [...path];
+            
+            for (let iter = 0; iter < iterations; iter++) {
+                const temp = [smoothed[0]];
+                
+                for (let i = 1; i < smoothed.length - 1; i++) {
+                    const prev3 = i >= 3 ? smoothed[i - 3] : smoothed[Math.max(0, i - 1)];
+                    const prev2 = i >= 2 ? smoothed[i - 2] : smoothed[i - 1];
+                    const prev = smoothed[i - 1];
+                    const curr = smoothed[i];
+                    const next = smoothed[i + 1];
+                    const next2 = i < smoothed.length - 2 ? smoothed[i + 2] : smoothed[i + 1];
+                    const next3 = i < smoothed.length - 3 ? smoothed[i + 3] : smoothed[Math.min(smoothed.length - 1, i + 1)];
+                    
+                    temp.push({
+                        x: (prev3.x + prev2.x * 2 + prev.x * 3 + curr.x * 6 + next.x * 3 + next2.x * 2 + next3.x) / 18,
+                        y: (prev3.y + prev2.y * 2 + prev.y * 3 + curr.y * 6 + next.y * 3 + next2.y * 2 + next3.y) / 18
+                    });
+                }
+                
+                temp.push(smoothed[smoothed.length - 1]);
+                smoothed = temp;
+            }
+            
+            return smoothed;
+        }
+
+        function extractPathsFromImage(imageData, width, height) {
+            // This function is deprecated - use tracePaths instead
+            return tracePaths(imageData, 128);
+        }
+
+        function tracePath(edgeMap, visited, startX, startY, width, height) {
+            const path = [];
+            const queue = [[startX, startY]];
+            
+            while (queue.length > 0) {
+                const [x, y] = queue.shift();
+                
+                if (x < 0 || x >= width || y < 0 || y >= height) continue;
+                if (!edgeMap[y][x] || visited[y][x]) continue;
+                
+                visited[y][x] = true;
+                path.push({ x, y });
+                
+                const neighbors = [
+                    [x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1],
+                    [x + 1, y + 1], [x + 1, y - 1], [x - 1, y + 1], [x - 1, y - 1]
+                ];
+                
+                for (const [nx, ny] of neighbors) {
+                    if (nx >= 0 && nx < width && ny >= 0 && ny < height && 
+                        edgeMap[ny][nx] && !visited[ny][nx]) {
+                        queue.push([nx, ny]);
+                    }
+                }
+            }
+            
+            return path;
+        }
+
+        function renderPathsAsSVG(paths, width, height) {
+            const svgContainer = document.getElementById('svgContainer');
+            const strokeColorValue = strokeColor.value;
+            const bgColorValue = bgColor.value;
+            
+            // Check if manual stroke width is enabled
+            const uploadStrokeCheckbox = document.getElementById('uploadStrokeCheckbox');
+            const uploadStrokeWidth = document.getElementById('uploadStrokeWidth');
+            const useManualStroke = uploadStrokeCheckbox && uploadStrokeCheckbox.checked;
+            const manualStrokeWidth = useManualStroke && uploadStrokeWidth ? parseFloat(uploadStrokeWidth.value) : null;
+            
+            console.log(`Rendering ${paths.length} paths to SVG`);
+            
+            const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            svg.setAttribute('width', width);
+            svg.setAttribute('height', height);
+            svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+            svg.style.background = bgColorValue;
+            
+            let renderedCount = 0;
+            paths.forEach((pathObj, index) => {
+                const path = pathObj.points;
+                if (path.length < 2) return;
+                
+                // Create smooth curve using quadratic bezier
+                let d = `M ${path[0].x} ${path[0].y}`;
+                
+                if (path.length === 2) {
+                    // Just a line for 2 points
+                    d += ` L ${path[1].x} ${path[1].y}`;
+                } else {
+                    // Use quadratic curves for smoother appearance
+                    for (let i = 1; i < path.length - 1; i++) {
+                        const curr = path[i];
+                        const next = path[i + 1];
+                        
+                        // Control point is the current point
+                        // End point is midway to next point for smooth connection
+                        const midX = (curr.x + next.x) / 2;
+                        const midY = (curr.y + next.y) / 2;
+                        
+                        d += ` Q ${curr.x} ${curr.y}, ${midX} ${midY}`;
+                    }
+                    
+                    // Final segment to last point
+                    const last = path[path.length - 1];
+                    d += ` L ${last.x} ${last.y}`;
+                }
+                
+                const pathElement = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                pathElement.setAttribute('d', d);
+                pathElement.setAttribute('class', 'svg-path');
+                pathElement.setAttribute('stroke', strokeColorValue);
+                // Use manual stroke width if enabled, otherwise use detected width
+                const strokeWidth = manualStrokeWidth !== null ? manualStrokeWidth : (pathObj.strokeWidth || 2);
+                pathElement.setAttribute('stroke-width', strokeWidth);
+                pathElement.setAttribute('fill', 'none');
+                pathElement.setAttribute('stroke-linecap', 'round');
+                pathElement.setAttribute('stroke-linejoin', 'round');
+                pathElement.setAttribute('data-path', index);
+                
+                // Hide path initially with opacity for animation
+                pathElement.style.opacity = '0';
+                
+                svg.appendChild(pathElement);
+                renderedCount++;
+            });
+            
+            console.log(`Rendered ${renderedCount} paths`);
+            
+            // Suggest duration based on complexity
+            const suggestedDuration = suggestDuration(renderedCount);
+            setDuration(suggestedDuration);
+            console.log(`Suggested duration for ${renderedCount} paths: ${suggestedDuration}s`);
+            
+            // Store SVG in tempSVG for later use
+            svgContainer.tempSVG = svg;
+            
+            // Also put it in the container (will be shown when animate is clicked)
+            svgContainer.innerHTML = '';
+            svgContainer.appendChild(svg);
+        }
+
+        // Animation functionality
+        const animateBtn = document.getElementById('animateBtn');
+        const duration = document.getElementById('duration');
+        const durationDisplay = document.getElementById('durationDisplay');
+        const handImage = document.getElementById('handImage');
+        const handImageUpload = document.getElementById('handImageUpload');
+        const handSize = document.getElementById('handSize');
+        const handSizeDisplay = document.getElementById('handSizeDisplay');
+
+        let handImageData = null;
+        let handSizeValue = 50;
+        let handOffsetXPercent = 0;
+        let handOffsetYPercent = 0;
+
+        duration.addEventListener('input', (e) => {
+            durationDisplay.textContent = parseFloat(e.target.value).toFixed(1) + 's';
+        });
+
+        const handCheckbox = document.getElementById('handCheckbox');
+        const handSettingsPopup = document.getElementById('handSettingsPopup');
+        const handToggle = document.getElementById('handToggle');
+        const handUploadArea = document.getElementById('handUploadArea');
+        const handUploadPlaceholder = document.getElementById('handUploadPlaceholder');
+        const handImagePreview = document.getElementById('handImagePreview');
+        const handPreviewImg = document.getElementById('handPreviewImg');
+        const handImageName = document.getElementById('handImageName');
+        const changeHandImage = document.getElementById('changeHandImage');
+
+        // Toggle hand settings popup
+        if (handToggle && handSettingsPopup && handCheckbox) {
+            // Click on the toggle area toggles the popup
+            handToggle.addEventListener('click', (e) => {
+                // If clicking the checkbox itself, don't toggle the popup
+                if (e.target === handCheckbox) return;
+                
+                e.stopPropagation();
+                const isVisible = handSettingsPopup.style.display === 'block';
+                handSettingsPopup.style.display = isVisible ? 'none' : 'block';
+                
+                // Close other popups
+                const strokeColorPopup = document.getElementById('strokeColorPopup');
+                const bgColorPopup = document.getElementById('bgColorPopup');
+                if (strokeColorPopup) strokeColorPopup.style.display = 'none';
+                if (bgColorPopup) bgColorPopup.style.display = 'none';
+            });
+            
+            // Prevent checkbox clicks from bubbling to handToggle
+            handCheckbox.addEventListener('click', (e) => {
+                e.stopPropagation();
+            });
+            
+            // Checkbox change only affects whether hand is enabled, not popup visibility
+            handCheckbox.addEventListener('change', (e) => {
+                if (!e.target.checked) {
+                    handImageData = null; // Disable hand when unchecked
+                }
+            });
+        }
+
+        if (handSize && handSizeDisplay) {
+            handSize.addEventListener('input', (e) => {
+                handSizeValue = parseInt(e.target.value);
+                handSizeDisplay.textContent = handSizeValue + 'px';
+            });
+        }
+
+        if (handUploadArea && handImageUpload) {
+            handUploadArea.addEventListener('click', () => {
+                handImageUpload.click();
+            });
+            
+            // Also allow clicking "Change image" text
+            if (changeHandImage) {
+                changeHandImage.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    handImageUpload.click();
+                });
+            }
+        }
+
+        if (handImageUpload && handCheckbox) {
+            handImageUpload.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    handImageData = event.target.result;
+                    handImage.src = handImageData;
+                    
+                    // Show preview in popup
+                    if (handPreviewImg && handImagePreview && handUploadPlaceholder && handImageName) {
+                        handPreviewImg.src = handImageData;
+                        handImageName.textContent = file.name;
+                        handUploadPlaceholder.style.display = 'none';
+                        handImagePreview.style.display = 'flex';
+                    }
+                    
+                    // Auto-check the checkbox when image is uploaded
+                    handCheckbox.checked = true;
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        // Guide image controls
+        const guideImageToggle = document.getElementById('guideImageToggle');
+        const guideImagePopup = document.getElementById('guideImagePopup');
+        const guideImageCheckbox = document.getElementById('guideImageCheckbox');
+        const guideImageUpload = document.getElementById('guideImageUpload');
+        const guideCanvas = document.getElementById('guideCanvas');
+        const guideOpacity = document.getElementById('guideOpacity');
+        const guideOpacityDisplay = document.getElementById('guideOpacityDisplay');
+        const guideUploadArea = document.getElementById('guideUploadArea');
+        const guideUploadPlaceholder = document.getElementById('guideUploadPlaceholder');
+        const guideImagePreview = document.getElementById('guideImagePreview');
+        const guidePreviewImg = document.getElementById('guidePreviewImg');
+        const guideImageName = document.getElementById('guideImageName');
+        const changeGuideImage = document.getElementById('changeGuideImage');
+        
+        let guideImageData = null;
+        
+        if (guideImageToggle && guideImagePopup && guideImageCheckbox) {
+            // Toggle popup on click
+            guideImageToggle.addEventListener('click', (e) => {
+                if (e.target !== guideImageCheckbox) {
+                    const isVisible = guideImagePopup.style.display === 'block';
+                    guideImagePopup.style.display = isVisible ? 'none' : 'block';
+                }
+            });
+            
+            // Close popup when clicking outside
+            document.addEventListener('click', (e) => {
+                if (guideImagePopup && guideImageToggle && !guideImageToggle.contains(e.target) && !guideImagePopup.contains(e.target)) {
+                    guideImagePopup.style.display = 'none';
+                }
+            });
+            
+            // Toggle guide canvas visibility
+            guideImageCheckbox.addEventListener('change', (e) => {
+                if (guideCanvas) {
+                    guideCanvas.style.display = e.target.checked && guideImageData ? 'block' : 'none';
+                }
+            });
+        }
+        
+        // Opacity slider
+        if (guideOpacity && guideOpacityDisplay) {
+            guideOpacity.addEventListener('input', (e) => {
+                const opacity = parseInt(e.target.value);
+                guideOpacityDisplay.textContent = opacity + '%';
+                if (guideCanvas) {
+                    guideCanvas.style.opacity = opacity / 100;
+                }
+            });
+        }
+        
+        // Upload area click handler
+        if (guideUploadArea && guideImageUpload) {
+            guideUploadArea.addEventListener('click', () => {
+                guideImageUpload.click();
+            });
+            
+            if (changeGuideImage) {
+                changeGuideImage.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    guideImageUpload.click();
+                });
+            }
+        }
+        
+        // Handle guide image upload
+        if (guideImageUpload && guideImageCheckbox) {
+            guideImageUpload.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    guideImageData = event.target.result;
+                    
+                    // Draw image on guide canvas
+                    const img = new Image();
+                    img.onload = () => {
+                        const canvasWidth = 600;
+                        const canvasHeight = 400;
+                        
+                        // Calculate scaling to fit image into canvas while maintaining aspect ratio
+                        const scaleX = canvasWidth / img.width;
+                        const scaleY = canvasHeight / img.height;
+                        const scale = Math.min(scaleX, scaleY);
+                        
+                        const scaledWidth = img.width * scale;
+                        const scaledHeight = img.height * scale;
+                        
+                        // Center the image in the canvas
+                        const offsetX = (canvasWidth - scaledWidth) / 2;
+                        const offsetY = (canvasHeight - scaledHeight) / 2;
+                        
+                        console.log('Image fitted to canvas:', scaledWidth, 'x', scaledHeight, 'at offset', offsetX, 'x', offsetY);
+                        
+                        // Draw guide image centered and scaled to fit
+                        const guideCtx = guideCanvas.getContext('2d');
+                        guideCtx.clearRect(0, 0, guideCanvas.width, guideCanvas.height);
+                        guideCtx.drawImage(img, offsetX, offsetY, scaledWidth, scaledHeight);
+                        
+                        // Show guide canvas if checkbox is checked
+                        if (guideImageCheckbox.checked) {
+                            guideCanvas.style.display = 'block';
+                        }
+                    };
+                    img.src = guideImageData;
+                    
+                    // Show preview in popup
+                    if (guidePreviewImg && guideImagePreview && guideUploadPlaceholder && guideImageName) {
+                        guidePreviewImg.src = guideImageData;
+                        guideImageName.textContent = file.name;
+                        guideUploadPlaceholder.style.display = 'none';
+                        guideImagePreview.style.display = 'flex';
+                    }
+                    
+                    // Auto-check the checkbox when image is uploaded
+                    guideImageCheckbox.checked = true;
+                    guideCanvas.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        // Upload manual stroke width controls
+        const uploadStrokeToggle = document.getElementById('uploadStrokeToggle');
+        const uploadStrokePopup = document.getElementById('uploadStrokePopup');
+        const uploadStrokeCheckbox = document.getElementById('uploadStrokeCheckbox');
+        const uploadStrokeWidth = document.getElementById('uploadStrokeWidth');
+        const uploadStrokeWidthDisplay = document.getElementById('uploadStrokeWidthDisplay');
+        
+        if (uploadStrokeToggle && uploadStrokePopup && uploadStrokeCheckbox) {
+            // Toggle popup on click
+            uploadStrokeToggle.addEventListener('click', (e) => {
+                if (e.target !== uploadStrokeCheckbox) {
+                    const isVisible = uploadStrokePopup.style.display === 'block';
+                    uploadStrokePopup.style.display = isVisible ? 'none' : 'block';
+                }
+            });
+            
+            // Close popup when clicking outside
+            document.addEventListener('click', (e) => {
+                if (uploadStrokePopup && uploadStrokeToggle && !uploadStrokeToggle.contains(e.target) && !uploadStrokePopup.contains(e.target)) {
+                    uploadStrokePopup.style.display = 'none';
+                }
+            });
+        }
+        
+        // Update stroke width display
+        if (uploadStrokeWidth && uploadStrokeWidthDisplay) {
+            uploadStrokeWidth.addEventListener('input', (e) => {
+                const width = parseFloat(e.target.value);
+                uploadStrokeWidthDisplay.textContent = width + 'px';
+            });
+        }
+
+
+        const bgColorPreview = document.getElementById('bgColorPreview');
+        const bgColorIndicator = document.getElementById('bgColorIndicator');
+        const bgColorPopup = document.getElementById('bgColorPopup');
+        
+        // Toggle background color popup on click
+        if (bgColorIndicator && bgColorPopup && bgColor) {
+            bgColorIndicator.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const isVisible = bgColorPopup.style.display === 'block';
+                bgColorPopup.style.display = isVisible ? 'none' : 'block';
+                // Close other popups
+                const strokeColorPopup = document.getElementById('strokeColorPopup');
+                const handSettingsPopup = document.getElementById('handSettingsPopup');
+                if (strokeColorPopup) strokeColorPopup.style.display = 'none';
+                if (handSettingsPopup) handSettingsPopup.style.display = 'none';
+            });
+            
+            // Custom color picker interaction for background
+            const bgColorSquare = document.getElementById('bgColorSquare');
+            const bgColorCursor = document.getElementById('bgColorCursor');
+            const bgHueSlider = document.getElementById('bgHueSlider');
+            const bgHueCursor = document.getElementById('bgHueCursor');
+            const bgColorHexInput = document.getElementById('bgColorHexInput');
+            
+            let bgHue = 0; // Start with white (will be adjusted)
+            let bgSaturation = 0;
+            let bgLightness = 100;
+            
+            function updateBgColor() {
+                const hsl = `hsl(${bgHue}, ${bgSaturation}%, ${bgLightness}%)`;
+                const hex = hslToHex(bgHue, bgSaturation, bgLightness);
+                bgColor.value = hex;
+                bgColorHexInput.value = hex;
+                bgColor.dispatchEvent(new Event('input'));
+                
+                // Update square background with current hue
+                bgColorSquare.style.background = `hsl(${bgHue}, 100%, 50%)`;
+            }
+            
+            if (bgColorSquare && bgColorCursor) {
+                bgColorSquare.addEventListener('mousedown', (e) => {
+                    function pickColor(event) {
+                        const rect = bgColorSquare.getBoundingClientRect();
+                        const x = Math.max(0, Math.min(event.clientX - rect.left, rect.width));
+                        const y = Math.max(0, Math.min(event.clientY - rect.top, rect.height));
+                        
+                        bgSaturation = (x / rect.width) * 100;
+                        bgLightness = 100 - (y / rect.height) * 100;
+                        
+                        bgColorCursor.style.left = x + 'px';
+                        bgColorCursor.style.top = y + 'px';
+                        updateBgColor();
+                    }
+                    
+                    pickColor(e);
+                    
+                    function onMouseMove(event) { pickColor(event); }
+                    function onMouseUp() {
+                        document.removeEventListener('mousemove', onMouseMove);
+                        document.removeEventListener('mouseup', onMouseUp);
+                    }
+                    
+                    document.addEventListener('mousemove', onMouseMove);
+                    document.addEventListener('mouseup', onMouseUp);
+                });
+            }
+            
+            if (bgHueSlider && bgHueCursor) {
+                bgHueSlider.addEventListener('mousedown', (e) => {
+                    function pickHue(event) {
+                        const rect = bgHueSlider.getBoundingClientRect();
+                        const x = Math.max(0, Math.min(event.clientX - rect.left, rect.width));
+                        bgHue = (x / rect.width) * 360;
+                        bgHueCursor.style.left = x + 'px';
+                        updateBgColor();
+                    }
+                    
+                    pickHue(e);
+                    
+                    function onMouseMove(event) { pickHue(event); }
+                    function onMouseUp() {
+                        document.removeEventListener('mousemove', onMouseMove);
+                        document.removeEventListener('mouseup', onMouseUp);
+                    }
+                    
+                    document.addEventListener('mousemove', onMouseMove);
+                    document.addEventListener('mouseup', onMouseUp);
+                });
+            }
+            
+            if (bgColorHexInput) {
+                bgColorHexInput.addEventListener('input', (e) => {
+                    let hex = e.target.value;
+                    if (hex.match(/^#[0-9A-Fa-f]{6}$/)) {
+                        bgColor.value = hex;
+                        bgColor.dispatchEvent(new Event('input'));
+                    }
+                });
+            }
+            
+            // Native color picker fallback
+            bgColor.addEventListener('input', (e) => {
+                bgColorHexInput.value = e.target.value;
+            });
+        }
+
+        if (bgColor && bgColorPreview) {
+            bgColor.addEventListener('input', () => {
+                const color = bgColor.value;
+                if (bgColorPreview) {
+                    bgColorPreview.style.background = color;
+                }
+                
+                const svg = svgContainer ? svgContainer.querySelector('svg') : null;
+                if (svg) {
+                    svg.style.background = color;
+                }
+            });
+        }
+        
+        // Close popups when clicking outside
+        document.addEventListener('click', (e) => {
+            const strokeColorPopup = document.getElementById('strokeColorPopup');
+            const strokeColorIndicator = document.getElementById('strokeColorIndicator');
+            const bgColorPopup = document.getElementById('bgColorPopup');
+            const bgColorIndicator = document.getElementById('bgColorIndicator');
+            const handSettingsPopup = document.getElementById('handSettingsPopup');
+            const handToggle = document.getElementById('handToggle');
+            
+            if (strokeColorPopup && strokeColorIndicator && !strokeColorIndicator.contains(e.target) && !strokeColorPopup.contains(e.target)) {
+                strokeColorPopup.style.display = 'none';
+            }
+            if (bgColorPopup && bgColorIndicator && !bgColorIndicator.contains(e.target) && !bgColorPopup.contains(e.target)) {
+                bgColorPopup.style.display = 'none';
+            }
+            if (handSettingsPopup && handToggle && !handToggle.contains(e.target) && !handSettingsPopup.contains(e.target)) {
+                handSettingsPopup.style.display = 'none';
+            }
+        });
+
+        if (animateBtn) {
+            animateBtn.addEventListener('click', () => {
+                // Show the svg container
+                if (svgContainer) svgContainer.classList.add('has-content');
+                
+                // If we have drawn strokes, convert them to SVG first
+                if (allStrokes && allStrokes.length > 0) {
+                    console.log('Animating drawn strokes');
+                    convertDrawingToSVG();
+                }
+                // If we have uploaded image paths, regenerate SVG with current settings
+                else if (window.uploadedImagePaths && window.uploadedImageDimensions) {
+                    console.log('Regenerating uploaded image SVG with', window.uploadedImagePaths.length, 'paths');
+                    renderPathsAsSVG(
+                        window.uploadedImagePaths, 
+                        window.uploadedImageDimensions.width, 
+                        window.uploadedImageDimensions.height
+                    );
+                }
+                // Fallback: If we have a stored SVG ready to display (from upload), use it
+                else if (svgContainer.tempSVG) {
+                    console.log('Using cached tempSVG');
+                    svgContainer.innerHTML = '';
+                    svgContainer.appendChild(svgContainer.tempSVG.cloneNode(true));
+                }
+                else {
+                    console.log('No content to animate!');
+                }
+                
+                // Immediately start animation (no delay)
+                animatePaths();
+            });
+        }
+
+        function animatePaths() {
+            const paths = svgContainer.querySelectorAll('.svg-path');
+            const animDuration = parseFloat(duration.value);
+            
+            // Reset transitions only, keep paths hidden
+            paths.forEach(path => {
+                path.style.transition = 'none';
+            });
+            
+            // Force reflow to apply the reset
+            void svgContainer.offsetWidth;
+            
+            // Check if we're animating user-drawn content
+            const isUserDrawing = window.userDrawingData && window.userDrawingData.length > 0;
+            
+            if (isUserDrawing) {
+                animateUserDrawing(animDuration);
+            } else {
+                animateUploadedImage(paths, animDuration);
+            }
+        }
+
+        function animateUserDrawing(totalDuration) {
+            const strokes = window.userDrawingData;
+            if (!strokes || strokes.length === 0) return;
+
+            const paths = svgContainer.querySelectorAll('.svg-path');
+            
+            // Show hand only if checkbox is checked and image is loaded
+            const handEnabled = (handCheckbox && handCheckbox.checked) && handImageData;
+            if (handEnabled) {
+                handImage.style.opacity = '0'; // Start hidden, will fade in during entrance
+                handImage.style.display = 'block';
+            }
+
+            // Calculate timing based on original drawing speed
+            const strokeDurations = strokes.map(stroke => {
+                if (stroke.length < 2) return 0;
+                const startTime = stroke[0].time;
+                const endTime = stroke[stroke.length - 1].time;
+                return endTime - startTime;
+            });
+
+            const totalOriginalTime = strokeDurations.reduce((sum, dur) => sum + dur, 0);
+            
+            // Scale to fit desired total duration
+            const timeScale = totalDuration * 1000 / totalOriginalTime;
+
+            // Delay path animation by entrance duration only if hand is enabled
+            const entranceDuration = handEnabled ? 400 : 0;
+            
+            let currentTime = entranceDuration / 1000; // Start after entrance (or immediately if no hand)
+            
+            paths.forEach((path, index) => {
+                const length = path.getTotalLength();
+                const strokeDuration = (strokeDurations[index] * timeScale) / 1000;
+                
+                // Debug: log stroke width
+                if (index === 0) {
+                    console.log('First drawn path stroke-width:', path.getAttribute('stroke-width'));
+                }
+                
+                path.style.strokeDasharray = length;
+                path.style.strokeDashoffset = length;
+                
+                setTimeout(() => {
+                    path.style.opacity = '1';  // Make path visible when animation starts
+                    path.style.transition = `stroke-dashoffset ${strokeDuration}s linear`;
+                    path.style.strokeDashoffset = '0';
+                }, currentTime * 1000);
+                
+                currentTime += strokeDuration;
+            });
+
+            // Animate hand along the drawn paths only if enabled
+            if (handEnabled) {
+                animateHandAlongUserDrawing(strokes, strokeDurations, timeScale);
+            }
+        }
+
+        function animateHandAlongUserDrawing(strokes, strokeDurations, timeScale) {
+            const startTime = performance.now();
+            const paths = svgContainer.querySelectorAll('.svg-path');
+            let animationPhase = 'entrance'; // entrance, drawing, exit
+            let entranceStartTime = startTime;
+            let drawingStartTime = null;
+            let exitAnimationStartTime = null;
+            const entranceDuration = 400; // 400ms to move in
+            const exitDuration = 500; // 500ms to slide out
+
+            // Get the starting point of the first path
+            const firstPath = paths[0];
+            const firstPoint = firstPath ? firstPath.getPointAtLength(0) : { x: 300, y: 200 };
+
+            function updateHand(timestamp) {
+                const svgElement = svgContainer.querySelector('svg');
+                if (!svgElement) return;
+
+                const previewContent = handImage.parentElement;
+                const previewRect = previewContent.getBoundingClientRect();
+                const svgRect = svgElement.getBoundingClientRect();
+                
+                // Debug logging once
+                if (!window.debugLoggedUserDraw) {
+                    console.log('=== Hand Animation Debug (User Drawing) ===');
+                    console.log('Preview dimensions:', previewRect.width, 'x', previewRect.height);
+                    console.log('SVG rect dimensions:', svgRect.width, 'x', svgRect.height);
+                    console.log('SVG attributes:', svgElement.getAttribute('width'), 'x', svgElement.getAttribute('height'));
+                    console.log('Preview position:', previewRect.left, previewRect.top);
+                    console.log('SVG position:', svgRect.left, svgRect.top);
+                    console.log('Offset:', svgRect.left - previewRect.left, svgRect.top - previewRect.top);
+                    window.debugLoggedUserDraw = true;
+                }
+
+                const svgWidth = svgElement.getAttribute('width');
+                const svgHeight = svgElement.getAttribute('height');
+                const actualWidth = svgRect.width;
+                const actualHeight = svgRect.height;
+
+                const scaleX = actualWidth / svgWidth;
+                const scaleY = actualHeight / svgHeight;
+
+                const svgOffsetX = svgRect.left - previewRect.left;
+                const svgOffsetY = svgRect.top - previewRect.top;
+
+                handImage.style.width = handSizeValue + 'px';
+                handImage.style.height = 'auto';
+
+                const offsetX = (handOffsetXPercent / 100) * handSizeValue;
+                const offsetY = (handOffsetYPercent / 100) * handSizeValue;
+
+                if (animationPhase === 'entrance') {
+                    // Entrance animation - move from bottom-right to first point
+                    const entranceElapsed = timestamp - entranceStartTime;
+                    const entranceProgress = Math.min(entranceElapsed / entranceDuration, 1);
+                    
+                    // Easing function for smooth entrance (ease-out)
+                    const easedProgress = 1 - Math.pow(1 - entranceProgress, 3);
+                    
+                    // Start position: bottom-right, off screen
+                    const startX = previewRect.width + 50;
+                    const startY = previewRect.height + 50;
+                    
+                    // Target position: first point of drawing
+                    const targetScreenX = firstPoint.x * scaleX;
+                    const targetScreenY = firstPoint.y * scaleY;
+                    const targetX = svgOffsetX + targetScreenX - offsetX;
+                    const targetY = svgOffsetY + targetScreenY - offsetY;
+                    
+                    // Interpolate position
+                    const handLeft = startX + (targetX - startX) * easedProgress;
+                    const handTop = startY + (targetY - startY) * easedProgress;
+                    
+                    handImage.style.left = `${handLeft}px`;
+                    handImage.style.top = `${handTop}px`;
+                    handImage.style.opacity = easedProgress; // Fade in
+                    
+                    if (entranceProgress < 1) {
+                        requestAnimationFrame(updateHand);
+                    } else {
+                        // Entrance complete, start drawing phase
+                        animationPhase = 'drawing';
+                        drawingStartTime = timestamp;
+                        requestAnimationFrame(updateHand);
+                    }
+                } else if (animationPhase === 'drawing') {
+                    // Normal drawing animation - follow the drawing path
+                    const elapsed = timestamp - drawingStartTime;
+                    
+                    // Calculate total animation duration
+                    const totalAnimationDuration = strokeDurations.reduce((sum, dur) => sum + dur * timeScale, 0);
+                    
+                    if (elapsed < totalAnimationDuration) {
+                        // Find which stroke we're on
+                        let accumulatedTime = 0;
+                        let currentStrokeIndex = 0;
+                        
+                        for (let i = 0; i < strokeDurations.length; i++) {
+                            const scaledDuration = strokeDurations[i] * timeScale;
+                            if (elapsed < accumulatedTime + scaledDuration) {
+                                currentStrokeIndex = i;
+                                break;
+                            }
+                            accumulatedTime += scaledDuration;
+                        }
+
+                        if (currentStrokeIndex >= paths.length) {
+                            animationPhase = 'exit';
+                            exitAnimationStartTime = timestamp;
+                            requestAnimationFrame(updateHand);
+                            return;
+                        }
+
+                        const currentPath = paths[currentStrokeIndex];
+                        const strokeElapsed = elapsed - accumulatedTime;
+                        const strokeDuration = strokeDurations[currentStrokeIndex] * timeScale;
+                        const progress = Math.min(strokeElapsed / strokeDuration, 1);
+
+                        const pathLength = currentPath.getTotalLength();
+                        const distance = pathLength * progress;
+                        const point = currentPath.getPointAtLength(distance);
+
+                        const screenX = point.x * scaleX;
+                        const screenY = point.y * scaleY;
+                        
+                        const handLeft = svgOffsetX + screenX - offsetX;
+                        const handTop = svgOffsetY + screenY - offsetY;
+
+                        handImage.style.left = `${handLeft}px`;
+                        handImage.style.top = `${handTop}px`;
+                        handImage.style.opacity = 1;
+
+                        requestAnimationFrame(updateHand);
+                    } else {
+                        // Drawing complete, start exit animation
+                        animationPhase = 'exit';
+                        exitAnimationStartTime = timestamp;
+                        requestAnimationFrame(updateHand);
+                    }
+                } else if (animationPhase === 'exit') {
+                    // Exit animation - slide down off screen
+                    const exitElapsed = timestamp - exitAnimationStartTime;
+                    const exitProgress = Math.min(exitElapsed / exitDuration, 1);
+                    
+                    // Easing function for smooth exit (ease-in)
+                    const easedProgress = Math.pow(exitProgress, 2);
+                    
+                    // Get current position
+                    const currentTop = parseFloat(handImage.style.top);
+                    
+                    // Animate to bottom of screen
+                    const targetTop = previewRect.height + 100;
+                    const newTop = currentTop + (targetTop - currentTop) * easedProgress * 0.15;
+                    
+                    handImage.style.top = `${newTop}px`;
+                    handImage.style.opacity = 1 - exitProgress;
+                    
+                    if (exitProgress < 1) {
+                        requestAnimationFrame(updateHand);
+                    } else {
+                        // Animation complete
+                        handImage.style.opacity = '0';
+                        handImage.style.display = 'none';
+                    }
+                }
+            }
+
+            requestAnimationFrame(updateHand);
+        }
+
+        function animateUploadedImage(paths, animDuration) {
+            // Show hand only if checkbox is checked and image is loaded
+            const handEnabled = (handCheckbox && handCheckbox.checked) && handImageData;
+            
+            // Delay path animation by entrance duration only if hand is enabled
+            const entranceDuration = handEnabled ? 400 : 0;
+            
+            // Calculate duration per path - ensure minimum of 0.1s per path
+            const minPathDuration = 0.1; // seconds
+            const pathDuration = Math.max(minPathDuration, animDuration / paths.length);
+            
+            // Recalculate total time if we hit the minimum
+            const totalTime = pathDuration * paths.length;
+            
+            // Start hand animation with the ACTUAL total time, not the slider duration
+            if (handEnabled) {
+                handImage.style.opacity = '0'; // Start hidden, will fade in during entrance
+                handImage.style.display = 'block';
+                animateHandContinuously(paths, totalTime); // Use totalTime, not animDuration
+            }
+            
+            let currentTime = entranceDuration / 1000; // Start after entrance (or immediately if no hand)
+
+            paths.forEach((path, index) => {
+                const length = path.getTotalLength();
+                
+                // Debug: log stroke width
+                if (index === 0) {
+                    console.log('First path stroke-width:', path.getAttribute('stroke-width'));
+                }
+                
+                path.style.strokeDasharray = length;
+                path.style.strokeDashoffset = length;
+                
+                setTimeout(() => {
+                    path.style.opacity = '1';  // Make path visible when animation starts
+                    path.style.transition = `stroke-dashoffset ${pathDuration}s linear`;
+                    path.style.strokeDashoffset = '0';
+                }, currentTime * 1000);
+                
+                currentTime += pathDuration;
+            });
+
+            // Hide hand after animation (only if it was shown)
+            if (handEnabled) {
+                setTimeout(() => {
+                    handImage.style.opacity = '0';
+                }, totalTime * 1000 + entranceDuration + 500);
+            }
+        }
+
+        function animateHandContinuously(paths, totalDuration) {
+            const startTime = performance.now();
+            const pathDuration = totalDuration * 1000 / paths.length;
+            let animationPhase = 'entrance'; // entrance, drawing, exit
+            let entranceStartTime = startTime;
+            let drawingStartTime = null;
+            let exitAnimationStartTime = null;
+            const entranceDuration = 400; // 400ms to move in
+            const exitDuration = 500; // 500ms to slide out
+
+            // Get the starting point of the first path
+            const firstPath = paths[0];
+            const firstPoint = firstPath ? firstPath.getPointAtLength(0) : { x: 300, y: 200 };
+
+            function updateHand(timestamp) {
+                const svgElement = svgContainer.querySelector('svg');
+                if (!svgElement) return;
+
+                const previewContent = handImage.parentElement;
+                const previewRect = previewContent.getBoundingClientRect();
+                const svgRect = svgElement.getBoundingClientRect();
+
+                const svgWidth = svgElement.getAttribute('width');
+                const svgHeight = svgElement.getAttribute('height');
+                const actualWidth = svgRect.width;
+                const actualHeight = svgRect.height;
+
+                const scaleX = actualWidth / svgWidth;
+                const scaleY = actualHeight / svgHeight;
+
+                const svgOffsetX = svgRect.left - previewRect.left;
+                const svgOffsetY = svgRect.top - previewRect.top;
+
+                handImage.style.width = handSizeValue + 'px';
+                handImage.style.height = 'auto';
+
+                const offsetX = (handOffsetXPercent / 100) * handSizeValue;
+                const offsetY = (handOffsetYPercent / 100) * handSizeValue;
+
+                if (animationPhase === 'entrance') {
+                    // Entrance animation - move from bottom-right to first point
+                    const entranceElapsed = timestamp - entranceStartTime;
+                    const entranceProgress = Math.min(entranceElapsed / entranceDuration, 1);
+                    
+                    // Easing function for smooth entrance (ease-out)
+                    const easedProgress = 1 - Math.pow(1 - entranceProgress, 3);
+                    
+                    // Start position: bottom-right, off screen
+                    const startX = previewRect.width + 50;
+                    const startY = previewRect.height + 50;
+                    
+                    // Target position: first point of drawing
+                    const targetScreenX = firstPoint.x * scaleX;
+                    const targetScreenY = firstPoint.y * scaleY;
+                    const targetX = svgOffsetX + targetScreenX - offsetX;
+                    const targetY = svgOffsetY + targetScreenY - offsetY;
+                    
+                    // Interpolate position
+                    const handLeft = startX + (targetX - startX) * easedProgress;
+                    const handTop = startY + (targetY - startY) * easedProgress;
+                    
+                    handImage.style.left = `${handLeft}px`;
+                    handImage.style.top = `${handTop}px`;
+                    handImage.style.opacity = easedProgress; // Fade in
+                    
+                    if (entranceProgress < 1) {
+                        requestAnimationFrame(updateHand);
+                    } else {
+                        // Entrance complete, start drawing phase
+                        animationPhase = 'drawing';
+                        drawingStartTime = timestamp;
+                        requestAnimationFrame(updateHand);
+                    }
+                } else if (animationPhase === 'drawing') {
+                    // Normal animation - follow the paths
+                    const elapsed = timestamp - drawingStartTime;
+
+                    if (elapsed < totalDuration * 1000) {
+                        let currentPathIndex = Math.floor(elapsed / pathDuration);
+                        currentPathIndex = Math.max(0, Math.min(currentPathIndex, paths.length - 1));
+
+                        const currentPath = paths[currentPathIndex];
+                        const pathStartTime = currentPathIndex * pathDuration;
+                        const pathProgress = Math.min((elapsed - pathStartTime) / pathDuration, 1);
+
+                        if (!currentPath || typeof currentPath.getTotalLength !== 'function') {
+                            requestAnimationFrame(updateHand);
+                            return;
+                        }
+
+                        const pathLength = currentPath.getTotalLength();
+                        const distance = pathLength * pathProgress;
+                        const point = currentPath.getPointAtLength(distance);
+
+                        const screenX = point.x * scaleX;
+                        const screenY = point.y * scaleY;
+                        
+                        const handLeft = svgOffsetX + screenX - offsetX;
+                        const handTop = svgOffsetY + screenY - offsetY;
+
+                        handImage.style.left = `${handLeft}px`;
+                        handImage.style.top = `${handTop}px`;
+                        handImage.style.opacity = 1;
+
+                        requestAnimationFrame(updateHand);
+                    } else {
+                        // Drawing complete, start exit animation
+                        animationPhase = 'exit';
+                        exitAnimationStartTime = timestamp;
+                        requestAnimationFrame(updateHand);
+                    }
+                } else if (animationPhase === 'exit') {
+                    // Exit animation - slide down off screen
+                    const exitElapsed = timestamp - exitAnimationStartTime;
+                    const exitProgress = Math.min(exitElapsed / exitDuration, 1);
+                    
+                    // Easing function for smooth exit (ease-in)
+                    const easedProgress = Math.pow(exitProgress, 2);
+                    
+                    // Get current position
+                    const currentTop = parseFloat(handImage.style.top);
+                    
+                    // Animate to bottom of screen
+                    const targetTop = previewRect.height + 100;
+                    const newTop = currentTop + (targetTop - currentTop) * easedProgress * 0.15;
+                    
+                    handImage.style.top = `${newTop}px`;
+                    handImage.style.opacity = 1 - exitProgress;
+                    
+                    if (exitProgress < 1) {
+                        requestAnimationFrame(updateHand);
+                    } else {
+                        // Animation complete
+                        handImage.style.opacity = '0';
+                        handImage.style.display = 'none';
+                    }
+                }
+            }
+
+            requestAnimationFrame(updateHand);
+        }
+    </script>
+</body>
+</html>
