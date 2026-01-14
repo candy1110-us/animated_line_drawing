@@ -6,6 +6,35 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Animated Line Drawing - Draw or Upload</title>
     <style>
+        /* Custom Fonts */
+        @font-face {
+            font-family: 'Be Vietnam Pro';
+            src: url('fonts/BeVietnamPro-Regular.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        @font-face {
+            font-family: 'Be Vietnam Pro';
+            src: url('fonts/BeVietnamPro-Bold.ttf') format('truetype');
+            font-weight: bold;
+            font-style: normal;
+        }
+
+        @font-face {
+            font-family: 'Be Vietnam Pro';
+            src: url('fonts/BeVietnamPro-Italic.ttf') format('truetype');
+            font-weight: normal;
+            font-style: italic;
+        }
+
+        @font-face {
+            font-family: 'Hmt Regular';
+            src: url('fonts/HmtRegular-WRrv.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -211,6 +240,18 @@
 
         .upload-section.active {
             display: flex;
+        }
+
+        .text-section {
+            display: none;
+            padding: 20px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .text-section.active {
+            display: block;
         }
 
         .upload-section:hover {
@@ -537,6 +578,9 @@
                     <button class="mode-btn" id="uploadModeBtn">
                         📤 Upload
                     </button>
+                    <button class="mode-btn" id="textModeBtn">
+                        📝 Text
+                    </button>
                 </div>
 
                 <!-- Drawing Section -->
@@ -601,6 +645,46 @@
                     </div>
                 </div>
 
+                <!-- Text Section -->
+                <div class="text-section" id="textSection">
+                    <div style="margin-bottom: 16px;">
+                        <label style="display: block; font-size: 12px; font-weight: 600; color: #374151; margin-bottom: 8px;">
+                            Enter Text
+                        </label>
+                        <textarea id="textInput"
+                                  placeholder="Type your text here..."
+                                  style="width: 100%; min-height: 100px; padding: 12px; border: 2px solid #c7d2fe; border-radius: 8px; font-size: 14px; font-family: inherit; resize: vertical;">
+                        </textarea>
+                    </div>
+
+                    <div style="display: flex; gap: 12px; align-items: end; margin-bottom: 16px;">
+                        <div>
+                            <label style="display: block; font-size: 12px; font-weight: 600; color: #374151; margin-bottom: 8px;">
+                                Font Family
+                            </label>
+                            <select id="fontFamily" style="width: auto; padding: 8px; border: 2px solid #c7d2fe; border-radius: 8px; font-size: 13px;">
+                                <option value="'Hmt Regular'">Hmt Regular</option>
+                                <option value="'Be Vietnam Pro'">Be Vietnam Pro</option>
+                                <option value="'Brush Script MT', cursive">Brush Script MT</option>
+                                <option value="'Comic Sans MS', cursive">Comic Sans MS</option>
+                                <option value="'Bradley Hand', cursive">Bradley Hand</option>
+                                <option value="'Snell Roundhand', cursive">Snell Roundhand</option>
+                                <option value="'Apple Chancery', cursive">Apple Chancery</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label style="display: block; font-size: 12px; font-weight: 600; color: #374151; margin-bottom: 8px;">
+                                Text Style
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; padding: 8px 12px; border: 2px solid #c7d2fe; border-radius: 8px; background: white;">
+                                <input type="checkbox" id="fontItalic" style="width: 16px; height: 16px; accent-color: #818cf8;">
+                                <span style="font-size: 12px; font-style: italic;">Italic</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
             </div>
 
             <!-- RIGHT - Preview -->
@@ -615,6 +699,11 @@
                             <span style="font-size: 12px; font-weight: 600; color: #374151;">Duration:</span>
                             <input type="range" id="duration" min="0.5" max="10" step="0.1" value="3" style="width: 100px; height: 4px; border-radius: 2px; background: #e0e7ff; outline: none; -webkit-appearance: none; cursor: pointer;">
                             <span class="value-display" id="durationDisplay" style="min-width: 45px;">3.0s</span>
+                        </div>
+                        <div id="textFontSizeSlider" style="display: none; align-items: center; gap: 8px; padding: 8px 12px; background: #f9fafb; border-radius: 8px;">
+                            <span style="font-size: 12px; font-weight: 600; color: #374151;">Font Size:</span>
+                            <input type="range" id="fontSize" min="40" max="120" step="10" value="60" style="width: 100px; height: 4px; border-radius: 2px; background: #e0e7ff; outline: none; -webkit-appearance: none; cursor: pointer;">
+                            <span class="value-display" id="fontSizeDisplay" style="min-width: 45px;">60px</span>
                         </div>
                         <div style="position: relative;">
                             <div style="display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: #f9fafb; border-radius: 8px; cursor: pointer;" id="strokeColorIndicator">
@@ -801,8 +890,12 @@
         drawModeBtn.addEventListener('click', () => {
             drawModeBtn.classList.add('active');
             uploadModeBtn.classList.remove('active');
+            const textModeBtn = document.getElementById('textModeBtn');
+            if (textModeBtn) textModeBtn.classList.remove('active');
             drawingSection.classList.add('active');
             uploadSection.classList.remove('active');
+            const textSection = document.getElementById('textSection');
+            if (textSection) textSection.classList.remove('active');
             
             // Show draw stroke width section, hide upload stroke section in popup
             const drawStrokeWidthSection = document.getElementById('drawStrokeWidthSection');
@@ -820,13 +913,22 @@
                 strokeWidthPreview.style.display = 'inline';
                 strokeWidthPreview.textContent = popupStrokeWidth.value + 'px';
             }
-            
+
+            // Hide font size slider for non-text modes
+            const textFontSizeSlider = document.getElementById('textFontSizeSlider');
+            if (textFontSizeSlider) {
+                textFontSizeSlider.style.display = 'none';
+            }
+
             // Clear uploaded content
             if (svgContainer) {
                 svgContainer.tempSVG = null;
                 svgContainer.innerHTML = '<div class="placeholder"><p>✨ Draw something or upload an image to get started!</p></div>';
             }
-            
+
+            // Clear text mode data
+            window.userTextData = null;
+
             // Disable animate button until something is drawn
             const animateBtn = document.getElementById('animateBtn');
             if (animateBtn && (!allStrokes || allStrokes.length === 0)) {
@@ -840,8 +942,12 @@
         uploadModeBtn.addEventListener('click', () => {
             uploadModeBtn.classList.add('active');
             drawModeBtn.classList.remove('active');
+            const textModeBtn = document.getElementById('textModeBtn');
+            if (textModeBtn) textModeBtn.classList.remove('active');
             uploadSection.classList.add('active');
             drawingSection.classList.remove('active');
+            const textSection = document.getElementById('textSection');
+            if (textSection) textSection.classList.remove('active');
             
             // Hide draw stroke width section, show upload stroke section in popup
             const drawStrokeWidthSection = document.getElementById('drawStrokeWidthSection');
@@ -858,11 +964,20 @@
             if (strokeWidthPreview && uploadStrokeCheckbox) {
                 strokeWidthPreview.style.display = uploadStrokeCheckbox.checked ? 'inline' : 'none';
             }
-            
+
+            // Hide font size slider for non-text modes
+            const textFontSizeSlider = document.getElementById('textFontSizeSlider');
+            if (textFontSizeSlider) {
+                textFontSizeSlider.style.display = 'none';
+            }
+
             // Clear drawn content
             allStrokes = [];
             window.userDrawingData = null;
-            
+
+            // Clear text mode data
+            window.userTextData = null;
+
             // Clear the canvas
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -888,6 +1003,131 @@
             
             if (svgContainer) svgContainer.classList.remove('has-content');
         });
+
+        const textModeBtn = document.getElementById('textModeBtn');
+        const textSection = document.getElementById('textSection');
+
+        if (textModeBtn) {
+            textModeBtn.addEventListener('click', () => {
+                // Update button states
+                textModeBtn.classList.add('active');
+                drawModeBtn.classList.remove('active');
+                uploadModeBtn.classList.remove('active');
+
+                // Show/hide sections
+                textSection.classList.add('active');
+                drawingSection.classList.remove('active');
+                uploadSection.classList.remove('active');
+
+                // Show draw stroke width section (text uses same controls as draw)
+                const drawStrokeWidthSection = document.getElementById('drawStrokeWidthSection');
+                const uploadStrokeSection = document.getElementById('uploadStrokeSection');
+                const uploadStrokeDivider = document.getElementById('uploadStrokeDivider');
+                const strokeWidthPreview = document.getElementById('strokeWidthPreview');
+                const popupStrokeWidth = document.getElementById('popupStrokeWidth');
+
+                if (drawStrokeWidthSection) drawStrokeWidthSection.style.display = 'block';
+                if (uploadStrokeSection) uploadStrokeSection.style.display = 'none';
+                if (uploadStrokeDivider) uploadStrokeDivider.style.display = 'none';
+
+                // Set stroke width to 3 for text mode
+                if (popupStrokeWidth) {
+                    popupStrokeWidth.value = '3';
+                    // Update the display
+                    const popupStrokeWidthDisplay = document.getElementById('popupStrokeWidthDisplay');
+                    if (popupStrokeWidthDisplay) {
+                        popupStrokeWidthDisplay.textContent = '3px';
+                    }
+                }
+
+                if (strokeWidthPreview && popupStrokeWidth) {
+                    strokeWidthPreview.style.display = 'inline';
+                    strokeWidthPreview.textContent = '3px';
+                }
+
+                // Show font size slider for text mode
+                const textFontSizeSlider = document.getElementById('textFontSizeSlider');
+                if (textFontSizeSlider) {
+                    textFontSizeSlider.style.display = 'flex';
+                }
+
+                // Clear other modes' data
+                allStrokes = [];
+                window.userDrawingData = null;
+                window.uploadedImagePaths = null;
+                window.uploadedImageDimensions = null;
+                svgContainer.tempSVG = null;
+
+                // Check if text is entered to enable/disable animate button
+                const textInput = document.getElementById('textInput');
+                const animateBtn = document.getElementById('animateBtn');
+                if (textInput && textInput.value.trim()) {
+                    animateBtn.disabled = false;
+                } else {
+                    animateBtn.disabled = true;
+                    svgContainer.classList.remove('has-content');
+                    svgContainer.innerHTML = '<div class="placeholder"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5"/></svg><p>Enter text to get started!</p></div>';
+                }
+            });
+        }
+
+        const textInput = document.getElementById('textInput');
+        const fontFamilySelect = document.getElementById('fontFamily');
+        const fontBoldCheckbox = document.getElementById('fontBold');
+        const fontItalicCheckbox = document.getElementById('fontItalic');
+        const fontSizeSelect = document.getElementById('fontSize');
+
+        // Function to update textarea font preview
+        function updateTextareaFont() {
+            if (!textInput) return;
+
+            const fontFamily = fontFamilySelect ? fontFamilySelect.value : "'Hmt Regular'";
+            const fontWeight = fontBoldCheckbox && fontBoldCheckbox.checked ? 'bold' : 'normal';
+            const fontStyle = fontItalicCheckbox && fontItalicCheckbox.checked ? 'italic' : 'normal';
+
+            textInput.style.fontFamily = fontFamily;
+            // Keep textarea font size fixed at 32px for better readability
+            textInput.style.fontSize = '32px';
+            textInput.style.fontWeight = fontWeight;
+            textInput.style.fontStyle = fontStyle;
+        }
+
+        // Set cursor to beginning when clicking on textarea
+        if (textInput) {
+            textInput.addEventListener('focus', (e) => {
+                // Set cursor to beginning
+                setTimeout(() => {
+                    textInput.setSelectionRange(0, 0);
+                }, 0);
+            });
+
+            textInput.addEventListener('input', () => {
+                // Enable animate button if text is entered
+                const currentMode = textModeBtn && textModeBtn.classList.contains('active');
+                const animateBtn = document.getElementById('animateBtn');
+                if (currentMode) {
+                    if (textInput.value.trim()) {
+                        animateBtn.disabled = false;
+                    } else {
+                        animateBtn.disabled = true;
+                    }
+                }
+            });
+        }
+
+        // Update textarea font when font options change
+        if (fontFamilySelect) {
+            fontFamilySelect.addEventListener('change', updateTextareaFont);
+        }
+        if (fontBoldCheckbox) {
+            fontBoldCheckbox.addEventListener('change', updateTextareaFont);
+        }
+        if (fontItalicCheckbox) {
+            fontItalicCheckbox.addEventListener('change', updateTextareaFont);
+        }
+
+        // Initialize textarea font on page load
+        updateTextareaFont();
 
         // Drawing functionality
         const canvas = document.getElementById('drawingCanvas');
@@ -1351,6 +1591,204 @@
             reader.readAsDataURL(file);
         }
 
+        async function processTextInput() {
+            try {
+                const textInput = document.getElementById('textInput');
+                const fontFamily = document.getElementById('fontFamily');
+                const fontSize = document.getElementById('fontSize');
+                const fontBold = document.getElementById('fontBold');
+                const fontItalic = document.getElementById('fontItalic');
+
+                const text = textInput.value.trim();
+                if (!text) {
+                    console.log('No text entered');
+                    return;
+                }
+
+                // Build font style
+                let fontWeight = fontBold && fontBold.checked ? 'bold' : 'normal';
+                let fontStyle = fontItalic && fontItalic.checked ? 'italic' : 'normal';
+
+                console.log('Processing text:', text, 'Font:', fontFamily.value, 'Size:', fontSize.value);
+
+                // Wait for fonts to load
+                await document.fonts.ready;
+                console.log('Fonts loaded');
+
+                // Create high-resolution canvas to render text outline
+                // Use higher resolution for better quality
+                const scale = 2; // Render at 2x resolution for better quality
+                const tempCanvas = document.createElement('canvas');
+                tempCanvas.width = 600 * scale;
+                tempCanvas.height = 400 * scale;
+                const tempCtx = tempCanvas.getContext('2d');
+
+                // Scale context
+                tempCtx.scale(scale, scale);
+
+                // Fill with white background
+                tempCtx.fillStyle = 'white';
+                tempCtx.fillRect(0, 0, 600, 400);
+
+                // Set font
+                tempCtx.font = `${fontStyle} ${fontWeight} ${fontSize.value}px ${fontFamily.value}`;
+                tempCtx.textBaseline = 'middle';
+
+                console.log('Canvas font set to:', tempCtx.font);
+
+                // Split text into lines
+                const lines = text.split('\n');
+                const lineHeight = parseInt(fontSize.value) * 1.3; // 1.3 line spacing
+
+                // Process each character separately to ensure proper ordering
+                const allPaths = [];
+
+                // Calculate starting Y position to center all lines vertically
+                const totalHeight = lines.length * lineHeight;
+                let currentY = 200 - (totalHeight / 2) + (lineHeight / 2);
+
+                // Left margin for text alignment (matching textarea)
+                const leftMargin = 50;
+
+                for (let lineIndex = 0; lineIndex < lines.length; lineIndex++) {
+                    const line = lines[lineIndex];
+
+                    if (line.length === 0) {
+                        // Empty line, just move to next line
+                        currentY += lineHeight;
+                        continue;
+                    }
+
+                    // Start from left margin (not centered)
+                    let currentX = leftMargin;
+
+                    for (let i = 0; i < line.length; i++) {
+                        const char = line[i];
+
+                        // Skip spaces
+                        if (char === ' ') {
+                            currentX += tempCtx.measureText(char).width;
+                            continue;
+                        }
+
+                    // Normalize and decompose Vietnamese character into base + diacritics
+                    const normalized = char.normalize('NFD'); // Decompose into base + combining marks
+                    const baseChar = normalized[0]; // First character is the base
+                    const diacritics = normalized.slice(1); // Rest are diacritical marks
+
+                    // Draw base character first
+                    tempCtx.clearRect(0, 0, 600, 400);
+                    tempCtx.fillStyle = 'white';
+                    tempCtx.fillRect(0, 0, 600, 400);
+                    tempCtx.fillStyle = 'black';
+                    tempCtx.textAlign = 'left';
+                    tempCtx.fillText(baseChar, currentX, currentY);
+
+                    // Get paths for base character
+                    let imageData = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
+                    let threshold = 128;
+                    const basePaths = tracePaths(imageData, threshold);
+
+                    console.log(`Base char '${baseChar}' produced ${basePaths.length} paths`);
+
+                    // Sort base paths (left to right, top to bottom for the base letter itself)
+                    const sortedBasePaths = basePaths.sort((a, b) => {
+                        const aMinX = Math.min(...a.points.map(p => p.x));
+                        const bMinX = Math.min(...b.points.map(p => p.x));
+                        const aMinY = Math.min(...a.points.map(p => p.y));
+                        const bMinY = Math.min(...b.points.map(p => p.y));
+
+                        // Sort primarily by X (left to right)
+                        if (Math.abs(aMinX - bMinX) > 10) {
+                            return aMinX - bMinX;
+                        }
+                        // Then by Y if at same X position
+                        return aMinY - bMinY;
+                    });
+
+                    allPaths.push(...sortedBasePaths);
+
+                    // Draw diacritics after base character
+                    if (diacritics.length > 0) {
+                        tempCtx.clearRect(0, 0, 600, 400);
+                        tempCtx.fillStyle = 'white';
+                        tempCtx.fillRect(0, 0, 600, 400);
+                        tempCtx.fillStyle = 'black';
+                        tempCtx.fillText(char, currentX, currentY); // Draw full character
+
+                        // Get full character image
+                        const fullImageData = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
+                        const fullPaths = tracePaths(fullImageData, threshold);
+
+                        // Extract only the diacritic paths by comparing with base paths
+                        // Diacritics are paths that weren't in the base character
+                        const diacriticPaths = fullPaths.filter(fullPath => {
+                            // Check if this path is significantly different from base paths
+                            const fullMinY = Math.min(...fullPath.points.map(p => p.y));
+                            const fullMaxY = Math.max(...fullPath.points.map(p => p.y));
+                            const fullCenterY = (fullMinY + fullMaxY) / 2;
+
+                            // Consider it a diacritic if it's above or below the main character area
+                            // (checking if center Y is significantly different from currentY, the baseline)
+                            return Math.abs(fullCenterY - currentY) > 20;
+                        });
+
+                        console.log(`Diacritics for '${char}' produced ${diacriticPaths.length} paths`);
+                        allPaths.push(...diacriticPaths);
+                    }
+
+                        // Move to next character position
+                        currentX += tempCtx.measureText(char).width;
+                    }
+
+                    // Move to next line
+                    currentY += lineHeight;
+                }
+
+                console.log(`Total: ${allPaths.length} paths from ${lines.length} lines`);
+
+                const tracedPaths = allPaths;
+
+                // Scale paths back down
+                // tracePaths returns objects with { points: [...], strokeWidth: number }
+                const scaledPaths = tracedPaths.map(pathObj => ({
+                    points: pathObj.points.map(point => ({
+                        x: point.x / scale,
+                        y: point.y / scale
+                    })),
+                    strokeWidth: pathObj.strokeWidth
+                }));
+
+                console.log(`Scaled to ${scaledPaths.length} paths`);
+
+                // Store for regeneration
+                window.uploadedImagePaths = scaledPaths;
+                window.uploadedImageDimensions = { width: 600, height: 400 };
+                window.userTextData = {
+                    text,
+                    fontFamily: fontFamily.value,
+                    fontSize: fontSize.value,
+                    fontWeight,
+                    fontStyle
+                };
+
+                console.log('About to render SVG with', scaledPaths.length, 'paths');
+
+                // Get stroke width from UI (draw mode stroke width)
+                const popupStrokeWidth = document.getElementById('popupStrokeWidth');
+                const textStrokeWidth = popupStrokeWidth ? parseFloat(popupStrokeWidth.value) : 1;
+
+                console.log('Using stroke width:', textStrokeWidth);
+
+                // Render as SVG with forced stroke width
+                renderPathsAsSVG(scaledPaths, 600, 400, textStrokeWidth);
+
+                console.log('SVG rendered');
+            } catch (error) {
+                console.error('Error in processTextInput:', error);
+            }
+        }
+
         function tracePaths(imgData, threshold) {
             const width = imgData.width;
             const height = imgData.height;
@@ -1780,7 +2218,7 @@
             return path;
         }
 
-        function renderPathsAsSVG(paths, width, height) {
+        function renderPathsAsSVG(paths, width, height, forceStrokeWidth = null) {
             const svgContainer = document.getElementById('svgContainer');
             const strokeColorValue = strokeColor.value;
             const bgColorValue = bgColor.value;
@@ -1789,7 +2227,8 @@
             const uploadStrokeCheckbox = document.getElementById('uploadStrokeCheckbox');
             const uploadStrokeWidth = document.getElementById('uploadStrokeWidth');
             const useManualStroke = uploadStrokeCheckbox && uploadStrokeCheckbox.checked;
-            const manualStrokeWidth = useManualStroke && uploadStrokeWidth ? parseFloat(uploadStrokeWidth.value) : null;
+            const manualStrokeWidth = forceStrokeWidth !== null ? forceStrokeWidth :
+                                     (useManualStroke && uploadStrokeWidth ? parseFloat(uploadStrokeWidth.value) : null);
 
             console.log(`Rendering ${paths.length} paths to SVG`);
 
@@ -1909,6 +2348,46 @@
             durationDisplay.textContent = parseFloat(e.target.value).toFixed(1) + 's';
             userSetDuration = true; // User manually adjusted duration
         });
+
+        // Font size slider for text mode
+        const fontSizeSlider = document.getElementById('fontSize');
+        const fontSizeDisplay = document.getElementById('fontSizeDisplay');
+
+        if (fontSizeSlider && fontSizeDisplay) {
+            fontSizeSlider.addEventListener('input', (e) => {
+                const size = parseInt(e.target.value);
+                fontSizeDisplay.textContent = size + 'px';
+
+                // Auto-adjust stroke width based on font size
+                const popupStrokeWidth = document.getElementById('popupStrokeWidth');
+                const popupStrokeWidthDisplay = document.getElementById('popupStrokeWidthDisplay');
+                const strokeWidthPreview = document.getElementById('strokeWidthPreview');
+
+                if (popupStrokeWidth) {
+                    let newStrokeWidth = 3; // Default
+
+                    // Adjust stroke width based on font size
+                    if (size >= 100) {
+                        newStrokeWidth = 7; // 7px for extra large
+                    } else if (size >= 80) {
+                        newStrokeWidth = 5; // 5px for large
+                    } else if (size >= 60) {
+                        newStrokeWidth = 3; // 3px for medium
+                    } else {
+                        newStrokeWidth = 2; // 2px for small
+                    }
+
+                    popupStrokeWidth.value = newStrokeWidth;
+
+                    if (popupStrokeWidthDisplay) {
+                        popupStrokeWidthDisplay.textContent = newStrokeWidth + 'px';
+                    }
+                    if (strokeWidthPreview) {
+                        strokeWidthPreview.textContent = newStrokeWidth + 'px';
+                    }
+                }
+            });
+        }
 
         // Helper function to close all popups
         function closeAllPopups() {
@@ -2418,8 +2897,23 @@
                     downloadGifBtn.style.display = 'block';
                 }
 
+                // Check if we're in text mode
+                const textModeBtn = document.getElementById('textModeBtn');
+                const isTextMode = textModeBtn && textModeBtn.classList.contains('active');
+
+                // If we're in text mode, process text input
+                if (isTextMode) {
+                    console.log('Processing text input for animation');
+                    processTextInput().then(() => {
+                        // Wait a bit for SVG to render, then animate
+                        setTimeout(() => {
+                            animatePaths();
+                        }, 100);
+                    });
+                    return; // Exit early to avoid the later animatePaths call
+                }
                 // If we have drawn strokes, convert them to SVG first
-                if (allStrokes && allStrokes.length > 0) {
+                else if (allStrokes && allStrokes.length > 0) {
                     console.log('Animating drawn strokes');
                     convertDrawingToSVG();
                 }
