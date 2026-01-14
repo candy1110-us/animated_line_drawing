@@ -3098,8 +3098,7 @@
                                 const handHeightScaled = handWidthScaled * (handImg.height / handImg.width);
 
                                 // Apply hand offset (as percentage of hand size)
-                                const handOffsetXPercent = parseFloat(document.getElementById('handOffsetX')?.value || 0);
-                                const handOffsetYPercent = parseFloat(document.getElementById('handOffsetY')?.value || 0);
+                                // Use the global variables defined in the main script
                                 const offsetXPixels = (handOffsetXPercent / 100) * handWidthScaled;
                                 const offsetYPixels = (handOffsetYPercent / 100) * handWidthScaled;
 
