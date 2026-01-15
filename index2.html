@@ -1256,31 +1256,37 @@
         }
 
         function updateChartBackground() {
-            const chartContainer = document.querySelector('.chart-container-wrapper');
+            const chartContainerWrapper = document.querySelector('.chart-container-wrapper');
+            const chartContainer = document.querySelector('.chart-container');
             const bgColor = document.getElementById('bgColor').value;
             const bgPattern = document.getElementById('bgPattern').value;
 
-            // Always set the background color
-            chartContainer.style.backgroundColor = bgColor;
+            // Apply background to both wrapper (for display) and container (for GIF export)
+            [chartContainerWrapper, chartContainer].forEach(element => {
+                if (!element) return;
 
-            // Apply pattern or custom image as overlay
-            if (backgroundImage && !bgPattern) {
-                // Custom uploaded image
-                chartContainer.style.backgroundImage = `url(${backgroundImage})`;
-                chartContainer.style.backgroundSize = 'cover';
-                chartContainer.style.backgroundPosition = 'center';
-                chartContainer.style.backgroundBlendMode = 'multiply';
-            } else if (bgPattern) {
-                // Pattern overlay - fixed size so it doesn't scale with window
-                chartContainer.style.backgroundImage = `url(${bgPattern})`;
-                chartContainer.style.backgroundSize = '400px 400px'; // Fixed size
-                chartContainer.style.backgroundRepeat = 'repeat';
-                chartContainer.style.backgroundPosition = 'top left';
-                chartContainer.style.backgroundBlendMode = 'multiply';
-            } else {
-                // No pattern or image, just solid color
-                chartContainer.style.backgroundImage = 'none';
-            }
+                // Always set the background color
+                element.style.backgroundColor = bgColor;
+
+                // Apply pattern or custom image as overlay
+                if (backgroundImage && !bgPattern) {
+                    // Custom uploaded image
+                    element.style.backgroundImage = `url(${backgroundImage})`;
+                    element.style.backgroundSize = 'cover';
+                    element.style.backgroundPosition = 'center';
+                    element.style.backgroundBlendMode = 'multiply';
+                } else if (bgPattern) {
+                    // Pattern overlay - fixed size so it doesn't scale with window
+                    element.style.backgroundImage = `url(${bgPattern})`;
+                    element.style.backgroundSize = '400px 400px'; // Fixed size
+                    element.style.backgroundRepeat = 'repeat';
+                    element.style.backgroundPosition = 'top left';
+                    element.style.backgroundBlendMode = 'multiply';
+                } else {
+                    // No pattern or image, just solid color
+                    element.style.backgroundImage = 'none';
+                }
+            });
 
             // Update the preview display
             const bgDisplay = document.getElementById('bgColorDisplay');
@@ -1526,7 +1532,7 @@
             const titleFontSize = parseInt(document.getElementById('titleFontSize').value) || 56;
             const chartTitle = document.getElementById('chartTitle').value;
 
-            const topPadding = chartTitle ? Math.max(titleFontSize + 40, 80) : 60;
+            const topPadding = chartTitle ? Math.max(titleFontSize + 120, 160) : 60;
             const bottomPadding = 80; // Increased to give more space for labels
             const chartHeight = svgHeight - topPadding - bottomPadding;
             const chartWidth = svgWidth - 120;
@@ -1539,10 +1545,12 @@
             const leftPadding = Math.max(60, (svgWidth - neededWidth) / 2);
             const roughness = parseFloat(document.getElementById('roughnessSlider').value);
             const xAxisEnd = leftPadding + neededWidth;
+            const dataLabelFontSize = parseInt(document.getElementById('dataLabelFontSize')?.value) || 20;
+            const yAxisExtension = dataLabelFontSize + 20; // Extra space for data labels above bars
 
             const axisY = rc.line(
                 leftPadding,
-                topPadding,
+                topPadding - yAxisExtension,
                 leftPadding,
                 svgHeight - bottomPadding,
                 { roughness: roughness, strokeWidth: 2.5, stroke: '#333' }
@@ -1624,7 +1632,7 @@
             const axisFontSize = parseInt(document.getElementById('axisFontSize').value) || 28;
             const chartTitle = document.getElementById('chartTitle').value;
 
-            const topOffset = chartTitle ? Math.max(titleFontSize + 20, 60) : 30;
+            const topOffset = chartTitle ? Math.max(titleFontSize + 100, 140) : 30;
             const centerX = svgWidth / 2;
             const centerY = (svgHeight + topOffset) / 2;
             const radius = Math.min(svgWidth, svgHeight - topOffset) * 0.30;
@@ -1674,7 +1682,7 @@
             const titleFontSize = parseInt(document.getElementById('titleFontSize').value) || 56;
             const chartTitle = document.getElementById('chartTitle').value;
 
-            const topPadding = chartTitle ? Math.max(titleFontSize + 40, 80) : 60;
+            const topPadding = chartTitle ? Math.max(titleFontSize + 120, 160) : 60;
             const bottomPadding = 80;
             const chartHeight = svgHeight - topPadding - bottomPadding;
             const maxValue = Math.max(...dataItems.map(item => item.value));
@@ -1684,10 +1692,12 @@
             const leftPadding = Math.max(60, (svgWidth - neededWidth) / 2);
             const xAxisEnd = leftPadding + neededWidth;
             const roughness = parseFloat(document.getElementById('roughnessSlider').value);
+            const dataLabelFontSize = parseInt(document.getElementById('dataLabelFontSize')?.value) || 20;
+            const yAxisExtension = dataLabelFontSize + 20; // Extra space for data labels above points
 
             const axisY = rc.line(
                 leftPadding,
-                topPadding,
+                topPadding - yAxisExtension,
                 leftPadding,
                 svgHeight - bottomPadding,
                 { roughness: roughness, strokeWidth: 2.5, stroke: '#333' }
@@ -2698,14 +2708,14 @@
             const captureInterval = 1000 / fps;
             const totalFrames = Math.ceil((animDuration / 1000) * fps); // Convert ms to seconds
 
-            const chartContainerWrapper = document.querySelector('.chart-container-wrapper');
-            if (!chartContainerWrapper) {
+            const chartContainer = document.querySelector('.chart-container');
+            if (!chartContainer) {
                 throw new Error('Chart container not found');
             }
 
             console.log('Capturing animation as GIF:', { totalFrames, animDuration, fps });
 
-            const rect = chartContainerWrapper.getBoundingClientRect();
+            const rect = chartContainer.getBoundingClientRect();
             const canvasWidth = Math.floor(rect.width);
             const canvasHeight = Math.floor(rect.height);
             const userBgColor = document.getElementById('bgColor').value || '#ffffff';
@@ -2722,8 +2732,8 @@
             for (let i = 0; i < totalFrames; i++) {
                 // Capture first, then wait (so we capture frame 0)
                 try {
-                    const canvas = await html2canvas(chartContainerWrapper, {
-                        backgroundColor: userBgColor,
+                    const canvas = await html2canvas(chartContainer, {
+                        backgroundColor: null, // Let the element's background show through
                         scale: 1,
                         logging: true,
                         width: canvasWidth,
@@ -2732,6 +2742,7 @@
                         allowTaint: true,
                         foreignObjectRendering: false,
                         imageTimeout: 15000,
+                        removeContainer: true,
                         onclone: function(clonedDoc) {
                             // Use selected system font for export (no custom font loading needed)
                             const selectedFont = document.getElementById('fontFamily')?.value || 'Noteworthy, sans-serif';
@@ -2739,6 +2750,9 @@
                             style.textContent = `
                                 .bar-label, .bar-value, text {
                                     font-family: ${selectedFont} !important;
+                                }
+                                .chart-container {
+                                    background-color: ${userBgColor} !important;
                                 }
                             `;
                             clonedDoc.head.appendChild(style);
