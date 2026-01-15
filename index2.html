@@ -771,56 +771,77 @@
                 <div class="settings-column">
                     <div class="sidebar-panel" id="chartSettingsPanel">
                         <h3>Settings</h3>
-                        <div style="margin-bottom: 12px;">
-                            <label style="display: block; font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 8px;">Chart Type</label>
-                            <div class="chart-type-btns">
-                                <button class="mode-btn selected" data-chart="bar" onclick="selectChartType('bar', this)">Bar</button>
-                                <button class="mode-btn" data-chart="pie" onclick="selectChartType('pie', this)">Pie</button>
-                                <button class="mode-btn" data-chart="line" onclick="selectChartType('line', this)">Line</button>
+
+                        <!-- Row 1: Chart Type and Canvas Aspect Ratio -->
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+                            <div>
+                                <label style="display: block; font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 8px;">Chart Type</label>
+                                <div class="chart-type-btns">
+                                    <button class="mode-btn selected" data-chart="bar" onclick="selectChartType('bar', this)" style="padding: 8px; font-size: 13px;">Bar</button>
+                                    <button class="mode-btn" data-chart="pie" onclick="selectChartType('pie', this)" style="padding: 8px; font-size: 13px;">Pie</button>
+                                    <button class="mode-btn" data-chart="line" onclick="selectChartType('line', this)" style="padding: 8px; font-size: 13px;">Line</button>
+                                </div>
+                            </div>
+                            <div>
+                                <label style="display: block; font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 8px;">Aspect Ratio</label>
+                                <div class="chart-type-btns">
+                                    <button class="mode-btn selected" data-ratio="16:9" onclick="selectAspectRatio('16:9', this)" style="padding: 8px; font-size: 13px;">16:9</button>
+                                    <button class="mode-btn" data-ratio="9:16" onclick="selectAspectRatio('9:16', this)" style="padding: 8px; font-size: 13px;">9:16</button>
+                                </div>
                             </div>
                         </div>
 
-                        <div style="margin-bottom: 12px;">
-                            <label style="display: block; font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 8px;">Canvas Aspect Ratio</label>
-                            <div class="chart-type-btns">
-                                <button class="mode-btn selected" data-ratio="16:9" onclick="selectAspectRatio('16:9', this)">16:9</button>
-                                <button class="mode-btn" data-ratio="9:16" onclick="selectAspectRatio('9:16', this)">9:16</button>
+                        <!-- Row 2: Chart Size, Line Roughness, Duration -->
+                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+                            <div class="slider-group" style="margin-bottom: 0;">
+                                <label>
+                                    <span>Chart Size</span>
+                                    <span class="slider-value" id="chartSizeDisplay">80%</span>
+                                </label>
+                                <input type="range" id="chartSizeSlider" min="50" max="100" value="80" step="5" oninput="updateChartSizeDisplay(this.value)" style="width: 100%;">
+                            </div>
+                            <div class="slider-group" style="margin-bottom: 0;">
+                                <label>
+                                    <span>Line Roughness</span>
+                                    <span class="slider-value" id="roughnessDisplay">2.0</span>
+                                </label>
+                                <input type="range" id="roughnessSlider" min="0" max="5" value="2" step="0.5" oninput="updateRoughnessDisplay(this.value)" style="width: 100%;">
+                            </div>
+                            <div class="slider-group" style="margin-bottom: 0;">
+                                <label>
+                                    <span>Duration</span>
+                                    <span class="slider-value" id="durationDisplay">0.8s</span>
+                                </label>
+                                <input type="range" id="durationSlider" min="500" max="5000" value="800" step="100" oninput="updateDurationDisplay(this.value)" style="width: 100%;">
                             </div>
                         </div>
 
-                        <div class="slider-group" style="margin-bottom: 12px;">
-                            <label>
-                                <span>Chart Size</span>
-                                <span class="slider-value" id="chartSizeDisplay">80%</span>
-                            </label>
-                            <input type="range" id="chartSizeSlider" min="50" max="100" value="80" step="5" oninput="updateChartSizeDisplay(this.value)" style="width: 100%;">
-                        </div>
-
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; align-items: end; margin-bottom: 12px;">
+                        <!-- Row 3: Chart Background and Text Font -->
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; align-items: end; margin-bottom: 12px;">
                             <div class="label-input-group" style="margin-bottom: 0;">
-                                <label>Background</label>
+                                <label>Chart Background</label>
                                 <div class="bg-color-display" id="bgColorDisplay" onclick="openBgColorPicker()" style="background: #ffffff; width: 100%; height: 40px; cursor: pointer; border: 2px solid #e0e7ff; border-radius: 8px;"></div>
                                 <input type="hidden" id="bgColor" value="#ffffff">
                                 <input type="hidden" id="bgPattern" value="">
                             </div>
                             <div class="label-input-group" style="margin-bottom: 0;">
-                                <label for="fontFamily">Font Family</label>
-                                <select id="fontFamily" onchange="updateChart()" style="width: 100%; padding: 10px 12px; border: 2px solid #e0e7ff; border-radius: 8px; font-size: 14px; background: white; cursor: pointer;">
+                                <label for="fontFamily">Text Font</label>
+                                <select id="fontFamily" onchange="updateChart()" style="width: 100%; padding: 10px 8px; border: 2px solid #e0e7ff; border-radius: 8px; font-size: 13px; background: white; cursor: pointer;">
                                     <option value="Comic Sans MS, cursive">Comic Sans MS</option>
-                                    <option value="Bradley Hand, Comic Sans MS, cursive">Bradley Hand (Mac)</option>
-                                    <option value="Marker Felt, Comic Sans MS, cursive">Marker Felt (Mac)</option>
-                                    <option value="Noteworthy, sans-serif" selected>Noteworthy (Mac)</option>
-                                    <option value="Snell Roundhand, cursive">Snell Roundhand (Mac)</option>
-                                    <option value="Apple Chancery, cursive">Apple Chancery (Mac)</option>
+                                    <option value="Bradley Hand, Comic Sans MS, cursive">Bradley Hand</option>
+                                    <option value="Marker Felt, Comic Sans MS, cursive">Marker Felt</option>
+                                    <option value="Noteworthy, sans-serif" selected>Noteworthy</option>
+                                    <option value="Snell Roundhand, cursive">Snell Roundhand</option>
+                                    <option value="Apple Chancery, cursive">Apple Chancery</option>
                                     <option value="Papyrus, fantasy">Papyrus</option>
-                                    <option value="Segoe Script, Comic Sans MS, cursive">Segoe Script (Win)</option>
-                                    <option value="Lucida Handwriting, cursive">Lucida Handwriting (Win)</option>
-                                    <option value="Segoe Print, Comic Sans MS, sans-serif">Segoe Print (Win)</option>
+                                    <option value="Segoe Script, Comic Sans MS, cursive">Segoe Script</option>
+                                    <option value="Lucida Handwriting, cursive">Lucida Handwriting</option>
+                                    <option value="Segoe Print, Comic Sans MS, sans-serif">Segoe Print</option>
                                 </select>
                             </div>
                         </div>
 
-                        <div style="display: grid; grid-template-columns: 1fr 100px; gap: 8px; align-items: end; margin-bottom: 12px;">
+                        <div style="display: grid; grid-template-columns: 1fr 100px 100px; gap: 8px; align-items: end; margin-bottom: 12px;">
                             <div class="label-input-group" style="margin-bottom: 0;">
                                 <label for="chartTitle">Title</label>
                                 <input type="text" id="chartTitle" placeholder="Chart title" oninput="updateChart()" onclick="event.stopPropagation()">
@@ -828,6 +849,10 @@
                             <div class="label-input-group" style="margin-bottom: 0;">
                                 <label>Font Size</label>
                                 <input type="number" id="titleFontSize" min="10" max="80" value="40" step="2" oninput="updateChart()" onclick="event.stopPropagation()" style="width: 100%; padding: 10px 8px; border: 2px solid #e0e7ff; border-radius: 8px; font-size: 14px;">
+                            </div>
+                            <div id="pieDataLabelFontSizeSetting" class="label-input-group" style="margin-bottom: 0; display: none;">
+                                <label>Data Label Font</label>
+                                <input type="number" id="pieDataLabelFontSize" min="10" max="50" value="24" step="2" oninput="updateChart()" onclick="event.stopPropagation()" style="width: 100%; padding: 10px 8px; border: 2px solid #e0e7ff; border-radius: 8px; font-size: 14px;">
                             </div>
                         </div>
 
@@ -846,11 +871,6 @@
                             </div>
                         </div>
 
-                        <div class="label-input-group" style="margin-bottom: 12px;">
-                            <label>Data Label Size</label>
-                            <input type="number" id="dataLabelFontSize" min="10" max="50" value="20" step="2" oninput="updateChart()" style="width: 100%; padding: 10px 8px; border: 2px solid #e0e7ff; border-radius: 8px; font-size: 14px;">
-                        </div>
-
                         <div id="lineshapeSettings" style="display: none; margin-bottom: 12px;">
                             <label style="display: block; font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 6px;">Datapoint Shape</label>
                             <select id="datapointShape" onchange="updateChart()" style="width: 100%; padding: 10px 12px; border: 2px solid #e0e7ff; border-radius: 8px; font-size: 14px; background: white; cursor: pointer;">
@@ -859,30 +879,6 @@
                                 <option value="diamond">Diamond</option>
                                 <option value="triangle">Triangle</option>
                             </select>
-                        </div>
-
-                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 12px;">
-                            <div class="slider-group" style="margin-bottom: 0;">
-                                <label>
-                                    <span>Roughness</span>
-                                    <span class="slider-value" id="roughnessDisplay">2.0</span>
-                                </label>
-                                <input type="range" id="roughnessSlider" min="0" max="5" value="2" step="0.5" oninput="updateRoughnessDisplay(this.value)" style="width: 100%;">
-                            </div>
-                            <div class="slider-group" style="margin-bottom: 0;">
-                                <label>
-                                    <span>Duration</span>
-                                    <span class="slider-value" id="durationDisplay">0.8s</span>
-                                </label>
-                                <input type="range" id="durationSlider" min="500" max="5000" value="800" step="100" oninput="updateDurationDisplay(this.value)" style="width: 100%;">
-                            </div>
-                            <div class="slider-group" style="margin-bottom: 0;">
-                                <label>
-                                    <span>Speed</span>
-                                    <span class="slider-value" id="sketchDisplay">100ms</span>
-                                </label>
-                                <input type="range" id="sketchSlider" min="50" max="500" value="100" step="10" oninput="updateSketchDisplay(this.value)" style="width: 100%;">
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -1110,11 +1106,14 @@
             // Show/hide axis settings and line shape settings based on chart type
             const axisSettings = document.getElementById('axisSettings');
             const lineshapeSettings = document.getElementById('lineshapeSettings');
+            const pieDataLabelFontSizeSetting = document.getElementById('pieDataLabelFontSizeSetting');
 
             if (chartType === 'pie') {
                 axisSettings.style.display = 'none';
+                pieDataLabelFontSizeSetting.style.display = 'block';
             } else {
                 axisSettings.style.display = 'grid';
+                pieDataLabelFontSizeSetting.style.display = 'none';
             }
 
             if (chartType === 'line') {
@@ -1337,37 +1336,34 @@
         }
 
         function updateChartBackground() {
-            const chartContainerWrapper = document.querySelector('.chart-container-wrapper');
             const chartContainer = document.querySelector('.chart-container');
             const bgColor = document.getElementById('bgColor').value;
             const bgPattern = document.getElementById('bgPattern').value;
 
-            // Apply background to both wrapper (for display) and container (for GIF export)
-            [chartContainerWrapper, chartContainer].forEach(element => {
-                if (!element) return;
+            // Apply background only to container (for display and GIF export)
+            if (!chartContainer) return;
 
-                // Always set the background color
-                element.style.backgroundColor = bgColor;
+            // Always set the background color
+            chartContainer.style.backgroundColor = bgColor;
 
-                // Apply pattern or custom image as overlay
-                if (backgroundImage && !bgPattern) {
-                    // Custom uploaded image
-                    element.style.backgroundImage = `url(${backgroundImage})`;
-                    element.style.backgroundSize = 'cover';
-                    element.style.backgroundPosition = 'center';
-                    element.style.backgroundBlendMode = 'multiply';
-                } else if (bgPattern) {
-                    // Pattern overlay - fixed size so it doesn't scale with window
-                    element.style.backgroundImage = `url(${bgPattern})`;
-                    element.style.backgroundSize = '400px 400px'; // Fixed size
-                    element.style.backgroundRepeat = 'repeat';
-                    element.style.backgroundPosition = 'top left';
-                    element.style.backgroundBlendMode = 'multiply';
-                } else {
-                    // No pattern or image, just solid color
-                    element.style.backgroundImage = 'none';
-                }
-            });
+            // Apply pattern or custom image as overlay
+            if (backgroundImage && !bgPattern) {
+                // Custom uploaded image
+                chartContainer.style.backgroundImage = `url(${backgroundImage})`;
+                chartContainer.style.backgroundSize = 'cover';
+                chartContainer.style.backgroundPosition = 'center';
+                chartContainer.style.backgroundBlendMode = 'multiply';
+            } else if (bgPattern) {
+                // Pattern overlay - fixed size so it doesn't scale with window
+                chartContainer.style.backgroundImage = `url(${bgPattern})`;
+                chartContainer.style.backgroundSize = '400px 400px'; // Fixed size
+                chartContainer.style.backgroundRepeat = 'repeat';
+                chartContainer.style.backgroundPosition = 'top left';
+                chartContainer.style.backgroundBlendMode = 'multiply';
+            } else {
+                // No pattern or image, just solid color
+                chartContainer.style.backgroundImage = 'none';
+            }
 
             // Update the preview display
             const bgDisplay = document.getElementById('bgColorDisplay');
@@ -1630,7 +1626,7 @@
             const leftPadding = Math.max(60, (svgWidth - neededWidth) / 2);
             const roughness = parseFloat(document.getElementById('roughnessSlider').value);
             const xAxisEnd = leftPadding + neededWidth;
-            const dataLabelFontSize = parseInt(document.getElementById('dataLabelFontSize')?.value) || 20;
+            const dataLabelFontSize = axisFontSize; // Use same font size as axis
             const yAxisExtension = dataLabelFontSize + 20; // Extra space for data labels above bars
 
             const axisY = rc.line(
@@ -1714,7 +1710,7 @@
             const svgWidth = svg.clientWidth || 900;
             const svgHeight = svg.clientHeight || 550;
             const titleFontSize = parseInt(document.getElementById('titleFontSize').value) || 56;
-            const axisFontSize = parseInt(document.getElementById('axisFontSize').value) || 28;
+            const pieDataLabelFontSize = parseInt(document.getElementById('pieDataLabelFontSize').value) || 24;
             const chartTitle = document.getElementById('chartTitle').value;
 
             const topOffset = chartTitle ? Math.max(titleFontSize + 100, 140) : 30;
@@ -1753,7 +1749,7 @@
                     color: item.color,
                     pattern: item.pattern,
                     percentage: ((item.value / totalValue) * 100).toFixed(1),
-                    fontSize: axisFontSize
+                    fontSize: pieDataLabelFontSize
                 };
             });
 
@@ -1777,7 +1773,7 @@
             const leftPadding = Math.max(60, (svgWidth - neededWidth) / 2);
             const xAxisEnd = leftPadding + neededWidth;
             const roughness = parseFloat(document.getElementById('roughnessSlider').value);
-            const dataLabelFontSize = parseInt(document.getElementById('dataLabelFontSize')?.value) || 20;
+            const dataLabelFontSize = axisFontSize; // Use same font size as axis
             const yAxisExtension = dataLabelFontSize + 20; // Extra space for data labels above points
 
             const axisY = rc.line(
@@ -2254,10 +2250,6 @@
 
             svg.innerHTML = '';
 
-            // Hide download button when starting new animation (unless creating GIF)
-            const downloadBtn = document.getElementById('downloadGifBtn');
-            if (downloadBtn && !isCreatingGif) downloadBtn.style.display = 'none';
-
             if (currentChartType === 'bar') {
                 animateBarChart();
             } else if (currentChartType === 'pie') {
@@ -2285,8 +2277,8 @@
 
             // Calculate padding - minimum needed for axis/labels + chart size setting
             const minPadding = { horizontal: 60, vertical: 40 };
-            const topPadding = minPadding.vertical + padding.vertical + (chartTitle ? titleFontSize + 40 : 0);
-            const bottomPadding = minPadding.vertical + padding.vertical + (axisFontSize + 40);
+            const topPadding = minPadding.vertical + padding.vertical + (chartTitle ? titleFontSize + 80 : 0);
+            const bottomPadding = minPadding.vertical + padding.vertical + (axisFontSize + 60);
             const leftPadding = minPadding.horizontal + padding.horizontal + 60; // Extra for Y-axis labels
             const rightPadding = minPadding.horizontal + padding.horizontal;
 
@@ -2306,7 +2298,7 @@
             const roughness = parseFloat(document.getElementById('roughnessSlider').value);
             const xAxisEnd = svgWidth - rightPadding;
             const duration = parseInt(document.getElementById('durationSlider').value);
-            const sketchInterval = parseInt(document.getElementById('sketchSlider').value);
+            const sketchInterval = 80; // Fixed speed
 
             const axisY = rc.line(leftPadding, topPadding, leftPadding, svgHeight - bottomPadding,
                 { roughness: roughness, strokeWidth: 2.5, stroke: '#333' });
@@ -2409,8 +2401,7 @@
                         valueText.setAttribute('y', currentY - 8);
                         valueText.setAttribute('text-anchor', 'middle');
                         valueText.setAttribute('class', 'bar-value');
-                        const dataLabelFontSize = parseInt(document.getElementById('dataLabelFontSize')?.value) || 24;
-                        valueText.style.fontSize = dataLabelFontSize + 'px';
+                        valueText.style.fontSize = axisFontSize + 'px';
                         valueText.textContent = item.value;
                         barGroup.appendChild(valueText);
                     }
@@ -2443,7 +2434,7 @@
             svg.style.maxWidth = '100%';
 
             const titleFontSize = parseInt(document.getElementById('titleFontSize').value) || 56;
-            const axisFontSize = parseInt(document.getElementById('axisFontSize').value) || 28;
+            const pieDataLabelFontSize = parseInt(document.getElementById('pieDataLabelFontSize').value) || 24;
             const chartTitle = document.getElementById('chartTitle').value;
 
             // Calculate padding for pie chart
@@ -2458,14 +2449,14 @@
                 svgHeight - totalVerticalPadding * 2 - topOffset
             );
             const radius = availableSize / 3.2; // Leave room for labels
-            const labelRadius = radius + Math.min(axisFontSize * 3, radius * 0.4); // Space for labels outside
+            const labelRadius = radius + Math.min(pieDataLabelFontSize * 3, radius * 0.4); // Space for labels outside
 
             const centerX = svgWidth / 2;
             const centerY = (svgHeight + topOffset) / 2;
             const totalValue = dataItems.reduce((sum, item) => sum + item.value, 0);
             const roughness = parseFloat(document.getElementById('roughnessSlider').value);
             const duration = parseInt(document.getElementById('durationSlider').value);
-            const sketchInterval = parseInt(document.getElementById('sketchSlider').value);
+            const sketchInterval = 80; // Fixed speed
 
             if (chartTitle) {
                 const title = document.createElementNS('http://www.w3.org/2000/svg', 'text');
@@ -2536,8 +2527,7 @@
                             labelText.setAttribute('text-anchor', 'middle');
                             labelText.setAttribute('dominant-baseline', 'middle');
                             labelText.setAttribute('class', 'bar-label');
-                            const dataLabelFontSize = parseInt(document.getElementById('dataLabelFontSize')?.value) || 24;
-                            labelText.style.fontSize = dataLabelFontSize + 'px';
+                            labelText.style.fontSize = pieDataLabelFontSize + 'px';
                             labelText.style.fontWeight = '700';
                             const percentage = ((item.value / totalValue) * 100).toFixed(1);
                             labelText.textContent = `${item.label} (${percentage}%)`;
@@ -2578,8 +2568,8 @@
 
             // Calculate padding - minimum needed for axis/labels + chart size setting
             const minPadding = { horizontal: 60, vertical: 40 };
-            const topPadding = minPadding.vertical + padding.vertical + (chartTitle ? titleFontSize + 40 : 0);
-            const bottomPadding = minPadding.vertical + padding.vertical + (axisFontSize + 40);
+            const topPadding = minPadding.vertical + padding.vertical + (chartTitle ? titleFontSize + 80 : 0);
+            const bottomPadding = minPadding.vertical + padding.vertical + (axisFontSize + 60);
             const leftPadding = minPadding.horizontal + padding.horizontal + 60; // Extra for Y-axis labels
             const rightPadding = minPadding.horizontal + padding.horizontal;
 
@@ -2594,7 +2584,7 @@
             const xAxisEnd = svgWidth - rightPadding;
             const roughness = parseFloat(document.getElementById('roughnessSlider').value);
             const duration = parseInt(document.getElementById('durationSlider').value);
-            const sketchInterval = parseInt(document.getElementById('sketchSlider').value);
+            const sketchInterval = 80; // Fixed speed
             const datapointShape = document.getElementById('datapointShape')?.value || 'circle';
 
             const axisY = rc.line(leftPadding, topPadding, leftPadding, svgHeight - bottomPadding,
@@ -2751,8 +2741,7 @@
                         valueText.setAttribute('y', points[i].y - 15);
                         valueText.setAttribute('text-anchor', 'middle');
                         valueText.setAttribute('class', 'bar-value');
-                        const dataLabelFontSize = parseInt(document.getElementById('dataLabelFontSize')?.value) || 24;
-                        valueText.style.fontSize = dataLabelFontSize + 'px';
+                        valueText.style.fontSize = axisFontSize + 'px';
                         valueText.textContent = points[i].item.value;
                         pointGroups[i].appendChild(valueText);
                     }
