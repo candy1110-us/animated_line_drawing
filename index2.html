@@ -2670,6 +2670,29 @@
             // System fonts are used, no need to load custom fonts
             console.log('Using system font for GIF export');
 
+            // Preload background pattern if present
+            const bgPattern = document.getElementById('bgPattern').value;
+            if (bgPattern) {
+                console.log('Preloading background pattern:', bgPattern);
+                await new Promise((resolve, reject) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        console.log('Background pattern loaded successfully');
+                        resolve();
+                    };
+                    img.onerror = () => {
+                        console.warn('Background pattern failed to load, continuing anyway');
+                        resolve(); // Continue even if pattern fails to load
+                    };
+                    img.src = bgPattern;
+                    // Timeout after 5 seconds
+                    setTimeout(() => {
+                        console.warn('Background pattern load timeout, continuing anyway');
+                        resolve();
+                    }, 5000);
+                });
+            }
+
             const animDuration = parseFloat(document.getElementById('durationSlider').value); // in milliseconds
             const fps = 10;
             const captureInterval = 1000 / fps;
@@ -2692,8 +2715,8 @@
             // Start the animation
             animateChart();
 
-            // Small wait for first render
-            await new Promise(resolve => setTimeout(resolve, 50));
+            // Wait for first render and background pattern to be applied
+            await new Promise(resolve => setTimeout(resolve, 300));
 
             // Capture frames during animation
             for (let i = 0; i < totalFrames; i++) {
@@ -2702,11 +2725,13 @@
                     const canvas = await html2canvas(chartContainerWrapper, {
                         backgroundColor: userBgColor,
                         scale: 1,
-                        logging: false,
+                        logging: true,
                         width: canvasWidth,
                         height: canvasHeight,
                         useCORS: true,
                         allowTaint: true,
+                        foreignObjectRendering: false,
+                        imageTimeout: 15000,
                         onclone: function(clonedDoc) {
                             // Use selected system font for export (no custom font loading needed)
                             const selectedFont = document.getElementById('fontFamily')?.value || 'Noteworthy, sans-serif';
@@ -2720,10 +2745,16 @@
                         }
                     });
 
-                    images.push(canvas.toDataURL('image/png'));
-                    console.log(`Captured frame ${i + 1}/${totalFrames}`);
+                    if (canvas && canvas.width > 0 && canvas.height > 0) {
+                        images.push(canvas.toDataURL('image/png'));
+                        console.log(`Captured frame ${i + 1}/${totalFrames}`);
+                    } else {
+                        console.error(`Frame ${i + 1} canvas is invalid`);
+                        throw new Error(`Failed to capture frame ${i + 1}: Invalid canvas`);
+                    }
                 } catch (error) {
                     console.error('Error capturing frame:', error);
+                    throw new Error(`Failed to capture frame ${i + 1}: ${error.message}`);
                 }
 
                 // Wait before next capture (except after last frame)
