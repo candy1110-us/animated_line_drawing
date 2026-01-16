@@ -42,37 +42,105 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background: linear-gradient(135deg, #e0e7ff 0%, #f3e7e9 100%);
-            background-attachment: fixed;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background-color: #ecebe4;
+            background-image: url('data:image/svg+xml;utf8,<svg width="28" height="28" xmlns="http://www.w3.org/2000/svg"><circle cx="14" cy="14" r="1" fill="%23d2d1c7"/></svg>');
+            background-size: 28px 28px;
             min-height: 100vh;
-            padding: 20px;
+            padding: 40px 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Doodle decorations */
+        body::before,
+        body::after {
+            content: '';
+            position: fixed;
+            border-radius: 50%;
+            opacity: 0.15;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        body::before {
+            background: #6ba3ff;
+            width: 50vh;
+            height: 50vh;
+            top: 20%;
+            left: -10vh;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        body::after {
+            background: #f59e0b;
+            width: 150px;
+            height: 150px;
+            bottom: 15%;
+            right: 8%;
+            animation: float 8s ease-in-out infinite reverse;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(5deg); }
         }
 
         .container {
             max-width: 1600px;
             margin: 0 auto;
+            position: relative;
+            z-index: 1;
         }
 
         .header {
-            background: linear-gradient(135deg, #818cf8 0%, #a78bfa 100%);
-            padding: 35px 30px;
+            background: transparent;
+            padding: 20px 30px;
+            margin-bottom: 30px;
             text-align: center;
-            border-radius: 16px;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 15px rgba(129, 140, 248, 0.25);
+            position: relative;
+        }
+
+        .logo-link {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            overflow: hidden;
+            background: white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 100;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .logo-link:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.25);
+        }
+
+        .header-logo {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .header-content {
+            text-align: center;
         }
 
         .header h1 {
-            font-size: 32px;
-            color: white;
-            margin-bottom: 8px;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            font-family: 'Hmt Regular', 'Inter', sans-serif;
+            font-size: 3.5rem;
+            color: #2d3436;
+            margin-bottom: 12px;
+            text-shadow: 3px 3px 0px rgba(107, 163, 255, 0.3);
         }
 
         .header p {
-            color: rgba(255,255,255,0.9);
-            font-size: 15px;
+            color: #636e72;
+            font-size: 1.1rem;
         }
 
         .main-layout {
@@ -84,17 +152,14 @@
         /* TOP - Controls */
         .sidebar {
             background: white;
-            border-radius: 16px;
+            border-radius: 20px;
             padding: 24px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            box-shadow:
+                3px 3px 0px rgba(0, 0, 0, 0.05),
+                6px 6px 0px rgba(107, 163, 255, 0.08);
+            border: 1px solid rgba(45, 52, 54, 0.15);
         }
 
-        .sidebar h3 {
-            font-size: 16px;
-            color: #4f46e5;
-            margin-bottom: 20px;
-            font-weight: 600;
-        }
 
         /* Mode Selection */
         .mode-selection {
@@ -106,24 +171,29 @@
         .mode-btn {
             flex: 1;
             padding: 12px;
-            border: 2px solid #e0e7ff;
-            border-radius: 8px;
+            border: 2px solid rgba(45, 52, 54, 0.15);
+            border-radius: 12px;
             background: white;
-            color: #6366f1;
+            color: #2d3436;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 2px 2px 0px rgba(107, 163, 255, 0.1);
         }
 
         .mode-btn:hover {
-            border-color: #818cf8;
-            background: #f5f3ff;
+            border-color: #6ba3ff;
+            background: #f8f9ff;
+            transform: translateY(-2px);
+            box-shadow: 3px 3px 0px rgba(107, 163, 255, 0.2);
         }
 
         .mode-btn.active {
-            border-color: #818cf8;
-            background: #818cf8;
+            border-color: #6ba3ff;
+            background: #6ba3ff;
             color: white;
+            transform: translateY(-2px);
+            box-shadow: 3px 3px 0px rgba(0, 0, 0, 0.1);
         }
 
         /* Drawing Canvas */
@@ -138,13 +208,14 @@
 
         .canvas-container {
             position: relative;
-            border: 2px solid #c7d2fe;
+            border: 2px solid rgba(45, 52, 54, 0.15);
             border-radius: 12px;
             overflow: hidden;
             width: 100%;
             max-width: 600px;
             aspect-ratio: 3 / 2; /* Match canvas 600x400 */
             margin: 0 auto;
+            box-shadow: 3px 3px 0px rgba(107, 163, 255, 0.1);
         }
 
         .canvas-container::before {
@@ -182,60 +253,77 @@
 
         .drawing-controls button {
             padding: 8px 16px;
-            border: none;
-            border-radius: 8px;
+            border: 2px solid rgba(45, 52, 54, 0.15);
+            border-radius: 12px;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.05);
         }
 
         .btn-clear {
-            background: #ef4444;
-            color: white;
+            background: white !important;
+            color: #dd6143 !important;
+            border-color: #dd6143 !important;
         }
 
         .btn-clear:hover {
-            background: #dc2626;
+            background: #dd6143 !important;
+            color: white !important;
+            transform: translateY(-2px);
+            box-shadow: 3px 3px 0px rgba(221, 97, 67, 0.2) !important;
         }
 
         .btn-undo {
-            background: #f59e0b;
-            color: white;
+            background: white;
+            color: #f59e0b;
+            border-color: #f59e0b;
         }
 
         .btn-undo:hover {
-            background: #d97706;
+            background: #f59e0b;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 3px 3px 0px rgba(245, 158, 11, 0.2);
         }
 
         .btn-use-drawing {
-            background: #10b981;
+            background: #6ba3ff;
             color: white;
+            border-color: #6ba3ff;
             flex: 1;
         }
 
         .btn-use-drawing:hover {
-            background: #059669;
+            background: #5a92ee;
+            transform: translateY(-2px);
+            box-shadow: 3px 3px 0px rgba(107, 163, 255, 0.3);
         }
 
         .btn-use-drawing:disabled {
-            background: #d1d5db;
+            background: #e5e7eb;
+            border-color: #e5e7eb;
+            color: #9ca3af;
             cursor: not-allowed;
+            transform: none;
+            box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.05);
         }
 
         .upload-section {
             display: none;
-            border: 2px dashed #c7d2fe;
-            border-radius: 12px;
+            border: 2px dashed rgba(107, 163, 255, 0.4);
+            border-radius: 20px;
             padding: 30px 20px;
             text-align: center;
             margin-bottom: 24px;
-            background: #faf5ff;
+            background: white;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
             height: 400px;
             flex-direction: column;
             justify-content: center;
             align-items: center;
+            box-shadow: 3px 3px 0px rgba(107, 163, 255, 0.1);
         }
 
         .upload-section.active {
@@ -246,8 +334,11 @@
             display: none;
             padding: 20px;
             background: white;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            border-radius: 20px;
+            box-shadow:
+                3px 3px 0px rgba(0, 0, 0, 0.05),
+                6px 6px 0px rgba(107, 163, 255, 0.08);
+            border: 1px solid rgba(45, 52, 54, 0.15);
         }
 
         .text-section.active {
@@ -255,9 +346,10 @@
         }
 
         .upload-section:hover {
-            border-color: #818cf8;
-            background: #f5f3ff;
-            transform: translateY(-2px);
+            border-color: #6ba3ff;
+            background: #f8f9ff;
+            transform: translateY(-3px) rotate(1deg);
+            box-shadow: 5px 5px 0px rgba(107, 163, 255, 0.2);
         }
 
         input[type="file"] {
@@ -266,7 +358,7 @@
 
         .upload-label {
             font-size: 14px;
-            color: #6366f1;
+            color: #5a92ee;
             font-weight: 600;
             display: block;
             margin-bottom: 8px;
@@ -288,7 +380,7 @@
             width: 100%;
             height: 6px;
             border-radius: 3px;
-            background: #e0e7ff;
+            background: #e3f2ff;
             outline: none;
             -webkit-appearance: none;
         }
@@ -299,13 +391,13 @@
             width: 18px;
             height: 18px;
             border-radius: 50%;
-            background: #818cf8;
+            background: #6ba3ff;
             cursor: pointer;
             transition: all 0.2s;
         }
 
         .setting-group input[type="range"]::-webkit-slider-thumb:hover {
-            background: #6366f1;
+            background: #5a92ee;
             transform: scale(1.1);
         }
         
@@ -316,13 +408,13 @@
             width: 14px;
             height: 14px;
             border-radius: 50%;
-            background: #818cf8;
+            background: #6ba3ff;
             cursor: pointer;
             transition: all 0.2s;
         }
         
         #duration::-webkit-slider-thumb:hover {
-            background: #6366f1;
+            background: #5a92ee;
             transform: scale(1.1);
         }
         
@@ -330,7 +422,7 @@
             width: 14px;
             height: 14px;
             border-radius: 50%;
-            background: #818cf8;
+            background: #6ba3ff;
             cursor: pointer;
             border: none;
         }
@@ -342,13 +434,13 @@
             width: 14px;
             height: 14px;
             border-radius: 50%;
-            background: #818cf8;
+            background: #6ba3ff;
             cursor: pointer;
             transition: all 0.2s;
         }
         
         #handSize::-webkit-slider-thumb:hover {
-            background: #6366f1;
+            background: #5a92ee;
             transform: scale(1.1);
         }
         
@@ -356,7 +448,7 @@
             width: 14px;
             height: 14px;
             border-radius: 50%;
-            background: #818cf8;
+            background: #6ba3ff;
             cursor: pointer;
             border: none;
         }
@@ -375,7 +467,7 @@
 
         .setting-group input[type="number"]:focus,
         .setting-group select:focus {
-            border-color: #818cf8;
+            border-color: #6ba3ff;
             outline: none;
             box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.1);
         }
@@ -388,13 +480,17 @@
 
         .value-display {
             display: inline-block;
-            background: #818cf8;
+            background: #6ba3ff;
             color: white;
             padding: 2px 8px;
             border-radius: 6px;
             font-size: 12px;
             font-weight: 600;
             margin-left: 8px;
+        }
+
+        .value-display.orange {
+            background: #f59e0b;
         }
 
         .helper-text {
@@ -414,21 +510,21 @@
         }
 
         .btn-primary {
-            background: linear-gradient(135deg, #818cf8 0%, #6366f1 100%);
+            background: linear-gradient(135deg, #6ba3ff 0%, #5a92ee 100%);
             color: white;
             border: none;
             padding: 14px 24px;
-            border-radius: 10px;
+            border-radius: 12px;
             font-weight: 600;
             font-size: 14px;
             cursor: pointer;
-            transition: all 0.2s;
-            box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 3px 3px 0px rgba(107, 163, 255, 0.3);
         }
 
         .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+            transform: translateY(-3px);
+            box-shadow: 5px 5px 0px rgba(107, 163, 255, 0.4);
         }
 
         .btn-primary:disabled {
@@ -439,26 +535,32 @@
 
         .btn-secondary {
             background: white;
-            color: #6366f1;
-            border: 2px solid #818cf8;
+            color: #f59e0b;
+            border: 2px solid #f59e0b;
             padding: 12px 24px;
-            border-radius: 10px;
+            border-radius: 12px;
             font-weight: 600;
             font-size: 14px;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 2px 2px 0px rgba(245, 158, 11, 0.2);
         }
 
         .btn-secondary:hover {
-            background: #f5f3ff;
+            background: #fff5e6;
+            transform: translateY(-2px);
+            box-shadow: 3px 3px 0px rgba(245, 158, 11, 0.3);
         }
 
         /* BOTTOM - Preview */
         .preview-section {
             background: white;
-            border-radius: 16px;
+            border-radius: 20px;
             padding: 24px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            box-shadow:
+                3px 3px 0px rgba(0, 0, 0, 0.05),
+                6px 6px 0px rgba(107, 163, 255, 0.08);
+            border: 1px solid rgba(45, 52, 54, 0.15);
         }
         
         .preview-content {
@@ -551,6 +653,518 @@
                 flex-direction: column;
             }
         }
+
+        /* Reusable utility classes - extracted from repeated inline styles */
+
+        /* Text and Label Styles */
+        .label-text {
+            font-size: 12px;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .label-block {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 6px;
+        }
+
+        .label-block-8 {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 8px;
+        }
+
+        .text-small-indigo {
+            font-size: 11px;
+            color: #5a92ee;
+        }
+
+        .text-tiny-gray {
+            font-size: 10px;
+            color: #6b7280;
+        }
+
+        .text-tiny-gray-mb {
+            font-size: 10px;
+            color: #6b7280;
+            margin-bottom: 6px;
+        }
+
+        .text-tiny-indigo {
+            font-size: 9px;
+            color: #6ba3ff;
+            cursor: pointer;
+        }
+
+        .text-white-bold {
+            font-size: 12px;
+            font-weight: 600;
+            color: #ffffff;
+        }
+
+        /* Section Headers with Badges */
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .numbered-badge {
+            width: 50px;
+            height: 50px;
+            background: #6ba3ff;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: white;
+            font-size: 24px;
+            box-shadow: 3px 3px 0px rgba(107, 163, 255, 0.3);
+            flex-shrink: 0;
+        }
+
+        .gradient-text {
+            margin: 0;
+            padding: 0;
+            font-family: 'Hmt Regular', 'Inter', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #2d3436;
+            line-height: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+        }
+
+        /* Control Groups */
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: #f9fafb;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        /* Popups */
+        .popup-menu {
+            display: none;
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 8px;
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            width: 280px;
+            z-index: 1000;
+        }
+
+        /* Checkboxes */
+        .checkbox-input {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: #6ba3ff;
+        }
+
+        /* Hand Gallery Items */
+        .hand-gallery-item {
+            border: 2px solid #e5e7eb;
+            border-radius: 6px;
+            padding: 8px;
+            cursor: pointer;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 50px;
+            transition: all 0.2s;
+        }
+
+        /* Slider Styles */
+        .slider-compact {
+            width: 100px;
+            height: 4px;
+            border-radius: 2px;
+            background: #e3f2ff;
+            outline: none;
+            -webkit-appearance: none;
+            cursor: pointer;
+        }
+
+        .slider-full {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #e3f2ff;
+            outline: none;
+            -webkit-appearance: none;
+            cursor: pointer;
+        }
+
+        .slider-thin-full {
+            width: 100%;
+            height: 4px;
+            border-radius: 2px;
+            background: #e3f2ff;
+            outline: none;
+            -webkit-appearance: none;
+            cursor: pointer;
+        }
+
+        /* Color Picker Elements */
+        .color-square {
+            position: relative;
+            width: 100%;
+            height: 150px;
+            background: linear-gradient(to right, white, red);
+            border-radius: 8px;
+            margin-bottom: 12px;
+            cursor: crosshair;
+            border: 2px solid #e5e7eb;
+        }
+
+        .color-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(to bottom, transparent, black);
+            border-radius: 6px;
+        }
+
+        .color-cursor {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            border: 2px solid white;
+            border-radius: 50%;
+            pointer-events: none;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 3px rgba(0,0,0,0.5);
+        }
+
+        .hue-slider {
+            height: 20px;
+            border-radius: 6px;
+            background: linear-gradient(to right, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000);
+            position: relative;
+            cursor: pointer;
+            border: 2px solid #e5e7eb;
+        }
+
+        .hue-cursor {
+            position: absolute;
+            width: 4px;
+            height: 24px;
+            background: white;
+            border: 2px solid #666;
+            border-radius: 2px;
+            top: -2px;
+            transform: translateX(-50%);
+            pointer-events: none;
+        }
+
+        .color-input {
+            width: 40px;
+            height: 32px;
+            border: 2px solid #e5e7eb;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        /* Layout Utilities */
+        .pos-relative {
+            position: relative;
+        }
+
+        .mb-12 {
+            margin-bottom: 12px;
+        }
+
+        .mb-16 {
+            margin-bottom: 16px;
+        }
+
+        .min-w-45 {
+            min-width: 45px;
+        }
+
+        .img-contain {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        .img-thumb {
+            max-width: 60px;
+            max-height: 60px;
+            object-fit: contain;
+        }
+
+        /* Extracted from inline styles for better maintainability */
+
+        /* Flex layouts */
+        .flex-center-gap-8 {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .flex-center-gap-12 {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .flex-space-between-gap-8 {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .flex-space-between-gap-12 {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .flex-start-mt-16 {
+            display: flex;
+            justify-content: flex-start;
+            margin-top: 16px;
+        }
+
+        .flex-start-mt-16-gap-8 {
+            display: flex;
+            justify-content: flex-start;
+            margin-top: 16px;
+            gap: 8px;
+        }
+
+        .flex-col-center-gap-4 {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .flex-col-center-gap-8 {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .flex-gap-12-end {
+            display: flex;
+            gap: 12px;
+            align-items: end;
+            margin-bottom: 16px;
+        }
+
+        /* Grid layouts */
+        .grid-5-col-gap-6 {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 6px;
+        }
+
+        /* Upload areas */
+        .upload-area {
+            border: 2px dashed #c7d2fe;
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+            background: #faf5ff;
+            cursor: pointer;
+            position: relative;
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Input styles */
+        .hex-input {
+            flex: 1;
+            padding: 6px 10px;
+            border: 2px solid #e5e7eb;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 13px;
+        }
+
+        .select-input {
+            width: auto;
+            padding: 8px;
+            border: 2px solid #c7d2fe;
+            border-radius: 8px;
+            font-size: 13px;
+        }
+
+        .textarea-input {
+            width: 100%;
+            min-height: 100px;
+            padding: 12px;
+            border: 2px solid #c7d2fe;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+            resize: vertical;
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            padding: 8px 12px;
+            border: 2px solid #c7d2fe;
+            border-radius: 8px;
+            background: white;
+        }
+
+        .checkbox-16 {
+            width: 16px;
+            height: 16px;
+            accent-color: #6ba3ff;
+        }
+
+        /* Color preview boxes */
+        .color-preview-box {
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+            border: 2px solid #e5e7eb;
+        }
+
+        /* Image previews */
+        .img-preview-lg {
+            max-width: 150px;
+            max-height: 150px;
+            object-fit: contain;
+            margin-bottom: 8px;
+            border-radius: 8px;
+        }
+
+        /* Canvas positioning */
+        .canvas-absolute-full {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .canvas-guide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            opacity: 0.3;
+            display: none;
+            z-index: 1;
+        }
+
+        .canvas-drawing {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 2;
+        }
+
+        /* Utility classes */
+        .hidden {
+            display: none;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .cursor-pointer {
+            cursor: pointer;
+        }
+
+        .cursor-auto {
+            cursor: auto;
+        }
+
+        .text-underline {
+            text-decoration: underline;
+        }
+
+        .italic-text {
+            font-style: italic;
+        }
+
+        .color-indigo {
+            color: #6ba3ff;
+        }
+
+        .bg-purple {
+            background: #a78bfa;
+        }
+
+        .bg-coral {
+            background: #dd6143 !important;
+        }
+
+        .border-divider {
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .btn-animate {
+            padding: 10px 20px;
+            font-size: 13px;
+            margin-left: 8px;
+        }
+
+        .mb-0 {
+            margin-bottom: 0;
+        }
+
+        .mb-8 {
+            margin-bottom: 8px;
+        }
+
+        .w-fit {
+            width: fit-content;
+        }
+
+        .popup-left {
+            left: 0;
+            right: auto;
+        }
+
+        .font-size-10 {
+            font-size: 10px;
+        }
+
+        .font-size-12 {
+            font-size: 12px;
+        }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/gifshot@0.4.5/dist/gifshot.min.js"></script>
@@ -558,16 +1172,21 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>✨ Animated Line Drawing</h1>
-            <p>Draw your own creation or upload an image to see it come to life with smooth animations</p>
+            <a href="index.html" class="logo-link">
+                <img src="images/mefn.gif" alt="Logo" class="header-logo">
+            </a>
+            <div class="header-content">
+                <h1>✨ Animated Line Drawing</h1>
+                <p>Draw your own creation or upload an image to see it come to life with smooth animations</p>
+            </div>
         </div>
 
         <div class="main-layout">
             <!-- LEFT - Controls -->
             <div class="sidebar">
-                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
-                    <div style="width: 32px; height: 32px; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 700; color: white; font-size: 16px; box-shadow: 0 4px 12px rgba(240, 147, 251, 0.4);">1</div>
-                    <h3 style="margin: 0; font-size: 18px; font-weight: 700; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">Choose or draw image</h3>
+                <div class="section-header">
+                    <div class="numbered-badge">1</div>
+                    <h3 class="gradient-text">Choose or draw image</h3>
                 </div>
                 
                 <!-- Mode Selection -->
@@ -586,44 +1205,44 @@
                 <!-- Drawing Section -->
                 <div class="drawing-section active" id="drawingSection">
                     <!-- Guide Image Control -->
-                    <div style="margin-bottom: 12px; position: relative;">
-                        <div style="display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: #f9fafb; border-radius: 8px; cursor: pointer; width: fit-content;" id="guideImageToggle">
-                            <input type="checkbox" id="guideImageCheckbox" style="width: 18px; height: 18px; cursor: pointer; accent-color: #818cf8;">
-                            <span style="font-size: 12px; font-weight: 600; color: #374151;">Guide Image</span>
+                    <div class="mb-12 pos-relative">
+                        <div class="control-group w-fit" id="guideImageToggle">
+                            <input type="checkbox" id="guideImageCheckbox" class="checkbox-input">
+                            <span class="label-text">Guide Image</span>
                         </div>
                         <!-- Guide image settings popup -->
-                        <div id="guideImagePopup" style="display: none; position: absolute; top: 100%; left: 0; margin-top: 8px; background: white; border-radius: 12px; padding: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); width: 280px; z-index: 1000;">
-                            <div style="margin-bottom: 12px;">
-                                <label style="display: block; font-size: 12px; font-weight: 600; color: #374151; margin-bottom: 6px;">
-                                    Opacity: <span id="guideOpacityDisplay" style="color: #818cf8;">30%</span>
+                        <div id="guideImagePopup" class="popup-menu popup-left">
+                            <div class="mb-12">
+                                <label class="label-block">
+                                    Opacity: <span id="guideOpacityDisplay" class="color-indigo">30%</span>
                                 </label>
-                                <input type="range" id="guideOpacity" min="10" max="100" step="5" value="30" style="width: 100%; height: 4px; border-radius: 2px; background: #e0e7ff; outline: none; -webkit-appearance: none; cursor: pointer;">
+                                <input type="range" id="guideOpacity" min="10" max="100" step="5" value="30" class="slider-thin-full">
                             </div>
                             <div>
-                                <label style="display: block; font-size: 12px; font-weight: 600; color: #374151; margin-bottom: 6px;">Upload Guide Image</label>
-                                <div style="border: 2px dashed #c7d2fe; border-radius: 8px; padding: 16px; text-align: center; background: #faf5ff; cursor: pointer; position: relative; min-height: 80px; display: flex; align-items: center; justify-content: center;" id="guideUploadArea">
-                                    <input type="file" id="guideImageUpload" accept="image/*" style="display: none;">
-                                    <div id="guideUploadPlaceholder" style="display: flex; flex-direction: column; align-items: center; gap: 4px;">
-                                        <span style="font-size: 11px; color: #6366f1;">🖼️ Click to upload</span>
+                                <label class="label-block">Upload Guide Image</label>
+                                <div class="upload-area" id="guideUploadArea">
+                                    <input type="file" id="guideImageUpload" accept="image/*" class="hidden">
+                                    <div id="guideUploadPlaceholder" class="flex-col-center-gap-4">
+                                        <span class="text-small-indigo">🖼️ Click to upload</span>
                                     </div>
-                                    <div id="guideImagePreview" style="display: none; flex-direction: column; align-items: center; gap: 8px;">
-                                        <img id="guidePreviewImg" style="max-width: 60px; max-height: 60px; object-fit: contain;" />
-                                        <span style="font-size: 10px; color: #6b7280;" id="guideImageName"></span>
-                                        <span style="font-size: 9px; color: #818cf8; cursor: pointer;" id="changeGuideImage">Change image</span>
+                                    <div id="guideImagePreview" class="flex-col-center-gap-8">
+                                        <img id="guidePreviewImg" class="img-thumb" />
+                                        <span class="text-tiny-gray" id="guideImageName"></span>
+                                        <span class="text-tiny-indigo" id="changeGuideImage">Change image</span>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="canvas-container" style="position: relative;">
-                        <canvas id="guideCanvas" width="600" height="400" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; opacity: 0.3; display: none; z-index: 1;"></canvas>
-                        <canvas id="drawingCanvas" width="600" height="400" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 2;"></canvas>
+                    <div class="canvas-container pos-relative">
+                        <canvas id="guideCanvas" width="600" height="400" class="canvas-guide"></canvas>
+                        <canvas id="drawingCanvas" width="600" height="400" class="canvas-drawing"></canvas>
                     </div>
                     <!-- Undo/Clear buttons moved below canvas -->
-                    <div style="display: flex; justify-content: flex-start; margin-top: 16px; gap: 8px;">
+                    <div class="flex-start-mt-16-gap-8">
                         <button id="undoBtn" class="btn-primary">Undo</button>
-                        <button id="clearBtn" class="btn-primary" style="background: #a78bfa;">Clear</button>
+                        <button id="clearBtn" class="btn-primary bg-coral">Clear</button>
                     </div>
                 </div>
 
@@ -638,31 +1257,31 @@
                             Upload a PNG, JPG, or SVG file
                         </div>
                     </div>
-                    <div id="uploadPreview" style="display: none; text-align: center;">
-                        <img id="uploadPreviewImg" style="max-width: 150px; max-height: 150px; object-fit: contain; margin-bottom: 8px; border-radius: 8px;" />
-                        <div style="font-size: 12px; color: #374151; margin-bottom: 8px;" id="uploadImageName"></div>
-                        <label for="imageUpload" style="font-size: 11px; color: #818cf8; cursor: pointer; text-decoration: underline;">Change image</label>
+                    <div id="uploadPreview" class="hidden text-center">
+                        <img id="uploadPreviewImg" class="img-preview-lg" />
+                        <div class="label-text" class="mb-8" id="uploadImageName"></div>
+                        <label for="imageUpload" class="text-small-indigo" class="cursor-pointer text-underline">Change image</label>
                     </div>
                 </div>
 
                 <!-- Text Section -->
                 <div class="text-section" id="textSection">
-                    <div style="margin-bottom: 16px;">
-                        <label style="display: block; font-size: 12px; font-weight: 600; color: #374151; margin-bottom: 8px;">
+                    <div class="mb-16">
+                        <label class="label-block-8">
                             Enter Text
                         </label>
                         <textarea id="textInput"
                                   placeholder="Type your text here..."
-                                  style="width: 100%; min-height: 100px; padding: 12px; border: 2px solid #c7d2fe; border-radius: 8px; font-size: 14px; font-family: inherit; resize: vertical;">
+                                  class="textarea-input">
                         </textarea>
                     </div>
 
-                    <div style="display: flex; gap: 12px; align-items: end; margin-bottom: 16px;">
+                    <div class="flex-gap-12-end">
                         <div>
-                            <label style="display: block; font-size: 12px; font-weight: 600; color: #374151; margin-bottom: 8px;">
+                            <label class="label-block-8">
                                 Font Family
                             </label>
-                            <select id="fontFamily" style="width: auto; padding: 8px; border: 2px solid #c7d2fe; border-radius: 8px; font-size: 13px;">
+                            <select id="fontFamily" class="select-input">
                                 <option value="'Hmt Regular'">Hmt Regular</option>
                                 <option value="'Be Vietnam Pro'">Be Vietnam Pro</option>
                                 <option value="'Brush Script MT', cursive">Brush Script MT</option>
@@ -674,12 +1293,12 @@
                         </div>
 
                         <div>
-                            <label style="display: block; font-size: 12px; font-weight: 600; color: #374151; margin-bottom: 8px;">
+                            <label class="label-block-8">
                                 Text Style
                             </label>
-                            <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; padding: 8px 12px; border: 2px solid #c7d2fe; border-radius: 8px; background: white;">
-                                <input type="checkbox" id="fontItalic" style="width: 16px; height: 16px; accent-color: #818cf8;">
-                                <span style="font-size: 12px; font-style: italic;">Italic</span>
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="fontItalic" class="checkbox-16">
+                                <span class="font-size-12 italic-text">Italic</span>
                             </label>
                         </div>
                     </div>
@@ -689,165 +1308,165 @@
 
             <!-- RIGHT - Preview -->
             <div class="preview-section">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px;">
-                    <div style="display: flex; align-items: center; gap: 12px;">
-                        <div style="width: 32px; height: 32px; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 700; color: white; font-size: 16px; box-shadow: 0 4px 12px rgba(240, 147, 251, 0.4);">2</div>
-                        <h3 style="margin: 0; font-size: 18px; font-weight: 700; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">Animate</h3>
+                <div class="flex-space-between-gap-12">
+                    <div class="section-header">
+                        <div class="numbered-badge">2</div>
+                        <h3 class="gradient-text">Animate</h3>
                     </div>
-                    <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
-                        <div style="display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: #f9fafb; border-radius: 8px;">
-                            <span style="font-size: 12px; font-weight: 600; color: #374151;">Duration:</span>
-                            <input type="range" id="duration" min="0.5" max="10" step="0.1" value="3" style="width: 100px; height: 4px; border-radius: 2px; background: #e0e7ff; outline: none; -webkit-appearance: none; cursor: pointer;">
-                            <span class="value-display" id="durationDisplay" style="min-width: 45px;">3.0s</span>
+                    <div class="flex-center-gap-12">
+                        <div class="control-group cursor-auto">
+                            <span class="label-text">Duration:</span>
+                            <input type="range" id="duration" min="0.5" max="10" step="0.1" value="3" class="slider-compact">
+                            <span class="value-display min-w-45" id="durationDisplay">3.0s</span>
                         </div>
-                        <div id="textFontSizeSlider" style="display: none; align-items: center; gap: 8px; padding: 8px 12px; background: #f9fafb; border-radius: 8px;">
-                            <span style="font-size: 12px; font-weight: 600; color: #374151;">Font Size:</span>
-                            <input type="range" id="fontSize" min="40" max="120" step="10" value="60" style="width: 100px; height: 4px; border-radius: 2px; background: #e0e7ff; outline: none; -webkit-appearance: none; cursor: pointer;">
-                            <span class="value-display" id="fontSizeDisplay" style="min-width: 45px;">60px</span>
+                        <div id="textFontSizeSlider" class="control-group hidden cursor-auto">
+                            <span class="label-text">Font Size:</span>
+                            <input type="range" id="fontSize" min="40" max="120" step="10" value="60" class="slider-compact">
+                            <span class="value-display min-w-45" id="fontSizeDisplay">60px</span>
                         </div>
-                        <div style="position: relative;">
-                            <div style="display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: #f9fafb; border-radius: 8px; cursor: pointer;" id="strokeColorIndicator">
-                                <span style="font-size: 12px; font-weight: 600; color: #374151;">Stroke:</span>
-                                <div id="strokeColorPreview" style="width: 24px; height: 24px; border-radius: 4px; background: #000000; border: 2px solid #e5e7eb;"></div>
-                                <span style="font-size: 12px; font-weight: 600; color: #374151;" id="strokeWidthPreview">3px</span>
+                        <div class="pos-relative">
+                            <div class="control-group" id="strokeColorIndicator">
+                                <span class="label-text">Stroke:</span>
+                                <div id="strokeColorPreview" class="color-preview-box" style="background: #000000;"></div>
+                                <span class="label-text" id="strokeWidthPreview">3px</span>
                             </div>
                             <!-- Stroke color popup -->
-                            <div id="strokeColorPopup" style="display: none; position: absolute; top: 100%; right: 0; margin-top: 8px; background: white; border-radius: 12px; padding: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); width: 280px; z-index: 1000;">
+                            <div id="strokeColorPopup" class="popup-menu">
                                 <!-- Stroke width slider (for draw mode) -->
-                                <div id="drawStrokeWidthSection" style="margin-bottom: 16px;">
-                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                                        <span style="font-size: 12px; font-weight: 600; color: #374151;">Stroke Width</span>
-                                        <span class="value-display" id="popupStrokeWidthDisplay" style="font-size: 12px; font-weight: 600; color: #ffffff;">3px</span>
+                                <div id="drawStrokeWidthSection" class="mb-16">
+                                    <div class="flex-space-between-gap-8">
+                                        <span class="label-text">Stroke Width</span>
+                                        <span class="value-display text-white-bold" id="popupStrokeWidthDisplay">3px</span>
                                     </div>
-                                    <input type="range" id="popupStrokeWidth" min="1" max="20" step="1" value="3" style="width: 100%; height: 6px; border-radius: 3px; background: #e0e7ff; outline: none; -webkit-appearance: none; cursor: pointer;">
+                                    <input type="range" id="popupStrokeWidth" min="1" max="20" step="1" value="3" class="slider-full">
                                 </div>
                                 <!-- Color square picker -->
-                                <div style="position: relative; width: 100%; height: 150px; background: linear-gradient(to right, white, red); border-radius: 8px; margin-bottom: 12px; cursor: crosshair; border: 2px solid #e5e7eb;" id="strokeColorSquare">
-                                    <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(to bottom, transparent, black); border-radius: 6px;" id="strokeColorOverlay"></div>
-                                    <div id="strokeColorCursor" style="position: absolute; width: 12px; height: 12px; border: 2px solid white; border-radius: 50%; pointer-events: none; transform: translate(-50%, -50%); box-shadow: 0 0 3px rgba(0,0,0,0.5);"></div>
+                                <div class="color-square" id="strokeColorSquare">
+                                    <div class="color-overlay" id="strokeColorOverlay"></div>
+                                    <div id="strokeColorCursor" class="color-cursor"></div>
                                 </div>
-                                
+
                                 <!-- Hue slider -->
-                                <div style="margin-bottom: 12px;">
-                                    <div style="height: 20px; border-radius: 6px; background: linear-gradient(to right, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000); position: relative; cursor: pointer; border: 2px solid #e5e7eb;" id="strokeHueSlider">
-                                        <div id="strokeHueCursor" style="position: absolute; width: 4px; height: 24px; background: white; border: 2px solid #666; border-radius: 2px; top: -2px; transform: translateX(-50%); pointer-events: none;"></div>
+                                <div class="mb-12">
+                                    <div class="hue-slider" id="strokeHueSlider">
+                                        <div id="strokeHueCursor" class="hue-cursor"></div>
                                     </div>
                                 </div>
-                                
+
                                 <!-- Hex input -->
-                                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px;">
-                                    <span style="font-size: 12px; font-weight: 600; color: #374151;">Hex:</span>
-                                    <input type="text" id="strokeColorHexInput" value="#000000" style="flex: 1; padding: 6px 10px; border: 2px solid #e5e7eb; border-radius: 6px; font-family: monospace; font-size: 13px;">
-                                    <input type="color" id="strokeColor" value="#000000" style="width: 40px; height: 32px; border: 2px solid #e5e7eb; border-radius: 6px; cursor: pointer;">
+                                <div class="mb-16" class="flex-center-gap-8">
+                                    <span class="label-text">Hex:</span>
+                                    <input type="text" id="strokeColorHexInput" value="#000000" class="hex-input">
+                                    <input type="color" id="strokeColor" value="#000000" class="color-input">
                                 </div>
 
                                 <!-- Divider -->
-                                <div style="border-top: 1px solid #e5e7eb; margin-bottom: 16px;" id="uploadStrokeDivider"></div>
+                                <div class="mb-16" class="border-divider" id="uploadStrokeDivider"></div>
 
                                 <!-- Consistent Stroke Width (for upload mode) -->
-                                <div id="uploadStrokeSection" style="display: none;">
-                                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
-                                        <input type="checkbox" id="uploadStrokeCheckbox" style="width: 18px; height: 18px; cursor: pointer; accent-color: #818cf8;">
-                                        <span style="font-size: 12px; font-weight: 600; color: #374151;">Consistent Stroke Width</span>
+                                <div id="uploadStrokeSection" class="hidden">
+                                    <div class="mb-12" class="flex-center-gap-8">
+                                        <input type="checkbox" id="uploadStrokeCheckbox" class="checkbox-input">
+                                        <span class="label-text">Consistent Stroke Width</span>
                                     </div>
-                                    <div id="uploadStrokeWidthControl" style="display: none;">
-                                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                                            <span style="font-size: 12px; font-weight: 600; color: #374151;">Stroke Width</span>
-                                            <span class="value-display" id="uploadStrokeWidthDisplay" style="font-size: 12px; font-weight: 600; color: #ffffff;">3px</span>
+                                    <div id="uploadStrokeWidthControl" class="hidden">
+                                        <div class="flex-space-between-gap-8">
+                                            <span class="label-text">Stroke Width</span>
+                                            <span class="value-display text-white-bold" id="uploadStrokeWidthDisplay">3px</span>
                                         </div>
-                                        <input type="range" id="uploadStrokeWidth" min="0.5" max="20" step="0.5" value="3" style="width: 100%; height: 6px; border-radius: 3px; background: #e0e7ff; outline: none; -webkit-appearance: none; cursor: pointer;">
+                                        <input type="range" id="uploadStrokeWidth" min="0.5" max="20" step="0.5" value="3" class="slider-full">
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        <div style="position: relative;">
-                            <div style="display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: #f9fafb; border-radius: 8px; cursor: pointer;" id="bgColorIndicator">
-                                <span style="font-size: 12px; font-weight: 600; color: #374151;">Background:</span>
-                                <div id="bgColorPreview" style="width: 24px; height: 24px; border-radius: 4px; background: #00ff00; border: 2px solid #e5e7eb;"></div>
+                        <div class="pos-relative">
+                            <div class="control-group" id="bgColorIndicator">
+                                <span class="label-text">Background:</span>
+                                <div id="bgColorPreview" class="color-preview-box" style="background: #00ff00;"></div>
                             </div>
                             <!-- Background color popup -->
-                            <div id="bgColorPopup" style="display: none; position: absolute; top: 100%; right: 0; margin-top: 8px; background: white; border-radius: 12px; padding: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); width: 280px; z-index: 1000;">
+                            <div id="bgColorPopup" class="popup-menu">
                                 <!-- Color square picker -->
-                                <div style="position: relative; width: 100%; height: 150px; background: linear-gradient(to right, white, red); border-radius: 8px; margin-bottom: 12px; cursor: crosshair; border: 2px solid #e5e7eb;" id="bgColorSquare">
-                                    <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(to bottom, transparent, black); border-radius: 6px;" id="bgColorOverlay"></div>
-                                    <div id="bgColorCursor" style="position: absolute; width: 12px; height: 12px; border: 2px solid white; border-radius: 50%; pointer-events: none; transform: translate(-50%, -50%); box-shadow: 0 0 3px rgba(0,0,0,0.5);"></div>
+                                <div class="color-square" id="bgColorSquare">
+                                    <div class="color-overlay" id="bgColorOverlay"></div>
+                                    <div id="bgColorCursor" class="color-cursor"></div>
                                 </div>
-                                
+
                                 <!-- Hue slider -->
-                                <div style="margin-bottom: 12px;">
-                                    <div style="height: 20px; border-radius: 6px; background: linear-gradient(to right, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000); position: relative; cursor: pointer; border: 2px solid #e5e7eb;" id="bgHueSlider">
-                                        <div id="bgHueCursor" style="position: absolute; width: 4px; height: 24px; background: white; border: 2px solid #666; border-radius: 2px; top: -2px; transform: translateX(-50%); pointer-events: none;"></div>
+                                <div class="mb-12">
+                                    <div class="hue-slider" id="bgHueSlider">
+                                        <div id="bgHueCursor" class="hue-cursor"></div>
                                     </div>
                                 </div>
-                                
+
                                 <!-- Hex input -->
-                                <div style="display: flex; align-items: center; gap: 8px;">
-                                    <span style="font-size: 12px; font-weight: 600; color: #374151;">Hex:</span>
-                                    <input type="text" id="bgColorHexInput" value="#00ff00" style="flex: 1; padding: 6px 10px; border: 2px solid #e5e7eb; border-radius: 6px; font-family: monospace; font-size: 13px;">
-                                    <input type="color" id="bgColor" value="#00ff00" style="width: 40px; height: 32px; border: 2px solid #e5e7eb; border-radius: 6px; cursor: pointer;">
+                                <div class="flex-center-gap-8">
+                                    <span class="label-text">Hex:</span>
+                                    <input type="text" id="bgColorHexInput" value="#00ff00" class="hex-input">
+                                    <input type="color" id="bgColor" value="#00ff00" class="color-input">
                                 </div>
                             </div>
                         </div>
-                        <div style="position: relative;">
-                            <div style="display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: #f9fafb; border-radius: 8px; cursor: pointer;" id="handToggle">
-                                <input type="checkbox" id="handCheckbox" style="width: 18px; height: 18px; cursor: pointer; accent-color: #818cf8;">
-                                <span style="font-size: 12px; font-weight: 600; color: #374151;">Show hand</span>
+                        <div class="pos-relative">
+                            <div class="control-group" id="handToggle">
+                                <input type="checkbox" id="handCheckbox" class="checkbox-input">
+                                <span class="label-text">Show hand</span>
                             </div>
                             <!-- Hand settings popup -->
-                            <div id="handSettingsPopup" style="display: none; position: absolute; top: 100%; right: 0; margin-top: 8px; background: white; border-radius: 12px; padding: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); width: 280px; z-index: 1000;">
-                                <div style="margin-bottom: 12px;">
-                                    <label style="display: block; font-size: 12px; font-weight: 600; color: #374151; margin-bottom: 6px;">
-                                        Size: <span id="handSizeDisplay" style="color: #818cf8;">200px</span>
+                            <div id="handSettingsPopup" class="popup-menu">
+                                <div class="mb-12">
+                                    <label class="label-block">
+                                        Size: <span id="handSizeDisplay" class="color-indigo">200px</span>
                                     </label>
-                                    <input type="range" id="handSize" min="50" max="300" step="5" value="200" style="width: 100%; height: 4px; border-radius: 2px; background: #e0e7ff; outline: none; -webkit-appearance: none; cursor: pointer;">
+                                    <input type="range" id="handSize" min="50" max="300" step="5" value="200" class="slider-thin-full">
                                 </div>
                                 <div>
-                                    <label style="display: block; font-size: 12px; font-weight: 600; color: #374151; margin-bottom: 6px;">Choose Hand</label>
+                                    <label class="label-block">Choose Hand</label>
 
                                     <!-- Pre-loaded hands gallery -->
-                                    <div style="margin-bottom: 12px;">
+                                    <div class="mb-12">
                                         <!-- <div style="font-size: 10px; color: #6b7280; margin-bottom: 6px;">Pre-loaded:</div> -->
-                                        <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px;">
-                                            <div class="preloaded-hand" data-hand="hand1.png" style="border: 2px solid #e5e7eb; border-radius: 6px; padding: 8px; cursor: pointer; background: white; display: flex; align-items: center; justify-content: center; height: 50px; transition: all 0.2s;">
-                                                <img src="hand1.png" style="max-width: 100%; max-height: 100%; object-fit: contain;" alt="Hand 1" />
+                                        <div class="grid-5-col-gap-6">
+                                            <div class="preloaded-hand hand-gallery-item" data-hand="hand1.png">
+                                                <img src="hand1.png" class="img-contain" alt="Hand 1" />
                                             </div>
-                                            <div class="preloaded-hand" data-hand="hand2.png" style="border: 2px solid #e5e7eb; border-radius: 6px; padding: 8px; cursor: pointer; background: white; display: flex; align-items: center; justify-content: center; height: 50px; transition: all 0.2s;">
-                                                <img src="hand2.png" style="max-width: 100%; max-height: 100%; object-fit: contain;" alt="Hand 2" />
+                                            <div class="preloaded-hand hand-gallery-item" data-hand="hand2.png">
+                                                <img src="hand2.png" class="img-contain" alt="Hand 2" />
                                             </div>
-                                            <div class="preloaded-hand" data-hand="hand3.png" style="border: 2px solid #e5e7eb; border-radius: 6px; padding: 8px; cursor: pointer; background: white; display: flex; align-items: center; justify-content: center; height: 50px; transition: all 0.2s;">
-                                                <img src="hand3.png" style="max-width: 100%; max-height: 100%; object-fit: contain;" alt="Hand 3" />
+                                            <div class="preloaded-hand hand-gallery-item" data-hand="hand3.png">
+                                                <img src="hand3.png" class="img-contain" alt="Hand 3" />
                                             </div>
-                                            <div class="preloaded-hand" data-hand="hand4.png" style="border: 2px solid #e5e7eb; border-radius: 6px; padding: 8px; cursor: pointer; background: white; display: flex; align-items: center; justify-content: center; height: 50px; transition: all 0.2s;">
-                                                <img src="hand4.png" style="max-width: 100%; max-height: 100%; object-fit: contain;" alt="Hand 4" />
+                                            <div class="preloaded-hand hand-gallery-item" data-hand="hand4.png">
+                                                <img src="hand4.png" class="img-contain" alt="Hand 4" />
                                             </div>
-                                            <div class="preloaded-hand" data-hand="hand5.png" style="border: 2px solid #e5e7eb; border-radius: 6px; padding: 8px; cursor: pointer; background: white; display: flex; align-items: center; justify-content: center; height: 50px; transition: all 0.2s;">
-                                                <img src="hand5.png" style="max-width: 100%; max-height: 100%; object-fit: contain;" alt="Hand 5" />
+                                            <div class="preloaded-hand hand-gallery-item" data-hand="hand5.png">
+                                                <img src="hand5.png" class="img-contain" alt="Hand 5" />
                                             </div>
                                         </div>
                                     </div>
 
                                     <!-- Upload custom image -->
                                     <div>
-                                        <div style="font-size: 10px; color: #6b7280; margin-bottom: 6px;">Or upload custom (pen tip at top-left):</div>
-                                        <div style="border: 2px dashed #c7d2fe; border-radius: 8px; padding: 16px; text-align: center; background: #faf5ff; cursor: pointer; position: relative; min-height: 80px; display: flex; align-items: center; justify-content: center;" id="handUploadArea">
-                                            <input type="file" id="handImageUpload" accept="image/*" style="display: none;">
-                                            <div id="handUploadPlaceholder" style="display: flex; flex-direction: column; align-items: center; gap: 4px;">
-                                                <span style="font-size: 11px; color: #6366f1;">🖐️ Click to upload</span>
+                                        <div class="text-tiny-gray-mb">Or upload custom (pen tip at top-left):</div>
+                                        <div class="upload-area" id="handUploadArea">
+                                            <input type="file" id="handImageUpload" accept="image/*" class="hidden">
+                                            <div id="handUploadPlaceholder" class="flex-col-center-gap-4">
+                                                <span class="text-small-indigo">🖐️ Click to upload</span>
                                             </div>
-                                            <div id="handImagePreview" style="display: none; flex-direction: column; align-items: center; gap: 8px;">
-                                                <img id="handPreviewImg" style="max-width: 60px; max-height: 60px; object-fit: contain;" />
-                                                <span style="font-size: 10px; color: #6b7280;" id="handImageName"></span>
-                                                <span style="font-size: 9px; color: #818cf8; cursor: pointer;" id="changeHandImage">Change image</span>
+                                            <div id="handImagePreview" class="flex-col-center-gap-8">
+                                                <img id="handPreviewImg" class="img-thumb" />
+                                                <span class="text-tiny-gray" id="handImageName"></span>
+                                                <span class="text-tiny-indigo" id="changeHandImage">Change image</span>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        <button class="btn-primary" id="animateBtn" disabled style="padding: 10px 20px; font-size: 13px; margin-left: 8px;">▶ Animate</button>
+                        <button class="btn-primary" id="animateBtn" disabled class="btn-animate">▶ Animate</button>
                     </div>
                 </div>
-                <div class="preview-content" style="position: relative;">
+                <div class="preview-content" class="pos-relative">
                     <img class="hand-image" id="handImage" alt="Hand pointer">
                     <div class="svg-container" id="svgContainer">
                         <div class="placeholder">
@@ -859,8 +1478,8 @@
                         </div>
                     </div>
                 </div>
-                <div style="display: flex; justify-content: flex-start; margin-top: 16px;">
-                    <button id="downloadGifBtn" class="btn-primary" style="display: none;">
+                <div class="flex-start-mt-16">
+                    <button id="downloadGifBtn" class="btn-primary hidden">
                         Download as GIF
                     </button>
                 </div>
@@ -1422,7 +2041,6 @@
         function setDuration(seconds) {
             // Don't override if user has manually set duration
             if (userSetDuration) {
-                console.log('User has set custom duration, skipping suggestion');
                 return;
             }
 
@@ -1446,9 +2064,7 @@
             // Get current stroke width from popup slider for the animation
             const popupStrokeWidth = document.getElementById('popupStrokeWidth');
             const strokeWidth = popupStrokeWidth ? popupStrokeWidth.value : '3';
-            
-            console.log('Converting to SVG with stroke color:', strokeColorValue, 'width:', strokeWidth);
-            
+
             // Create SVG
             const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
             svg.setAttribute('width', canvas.width);
@@ -1480,19 +2096,13 @@
                 path.style.strokeDasharray = length;
                 path.style.strokeDashoffset = length;
 
-                if (index === 0) {
-                    console.log('First path stroke-width attribute:', path.getAttribute('stroke-width'));
-                    console.log('First path computed style:', window.getComputedStyle(path).strokeWidth);
-                }
-
                 svg.appendChild(path);
             });
             
             // Suggest duration based on complexity
             const suggestedDuration = suggestDuration(allStrokes.length);
             setDuration(suggestedDuration);
-            console.log(`Suggested duration for ${allStrokes.length} strokes: ${suggestedDuration}s`);
-            
+
             svgContainer.innerHTML = '';
             svgContainer.appendChild(svg);
             
@@ -1505,14 +2115,12 @@
 
         if (uploadSection && imageUpload) {
             uploadSection.addEventListener('click', () => {
-                console.log('Upload section clicked, triggering file input');
                 imageUpload.click();
             });
         }
 
         if (imageUpload) {
             imageUpload.addEventListener('change', async (e) => {
-            console.log('File selected:', e.target.files[0]?.name);
             const file = e.target.files[0];
             if (!file) return;
 
@@ -1601,7 +2209,6 @@
 
                 const text = textInput.value.trim();
                 if (!text) {
-                    console.log('No text entered');
                     return;
                 }
 
@@ -1609,11 +2216,8 @@
                 let fontWeight = fontBold && fontBold.checked ? 'bold' : 'normal';
                 let fontStyle = fontItalic && fontItalic.checked ? 'italic' : 'normal';
 
-                console.log('Processing text:', text, 'Font:', fontFamily.value, 'Size:', fontSize.value);
-
                 // Wait for fonts to load
                 await document.fonts.ready;
-                console.log('Fonts loaded');
 
                 // Create high-resolution canvas to render text outline
                 // Use higher resolution for better quality
@@ -1633,8 +2237,6 @@
                 // Set font
                 tempCtx.font = `${fontStyle} ${fontWeight} ${fontSize.value}px ${fontFamily.value}`;
                 tempCtx.textBaseline = 'middle';
-
-                console.log('Canvas font set to:', tempCtx.font);
 
                 // Split text into lines
                 const lines = text.split('\n');
@@ -1689,8 +2291,6 @@
                     let threshold = 128;
                     const basePaths = tracePaths(imageData, threshold);
 
-                    console.log(`Base char '${baseChar}' produced ${basePaths.length} paths`);
-
                     // Sort base paths (left to right, top to bottom for the base letter itself)
                     const sortedBasePaths = basePaths.sort((a, b) => {
                         const aMinX = Math.min(...a.points.map(p => p.x));
@@ -1733,7 +2333,6 @@
                             return Math.abs(fullCenterY - currentY) > 20;
                         });
 
-                        console.log(`Diacritics for '${char}' produced ${diacriticPaths.length} paths`);
                         allPaths.push(...diacriticPaths);
                     }
 
@@ -1744,8 +2343,6 @@
                     // Move to next line
                     currentY += lineHeight;
                 }
-
-                console.log(`Total: ${allPaths.length} paths from ${lines.length} lines`);
 
                 const tracedPaths = allPaths;
 
@@ -1759,8 +2356,6 @@
                     strokeWidth: pathObj.strokeWidth
                 }));
 
-                console.log(`Scaled to ${scaledPaths.length} paths`);
-
                 // Store for regeneration
                 window.uploadedImagePaths = scaledPaths;
                 window.uploadedImageDimensions = { width: 600, height: 400 };
@@ -1772,18 +2367,12 @@
                     fontStyle
                 };
 
-                console.log('About to render SVG with', scaledPaths.length, 'paths');
-
                 // Get stroke width from UI (draw mode stroke width)
                 const popupStrokeWidth = document.getElementById('popupStrokeWidth');
                 const textStrokeWidth = popupStrokeWidth ? parseFloat(popupStrokeWidth.value) : 1;
 
-                console.log('Using stroke width:', textStrokeWidth);
-
                 // Render as SVG with forced stroke width
                 renderPathsAsSVG(scaledPaths, 600, 400, textStrokeWidth);
-
-                console.log('SVG rendered');
             } catch (error) {
                 console.error('Error in processTextInput:', error);
             }
@@ -1831,9 +2420,7 @@
                     }
                 }
             }
-            
-            console.log(`Found ${centerlines.length} centerline points`);
-            
+
             // Trace paths along centerlines
             const paths = [];
             const visited = new Set();
@@ -1900,8 +2487,7 @@
                     paths.push({ points: smoothedPath, strokeWidth });
                 }
             }
-            
-            console.log(`Created ${paths.length} paths`);
+
             return orderPathsNaturally(paths);
         }
         
@@ -2021,8 +2607,7 @@
                 current = bestPath.data;
                 remaining.splice(bestPath.idx, 1);
             }
-            
-            console.log(`Ordered ${ordered.length} paths naturally`);
+
             return ordered;
         }
 
@@ -2149,8 +2734,7 @@
                 
                 toDelete.forEach(idx => thinned[idx] = 0);
             }
-            
-            console.log(`Thinning completed in ${iterations} iterations`);
+
             return thinned;
         }
 
@@ -2230,8 +2814,6 @@
             const manualStrokeWidth = forceStrokeWidth !== null ? forceStrokeWidth :
                                      (useManualStroke && uploadStrokeWidth ? parseFloat(uploadStrokeWidth.value) : null);
 
-            console.log(`Rendering ${paths.length} paths to SVG`);
-
             // Fixed canvas size to match drawing canvas
             const CANVAS_WIDTH = 600;
             const CANVAS_HEIGHT = 400;
@@ -2246,8 +2828,6 @@
             const scaledHeight = height * scale;
             const offsetX = (CANVAS_WIDTH - scaledWidth) / 2;
             const offsetY = (CANVAS_HEIGHT - scaledHeight) / 2;
-
-            console.log(`Scaling uploaded image: ${width}x${height} -> ${scaledWidth.toFixed(0)}x${scaledHeight.toFixed(0)} at offset (${offsetX.toFixed(0)}, ${offsetY.toFixed(0)})`);
 
             const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
             svg.setAttribute('width', CANVAS_WIDTH);
@@ -2313,13 +2893,10 @@
                 pathElement.style.strokeDashoffset = length;
                 renderedCount++;
             });
-            
-            console.log(`Rendered ${renderedCount} paths`);
-            
+
             // Suggest duration based on complexity
             const suggestedDuration = suggestDuration(renderedCount);
             setDuration(suggestedDuration);
-            console.log(`Suggested duration for ${renderedCount} paths: ${suggestedDuration}s`);
             
             // Store SVG in tempSVG for later use
             svgContainer.tempSVG = svg;
@@ -2629,12 +3206,9 @@
 
         // Pre-loaded hand selection
         const preloadedHands = document.querySelectorAll('.preloaded-hand');
-        console.log('Found preloaded hands:', preloadedHands.length);
         preloadedHands.forEach(handDiv => {
             handDiv.addEventListener('click', () => {
-                console.log('PRE-LOADED HAND CLICKED!');
                 const handSrc = handDiv.getAttribute('data-hand');
-                console.log('Hand source:', handSrc);
 
                 // Remove active state from all hands
                 preloadedHands.forEach(h => {
@@ -2643,23 +3217,20 @@
                 });
 
                 // Add active state to clicked hand
-                handDiv.style.borderColor = '#818cf8';
-                handDiv.style.background = '#f5f3ff';
+                handDiv.style.borderColor = '#6ba3ff';
+                handDiv.style.background = '#fff5e6';
 
                 // Set hand image for display immediately
                 handImage.src = handSrc;
-                console.log('Pre-loaded hand selected:', handSrc);
 
                 // For hand3, use hardcoded pen tip offset (adjusted for better visual alignment)
                 if (handSrc === 'hand3.png') {
                     handOffsetXPercent = 0;      // Pen tip is at left edge (X=0)
                     handOffsetYPercent = 35;     // Pen tip is at Y=35% from top
-                    console.log('Hand3 selected, using pen tip offset:', handOffsetXPercent.toFixed(2) + '%', handOffsetYPercent.toFixed(2) + '%');
                 } else {
                     // Reset offset for other hands (pen tip at top-left corner)
                     handOffsetXPercent = 0;
                     handOffsetYPercent = 0;
-                    console.log('Other hand selected, offset reset to 0,0');
                 }
 
                 // Convert to data URL using fetch (works better with same-origin)
@@ -2669,7 +3240,6 @@
                         const reader = new FileReader();
                         reader.onloadend = () => {
                             handImageData = reader.result;
-                            console.log('Pre-loaded hand converted to data URL successfully');
                         };
                         reader.onerror = (error) => {
                             console.error('FileReader error:', error);
@@ -2903,7 +3473,6 @@
 
                 // If we're in text mode, process text input
                 if (isTextMode) {
-                    console.log('Processing text input for animation');
                     processTextInput().then(() => {
                         // Wait a bit for SVG to render, then animate
                         setTimeout(() => {
@@ -2914,12 +3483,10 @@
                 }
                 // If we have drawn strokes, convert them to SVG first
                 else if (allStrokes && allStrokes.length > 0) {
-                    console.log('Animating drawn strokes');
                     convertDrawingToSVG();
                 }
                 // If we have uploaded image paths, regenerate SVG with current settings
                 else if (window.uploadedImagePaths && window.uploadedImageDimensions) {
-                    console.log('Regenerating uploaded image SVG with', window.uploadedImagePaths.length, 'paths');
                     renderPathsAsSVG(
                         window.uploadedImagePaths,
                         window.uploadedImageDimensions.width,
@@ -2928,12 +3495,8 @@
                 }
                 // Fallback: If we have a stored SVG ready to display (from upload), use it
                 else if (svgContainer.tempSVG) {
-                    console.log('Using cached tempSVG');
                     svgContainer.innerHTML = '';
                     svgContainer.appendChild(svgContainer.tempSVG.cloneNode(true));
-                }
-                else {
-                    console.log('No content to animate!');
                 }
 
                 // Small delay to allow browser to render/reflow before animating
@@ -3003,12 +3566,7 @@
             paths.forEach((path, index) => {
                 const length = path.getTotalLength();
                 const strokeDuration = (strokeDurations[index] * timeScale) / 1000;
-                
-                // Debug: log stroke width
-                if (index === 0) {
-                    console.log('First drawn path stroke-width:', path.getAttribute('stroke-width'));
-                }
-                
+
                 path.style.strokeDasharray = length;
                 path.style.strokeDashoffset = length;
                 
@@ -3026,7 +3584,10 @@
             }
         }
 
-        function animateHandAlongUserDrawing(strokes, strokeDurations, timeScale) {
+        function animateHand(options) {
+            // options can be:
+            // - { mode: 'stroke-based', strokeDurations, timeScale } for user drawings
+            // - { mode: 'continuous', totalDuration } for uploaded images
             const startTime = performance.now();
             const paths = svgContainer.querySelectorAll('.svg-path');
             let animationPhase = 'entrance'; // entrance, drawing, exit
@@ -3040,6 +3601,13 @@
             const firstPath = paths[0];
             const firstPoint = firstPath ? firstPath.getPointAtLength(0) : { x: 300, y: 200 };
 
+            // Pre-calculate timing data based on mode
+            const isStrokeBased = options.mode === 'stroke-based';
+            const pathDuration = isStrokeBased ? null : options.totalDuration * 1000 / paths.length;
+            const totalAnimationDuration = isStrokeBased
+                ? options.strokeDurations.reduce((sum, dur) => sum + dur * options.timeScale, 0)
+                : options.totalDuration * 1000;
+
             function updateHand(timestamp) {
                 const svgElement = svgContainer.querySelector('svg');
                 if (!svgElement) return;
@@ -3047,18 +3615,6 @@
                 const previewContent = handImage.parentElement;
                 const previewRect = previewContent.getBoundingClientRect();
                 const svgRect = svgElement.getBoundingClientRect();
-                
-                // Debug logging once
-                if (!window.debugLoggedUserDraw) {
-                    console.log('=== Hand Animation Debug (User Drawing) ===');
-                    console.log('Preview dimensions:', previewRect.width, 'x', previewRect.height);
-                    console.log('SVG rect dimensions:', svgRect.width, 'x', svgRect.height);
-                    console.log('SVG attributes:', svgElement.getAttribute('width'), 'x', svgElement.getAttribute('height'));
-                    console.log('Preview position:', previewRect.left, previewRect.top);
-                    console.log('SVG position:', svgRect.left, svgRect.top);
-                    console.log('Offset:', svgRect.left - previewRect.left, svgRect.top - previewRect.top);
-                    window.debugLoggedUserDraw = true;
-                }
 
                 const svgWidth = svgElement.getAttribute('width');
                 const svgHeight = svgElement.getAttribute('height');
@@ -3077,38 +3633,32 @@
                 const offsetX = (handOffsetXPercent / 100) * handSizeValue;
                 const offsetY = (handOffsetYPercent / 100) * handSizeValue;
 
-                // Debug logging on first frame
-                if (animationPhase === 'entrance' && handOffsetXPercent > 0 && !window.handOffsetLogged) {
-                    console.log('Using hand offset:', offsetX.toFixed(2) + 'px', offsetY.toFixed(2) + 'px');
-                    window.handOffsetLogged = true;
-                }
-
                 if (animationPhase === 'entrance') {
                     // Entrance animation - move from bottom-right to first point
                     const entranceElapsed = timestamp - entranceStartTime;
                     const entranceProgress = Math.min(entranceElapsed / entranceDuration, 1);
-                    
+
                     // Easing function for smooth entrance (ease-out)
                     const easedProgress = 1 - Math.pow(1 - entranceProgress, 3);
-                    
+
                     // Start position: bottom-right, off screen
                     const startX = previewRect.width + 50;
                     const startY = previewRect.height + 50;
-                    
+
                     // Target position: first point of drawing
                     const targetScreenX = firstPoint.x * scaleX;
                     const targetScreenY = firstPoint.y * scaleY;
                     const targetX = svgOffsetX + targetScreenX - offsetX;
                     const targetY = svgOffsetY + targetScreenY - offsetY;
-                    
+
                     // Interpolate position
                     const handLeft = startX + (targetX - startX) * easedProgress;
                     const handTop = startY + (targetY - startY) * easedProgress;
-                    
+
                     handImage.style.left = `${handLeft}px`;
                     handImage.style.top = `${handTop}px`;
                     handImage.style.opacity = easedProgress; // Fade in
-                    
+
                     if (entranceProgress < 1) {
                         requestAnimationFrame(updateHand);
                     } else {
@@ -3118,37 +3668,51 @@
                         requestAnimationFrame(updateHand);
                     }
                 } else if (animationPhase === 'drawing') {
-                    // Normal drawing animation - follow the drawing path
+                    // Drawing animation - behavior depends on mode
                     const elapsed = timestamp - drawingStartTime;
-                    
-                    // Calculate total animation duration
-                    const totalAnimationDuration = strokeDurations.reduce((sum, dur) => sum + dur * timeScale, 0);
-                    
+
                     if (elapsed < totalAnimationDuration) {
-                        // Find which stroke we're on
-                        let accumulatedTime = 0;
-                        let currentStrokeIndex = 0;
-                        
-                        for (let i = 0; i < strokeDurations.length; i++) {
-                            const scaledDuration = strokeDurations[i] * timeScale;
-                            if (elapsed < accumulatedTime + scaledDuration) {
-                                currentStrokeIndex = i;
-                                break;
+                        let currentPathIndex, progress, currentPath;
+
+                        if (isStrokeBased) {
+                            // Stroke-based mode: use individual stroke durations
+                            let accumulatedTime = 0;
+                            currentPathIndex = 0;
+
+                            for (let i = 0; i < options.strokeDurations.length; i++) {
+                                const scaledDuration = options.strokeDurations[i] * options.timeScale;
+                                if (elapsed < accumulatedTime + scaledDuration) {
+                                    currentPathIndex = i;
+                                    break;
+                                }
+                                accumulatedTime += scaledDuration;
                             }
-                            accumulatedTime += scaledDuration;
-                        }
 
-                        if (currentStrokeIndex >= paths.length) {
-                            animationPhase = 'exit';
-                            exitAnimationStartTime = timestamp;
-                            requestAnimationFrame(updateHand);
-                            return;
-                        }
+                            if (currentPathIndex >= paths.length) {
+                                animationPhase = 'exit';
+                                exitAnimationStartTime = timestamp;
+                                requestAnimationFrame(updateHand);
+                                return;
+                            }
 
-                        const currentPath = paths[currentStrokeIndex];
-                        const strokeElapsed = elapsed - accumulatedTime;
-                        const strokeDuration = strokeDurations[currentStrokeIndex] * timeScale;
-                        const progress = Math.min(strokeElapsed / strokeDuration, 1);
+                            currentPath = paths[currentPathIndex];
+                            const strokeElapsed = elapsed - accumulatedTime;
+                            const strokeDuration = options.strokeDurations[currentPathIndex] * options.timeScale;
+                            progress = Math.min(strokeElapsed / strokeDuration, 1);
+                        } else {
+                            // Continuous mode: equal duration per path
+                            currentPathIndex = Math.floor(elapsed / pathDuration);
+                            currentPathIndex = Math.max(0, Math.min(currentPathIndex, paths.length - 1));
+
+                            currentPath = paths[currentPathIndex];
+                            const pathStartTime = currentPathIndex * pathDuration;
+                            progress = Math.min((elapsed - pathStartTime) / pathDuration, 1);
+
+                            if (!currentPath || typeof currentPath.getTotalLength !== 'function') {
+                                requestAnimationFrame(updateHand);
+                                return;
+                            }
+                        }
 
                         const pathLength = currentPath.getTotalLength();
                         const distance = pathLength * progress;
@@ -3156,7 +3720,7 @@
 
                         const screenX = point.x * scaleX;
                         const screenY = point.y * scaleY;
-                        
+
                         const handLeft = svgOffsetX + screenX - offsetX;
                         const handTop = svgOffsetY + screenY - offsetY;
 
@@ -3175,20 +3739,20 @@
                     // Exit animation - slide down off screen
                     const exitElapsed = timestamp - exitAnimationStartTime;
                     const exitProgress = Math.min(exitElapsed / exitDuration, 1);
-                    
+
                     // Easing function for smooth exit (ease-in)
                     const easedProgress = Math.pow(exitProgress, 2);
-                    
+
                     // Get current position
                     const currentTop = parseFloat(handImage.style.top);
-                    
+
                     // Animate to bottom of screen
                     const targetTop = previewRect.height + 100;
                     const newTop = currentTop + (targetTop - currentTop) * easedProgress * 0.15;
-                    
+
                     handImage.style.top = `${newTop}px`;
                     handImage.style.opacity = 1 - exitProgress;
-                    
+
                     if (exitProgress < 1) {
                         requestAnimationFrame(updateHand);
                     } else {
@@ -3200,6 +3764,11 @@
             }
 
             requestAnimationFrame(updateHand);
+        }
+
+        // Backward compatibility wrappers
+        function animateHandAlongUserDrawing(strokes, strokeDurations, timeScale) {
+            animateHand({ mode: 'stroke-based', strokeDurations, timeScale });
         }
 
         function animateUploadedImage(paths, animDuration) {
@@ -3227,12 +3796,7 @@
 
             paths.forEach((path, index) => {
                 const length = path.getTotalLength();
-                
-                // Debug: log stroke width
-                if (index === 0) {
-                    console.log('First path stroke-width:', path.getAttribute('stroke-width'));
-                }
-                
+
                 path.style.strokeDasharray = length;
                 path.style.strokeDashoffset = length;
                 
@@ -3253,151 +3817,7 @@
         }
 
         function animateHandContinuously(paths, totalDuration) {
-            const startTime = performance.now();
-            const pathDuration = totalDuration * 1000 / paths.length;
-            let animationPhase = 'entrance'; // entrance, drawing, exit
-            let entranceStartTime = startTime;
-            let drawingStartTime = null;
-            let exitAnimationStartTime = null;
-            const entranceDuration = 400; // 400ms to move in
-            const exitDuration = 500; // 500ms to slide out
-
-            // Get the starting point of the first path
-            const firstPath = paths[0];
-            const firstPoint = firstPath ? firstPath.getPointAtLength(0) : { x: 300, y: 200 };
-
-            function updateHand(timestamp) {
-                const svgElement = svgContainer.querySelector('svg');
-                if (!svgElement) return;
-
-                const previewContent = handImage.parentElement;
-                const previewRect = previewContent.getBoundingClientRect();
-                const svgRect = svgElement.getBoundingClientRect();
-
-                const svgWidth = svgElement.getAttribute('width');
-                const svgHeight = svgElement.getAttribute('height');
-                const actualWidth = svgRect.width;
-                const actualHeight = svgRect.height;
-
-                const scaleX = actualWidth / svgWidth;
-                const scaleY = actualHeight / svgHeight;
-
-                const svgOffsetX = svgRect.left - previewRect.left;
-                const svgOffsetY = svgRect.top - previewRect.top;
-
-                handImage.style.width = handSizeValue + 'px';
-                handImage.style.height = 'auto';
-
-                const offsetX = (handOffsetXPercent / 100) * handSizeValue;
-                const offsetY = (handOffsetYPercent / 100) * handSizeValue;
-
-                // Debug logging on first frame
-                if (animationPhase === 'entrance' && handOffsetXPercent > 0 && !window.handOffsetLogged) {
-                    console.log('Using hand offset:', offsetX.toFixed(2) + 'px', offsetY.toFixed(2) + 'px');
-                    window.handOffsetLogged = true;
-                }
-
-                if (animationPhase === 'entrance') {
-                    // Entrance animation - move from bottom-right to first point
-                    const entranceElapsed = timestamp - entranceStartTime;
-                    const entranceProgress = Math.min(entranceElapsed / entranceDuration, 1);
-                    
-                    // Easing function for smooth entrance (ease-out)
-                    const easedProgress = 1 - Math.pow(1 - entranceProgress, 3);
-                    
-                    // Start position: bottom-right, off screen
-                    const startX = previewRect.width + 50;
-                    const startY = previewRect.height + 50;
-                    
-                    // Target position: first point of drawing
-                    const targetScreenX = firstPoint.x * scaleX;
-                    const targetScreenY = firstPoint.y * scaleY;
-                    const targetX = svgOffsetX + targetScreenX - offsetX;
-                    const targetY = svgOffsetY + targetScreenY - offsetY;
-                    
-                    // Interpolate position
-                    const handLeft = startX + (targetX - startX) * easedProgress;
-                    const handTop = startY + (targetY - startY) * easedProgress;
-                    
-                    handImage.style.left = `${handLeft}px`;
-                    handImage.style.top = `${handTop}px`;
-                    handImage.style.opacity = easedProgress; // Fade in
-                    
-                    if (entranceProgress < 1) {
-                        requestAnimationFrame(updateHand);
-                    } else {
-                        // Entrance complete, start drawing phase
-                        animationPhase = 'drawing';
-                        drawingStartTime = timestamp;
-                        requestAnimationFrame(updateHand);
-                    }
-                } else if (animationPhase === 'drawing') {
-                    // Normal animation - follow the paths
-                    const elapsed = timestamp - drawingStartTime;
-
-                    if (elapsed < totalDuration * 1000) {
-                        let currentPathIndex = Math.floor(elapsed / pathDuration);
-                        currentPathIndex = Math.max(0, Math.min(currentPathIndex, paths.length - 1));
-
-                        const currentPath = paths[currentPathIndex];
-                        const pathStartTime = currentPathIndex * pathDuration;
-                        const pathProgress = Math.min((elapsed - pathStartTime) / pathDuration, 1);
-
-                        if (!currentPath || typeof currentPath.getTotalLength !== 'function') {
-                            requestAnimationFrame(updateHand);
-                            return;
-                        }
-
-                        const pathLength = currentPath.getTotalLength();
-                        const distance = pathLength * pathProgress;
-                        const point = currentPath.getPointAtLength(distance);
-
-                        const screenX = point.x * scaleX;
-                        const screenY = point.y * scaleY;
-                        
-                        const handLeft = svgOffsetX + screenX - offsetX;
-                        const handTop = svgOffsetY + screenY - offsetY;
-
-                        handImage.style.left = `${handLeft}px`;
-                        handImage.style.top = `${handTop}px`;
-                        handImage.style.opacity = 1;
-
-                        requestAnimationFrame(updateHand);
-                    } else {
-                        // Drawing complete, start exit animation
-                        animationPhase = 'exit';
-                        exitAnimationStartTime = timestamp;
-                        requestAnimationFrame(updateHand);
-                    }
-                } else if (animationPhase === 'exit') {
-                    // Exit animation - slide down off screen
-                    const exitElapsed = timestamp - exitAnimationStartTime;
-                    const exitProgress = Math.min(exitElapsed / exitDuration, 1);
-                    
-                    // Easing function for smooth exit (ease-in)
-                    const easedProgress = Math.pow(exitProgress, 2);
-                    
-                    // Get current position
-                    const currentTop = parseFloat(handImage.style.top);
-                    
-                    // Animate to bottom of screen
-                    const targetTop = previewRect.height + 100;
-                    const newTop = currentTop + (targetTop - currentTop) * easedProgress * 0.15;
-                    
-                    handImage.style.top = `${newTop}px`;
-                    handImage.style.opacity = 1 - exitProgress;
-                    
-                    if (exitProgress < 1) {
-                        requestAnimationFrame(updateHand);
-                    } else {
-                        // Animation complete
-                        handImage.style.opacity = '0';
-                        handImage.style.display = 'none';
-                    }
-                }
-            }
-
-            requestAnimationFrame(updateHand);
+            animateHand({ mode: 'continuous', totalDuration });
         }
 
         // Download as GIF functionality
@@ -3409,7 +3829,6 @@
                 downloadGifBtn.textContent = 'Creating GIF...';
 
                 try {
-                    console.log('Download GIF button clicked');
                     await captureAnimationAsGif();
                     downloadGifBtn.textContent = 'GIF Downloaded!';
                     setTimeout(() => {
@@ -3444,8 +3863,6 @@
             if (!previewContent) {
                 throw new Error('Preview content not found');
             }
-
-            console.log('Pre-rendering animation frames:', { totalFrames, animDuration, fps });
 
             // Get SVG and paths
             const svgElement = svgContainer.querySelector('svg');
@@ -3483,23 +3900,11 @@
             // Try to include hand regardless - if it fails due to CORS, we'll catch the error
             const includeHand = handEnabled;
 
-            console.log('GIF Export - Hand Debug:', {
-                handEnabled,
-                handImageData: handImageData ? (handImageData.substring(0, 30) + '...') : null,
-                isDataURL,
-                includeHand
-            });
-
-            if (handEnabled && !isDataURL) {
-                console.log('Attempting to include pre-loaded hand (not a data URL yet). This may work if served from same origin.');
-            }
-
             // Pre-render all frames
             const images = [];
 
             for (let frameIndex = 0; frameIndex < totalFrames; frameIndex++) {
                 const progress = frameIndex / (totalFrames - 1); // 0 to 1
-                console.log(`Rendering frame ${frameIndex + 1}/${totalFrames} (${Math.round(progress * 100)}%)`);
 
                 // Create canvas for this frame
                 const canvas = document.createElement('canvas');
@@ -3622,17 +4027,17 @@
             }
 
             // All frames rendered, create GIF
-            console.log('Creating GIF from', images.length, 'pre-rendered frames...');
             return new Promise((resolve, reject) => {
                 gifshot.createGIF({
                     images: images,
                     gifWidth: canvasWidth,
                     gifHeight: canvasHeight,
                     interval: 1 / fps,
-                    frameDuration: 1
+                    frameDuration: 1,
+                    numFrames: images.length,
+                    repeat: 0  // 0 = play once, -1 = loop forever
                 }, (obj) => {
                     if (!obj.error) {
-                        console.log('GIF ready!');
                         const a = document.createElement('a');
                         a.href = obj.image;
                         a.download = 'animation.gif';
