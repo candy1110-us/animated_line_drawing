@@ -1466,7 +1466,7 @@
             } else if (bgPattern) {
                 // Pattern overlay - fixed size so it doesn't scale with window
                 chartContainer.style.backgroundImage = `url(${bgPattern})`;
-                chartContainer.style.backgroundSize = '400px 400px'; // Fixed size
+                chartContainer.style.backgroundSize = '200px 200px'; // Fixed size (2x zoom)
                 chartContainer.style.backgroundRepeat = 'repeat';
                 chartContainer.style.backgroundPosition = 'top left';
                 chartContainer.style.backgroundBlendMode = 'multiply';
@@ -1861,7 +1861,7 @@
                 const barY = svgHeight - bottomPadding - barHeight;
 
                 // Draw the bar
-                const hachureGap = item.pattern === 'dots' ? 12 : (item.pattern === 'solid' ? 1 : 6);
+                const hachureGap = item.pattern === 'dots' ? 24 : (item.pattern === 'solid' ? 1 : 12);
                 const rect = rc.rectangle(barX, barY, barWidth, barHeight, {
                     fill: item.color,
                     fillStyle: item.pattern,
@@ -1934,13 +1934,26 @@
             const radius = availableSize / 2.8;
 
             const centerX = svgWidth / 2;
-            const centerY = svgHeight / 2;
             const totalValue = dataItems.reduce((sum, item) => sum + item.value, 0);
+
+            // Center the entire pie chart (title + chart) vertically in canvas
+            let titleYPosition, centerY;
+            if (chartTitle) {
+                // Calculate total height needed: title + gap + pie diameter
+                const totalContentHeight = titleFontSize + 80 + (radius * 2);
+                // Center this content block vertically
+                const contentStartY = (svgHeight - totalContentHeight) / 2;
+                titleYPosition = contentStartY + titleFontSize;
+                centerY = titleYPosition + 80 + radius;
+            } else {
+                // No title - just center the pie
+                centerY = svgHeight / 2;
+            }
 
             if (chartTitle) {
                 const title = document.createElementNS('http://www.w3.org/2000/svg', 'text');
                 title.setAttribute('x', svgWidth / 2);
-                title.setAttribute('y', centerY - radius - 130);
+                title.setAttribute('y', titleYPosition);
                 title.setAttribute('text-anchor', 'middle');
                 title.setAttribute('class', 'bar-label');
                 title.style.fontSize = titleFontSize + 'px';
@@ -1959,7 +1972,7 @@
                 currentAngle = endAngle;
 
                 // Draw pie slice
-                const hachureGap = item.pattern === 'dots' ? 12 : (item.pattern === 'solid' ? 1 : 6);
+                const hachureGap = item.pattern === 'dots' ? 24 : (item.pattern === 'solid' ? 1 : 12);
                 const arc = rc.arc(centerX, centerY, radius * 2, radius * 2, startAngle, endAngle, true, {
                     fill: item.color,
                     fillStyle: item.pattern,
@@ -1979,6 +1992,19 @@
                 const labelY = centerY + Math.sin(midAngle) * labelRadius;
                 const percentage = ((item.value / totalValue) * 100).toFixed(1);
 
+                // Add white background for label
+                const labelBg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                const labelText = `${item.label}\n${percentage}%`;
+                const bgWidth = labelText.length * pieDataLabelFontSize * 0.6;
+                const bgHeight = pieDataLabelFontSize * 1.4;
+                labelBg.setAttribute('x', labelX - bgWidth / 2);
+                labelBg.setAttribute('y', labelY - bgHeight / 2);
+                labelBg.setAttribute('width', bgWidth);
+                labelBg.setAttribute('height', bgHeight);
+                labelBg.setAttribute('fill', 'white');
+                labelBg.setAttribute('rx', '8');
+                svg.appendChild(labelBg);
+
                 const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
                 label.setAttribute('x', labelX);
                 label.setAttribute('y', labelY);
@@ -1987,7 +2013,7 @@
                 label.setAttribute('class', 'bar-label');
                 label.style.fontSize = pieDataLabelFontSize + 'px';
                 label.style.fontWeight = '700';
-                label.textContent = `${item.label}\n${percentage}%`;
+                label.textContent = labelText;
                 svg.appendChild(label);
             });
         }
@@ -2741,7 +2767,7 @@
 
                     barGroup.innerHTML = '';
 
-                    const hachureGap = item.pattern === 'dots' ? 12 : (item.pattern === 'solid' ? 1 : 6);
+                    const hachureGap = item.pattern === 'dots' ? 24 : (item.pattern === 'solid' ? 1 : 12);
                     const bar = rc.rectangle(barX, currentY, barWidth, currentHeight, {
                         fill: item.color,
                         fillStyle: item.pattern,
@@ -2815,16 +2841,29 @@
             const labelRadius = radius + Math.min(pieDataLabelFontSize * 3, radius * 0.4); // Space for labels outside
 
             const centerX = svgWidth / 2;
-            const centerY = svgHeight / 2;
             const totalValue = dataItems.reduce((sum, item) => sum + item.value, 0);
             const roughness = parseFloat(document.getElementById('roughnessSlider').value);
             const duration = parseInt(document.getElementById('durationSlider').value);
             const sketchInterval = 80; // Fixed speed
 
+            // Center the entire pie chart (title + chart) vertically in canvas
+            let titleYPosition, centerY;
+            if (chartTitle) {
+                // Calculate total height needed: title + gap + pie diameter
+                const totalContentHeight = titleFontSize + 80 + (radius * 2);
+                // Center this content block vertically
+                const contentStartY = (svgHeight - totalContentHeight) / 2;
+                titleYPosition = contentStartY + titleFontSize;
+                centerY = titleYPosition + 80 + radius;
+            } else {
+                // No title - just center the pie
+                centerY = svgHeight / 2;
+            }
+
             if (chartTitle) {
                 const title = document.createElementNS('http://www.w3.org/2000/svg', 'text');
                 title.setAttribute('x', svgWidth / 2);
-                title.setAttribute('y', centerY - radius - 130);
+                title.setAttribute('y', titleYPosition);
                 title.setAttribute('text-anchor', 'middle');
                 title.setAttribute('class', 'bar-label');
                 title.style.fontSize = titleFontSize + 'px';
@@ -2865,7 +2904,7 @@
                         const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
                         path.setAttribute('d', pathData);
 
-                        const hachureGap = item.pattern === 'dots' ? 12 : (item.pattern === 'solid' ? 1 : 6);
+                        const hachureGap = item.pattern === 'dots' ? 24 : (item.pattern === 'solid' ? 1 : 12);
                         const roughPath = rc.path(pathData, {
                             fill: item.color,
                             fillStyle: item.pattern,
@@ -2880,9 +2919,24 @@
 
                         if (progress === 1) {
                             const midAngle = (startAngle + endAngle) / 2;
-                            const labelRadius = radius * 1.25; // Position labels outside the pie
+                            const labelRadius = radius * 0.7; // Position labels inside the pie
                             const labelX = centerX + labelRadius * Math.cos(midAngle);
                             const labelY = centerY + labelRadius * Math.sin(midAngle);
+
+                            const percentage = ((item.value / totalValue) * 100).toFixed(1);
+                            const labelTextContent = `${item.label} (${percentage}%)`;
+
+                            // Add white background for label
+                            const labelBg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                            const bgWidth = labelTextContent.length * pieDataLabelFontSize * 0.6;
+                            const bgHeight = pieDataLabelFontSize * 1.4;
+                            labelBg.setAttribute('x', labelX - bgWidth / 2);
+                            labelBg.setAttribute('y', labelY - bgHeight / 2);
+                            labelBg.setAttribute('width', bgWidth);
+                            labelBg.setAttribute('height', bgHeight);
+                            labelBg.setAttribute('fill', 'white');
+                            labelBg.setAttribute('rx', '8');
+                            sliceGroup.appendChild(labelBg);
 
                             const labelText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
                             labelText.setAttribute('x', labelX);
@@ -2892,8 +2946,7 @@
                             labelText.setAttribute('class', 'bar-label');
                             labelText.style.fontSize = pieDataLabelFontSize + 'px';
                             labelText.style.fontWeight = '700';
-                            const percentage = ((item.value / totalValue) * 100).toFixed(1);
-                            labelText.textContent = `${item.label} (${percentage}%)`;
+                            labelText.textContent = labelTextContent;
                             sliceGroup.appendChild(labelText);
                         }
                     }
@@ -3049,7 +3102,7 @@
                 }
 
                 for (let i = 0; i < visiblePoints; i++) {
-                    const hachureGap = points[i].item.pattern === 'dots' ? 12 : (points[i].item.pattern === 'solid' ? 1 : 6);
+                    const hachureGap = points[i].item.pattern === 'dots' ? 24 : (points[i].item.pattern === 'solid' ? 1 : 12);
                     let shape;
 
                     if (datapointShape === 'circle') {
