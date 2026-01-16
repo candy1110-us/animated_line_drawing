@@ -843,14 +843,14 @@
                                     <span>Line Roughness</span>
                                     <span class="slider-value" id="roughnessDisplay">2.0</span>
                                 </label>
-                                <input type="range" id="roughnessSlider" min="0" max="5" value="2" step="0.5" oninput="updateRoughnessDisplay(this.value)" style="width: 100%;">
+                                <input type="range" id="roughnessSlider" min="0" max="5" value="2" step="0.5" oninput="updateRoughnessDisplay(this.value); updatePreview()" style="width: 100%;">
                             </div>
                             <div class="slider-group" style="margin-bottom: 0;">
                                 <label>
                                     <span>Duration</span>
                                     <span class="slider-value" id="durationDisplay">0.8s</span>
                                 </label>
-                                <input type="range" id="durationSlider" min="500" max="5000" value="800" step="100" oninput="updateDurationDisplay(this.value)" style="width: 100%;">
+                                <input type="range" id="durationSlider" min="500" max="5000" value="800" step="100" oninput="updateDurationDisplay(this.value); updatePreview()" style="width: 100%;">
                             </div>
                         </div>
 
@@ -864,7 +864,7 @@
                             </div>
                             <div class="label-input-group" style="margin-bottom: 0;">
                                 <label for="fontFamily">Text Font</label>
-                                <select id="fontFamily" onchange="updateChart()" style="width: 100%; padding: 10px 8px; border: 2px solid #e0e7ff; border-radius: 8px; font-size: 13px; background: white; cursor: pointer;">
+                                <select id="fontFamily" onchange="updatePreview()" style="width: 100%; padding: 10px 8px; border: 2px solid #e0e7ff; border-radius: 8px; font-size: 13px; background: white; cursor: pointer;">
                                     <option value="Comic Sans MS, cursive">Comic Sans MS</option>
                                     <option value="Bradley Hand, Comic Sans MS, cursive">Bradley Hand</option>
                                     <option value="Marker Felt, Comic Sans MS, cursive">Marker Felt</option>
@@ -883,11 +883,11 @@
                         <div style="display: grid; grid-template-columns: 1fr 1fr 100px; gap: 8px; align-items: end; margin-bottom: 12px;">
                             <div class="label-input-group" style="margin-bottom: 0; grid-column: span 2;">
                                 <label for="chartTitle">Title</label>
-                                <input type="text" id="chartTitle" placeholder="Chart title" oninput="updateChart()" onclick="event.stopPropagation()">
+                                <input type="text" id="chartTitle" placeholder="Chart title" oninput="updatePreview()" onclick="event.stopPropagation()">
                             </div>
                             <div class="label-input-group" style="margin-bottom: 0;">
                                 <label>Font Size</label>
-                                <input type="number" id="titleFontSize" min="10" max="80" value="50" step="2" oninput="updateChart()" onclick="event.stopPropagation()" style="width: 100%; padding: 10px 8px; border: 2px solid #e0e7ff; border-radius: 8px; font-size: 14px;">
+                                <input type="number" id="titleFontSize" min="10" max="80" value="50" step="2" oninput="updatePreview()" onclick="event.stopPropagation()" style="width: 100%; padding: 10px 8px; border: 2px solid #e0e7ff; border-radius: 8px; font-size: 14px;">
                             </div>
                         </div>
 
@@ -895,7 +895,7 @@
                         <div id="pieDataLabelFontSizeSetting" style="display: none; margin-bottom: 12px;">
                             <div class="label-input-group" style="margin-bottom: 0;">
                                 <label>Data Label Font Size</label>
-                                <input type="number" id="pieDataLabelFontSize" min="10" max="50" value="35" step="2" oninput="updateChart()" onclick="event.stopPropagation()" style="width: 100%; padding: 10px 8px; border: 2px solid #e0e7ff; border-radius: 8px; font-size: 14px;">
+                                <input type="number" id="pieDataLabelFontSize" min="10" max="50" value="35" step="2" oninput="updatePreview()" onclick="event.stopPropagation()" style="width: 100%; padding: 10px 8px; border: 2px solid #e0e7ff; border-radius: 8px; font-size: 14px;">
                             </div>
                         </div>
 
@@ -903,21 +903,21 @@
                         <div id="axisSettings" style="display: grid; grid-template-columns: 1fr 1fr 100px; gap: 8px; align-items: end; margin-bottom: 12px;">
                             <div class="label-input-group" style="margin-bottom: 0;">
                                 <label for="xAxisLabel">X-Axis</label>
-                                <input type="text" id="xAxisLabel" placeholder="X-axis" oninput="updateChart()" onclick="event.stopPropagation()">
+                                <input type="text" id="xAxisLabel" placeholder="X-axis" oninput="updatePreview()" onclick="event.stopPropagation()">
                             </div>
                             <div class="label-input-group" style="margin-bottom: 0;">
                                 <label for="yAxisLabel">Y-Axis</label>
-                                <input type="text" id="yAxisLabel" placeholder="Y-axis" oninput="updateChart()" onclick="event.stopPropagation()">
+                                <input type="text" id="yAxisLabel" placeholder="Y-axis" oninput="updatePreview()" onclick="event.stopPropagation()">
                             </div>
                             <div class="label-input-group" style="margin-bottom: 0;">
                                 <label>Font Size</label>
-                                <input type="number" id="axisFontSize" min="10" max="50" value="35" step="2" oninput="updateChart()" onclick="event.stopPropagation()" style="width: 100%; padding: 10px 8px; border: 2px solid #e0e7ff; border-radius: 8px; font-size: 14px;">
+                                <input type="number" id="axisFontSize" min="10" max="50" value="35" step="2" oninput="updatePreview()" onclick="event.stopPropagation()" style="width: 100%; padding: 10px 8px; border: 2px solid #e0e7ff; border-radius: 8px; font-size: 14px;">
                             </div>
                         </div>
 
                         <div id="lineshapeSettings" style="display: none; margin-bottom: 12px;">
                             <label style="display: block; font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 6px;">Datapoint Shape</label>
-                            <select id="datapointShape" onchange="updateChart()" style="width: 100%; padding: 10px 12px; border: 2px solid #e0e7ff; border-radius: 8px; font-size: 14px; background: white; cursor: pointer;">
+                            <select id="datapointShape" onchange="updatePreview()" style="width: 100%; padding: 10px 12px; border: 2px solid #e0e7ff; border-radius: 8px; font-size: 14px; background: white; cursor: pointer;">
                                 <option value="circle">Circle</option>
                                 <option value="square">Square</option>
                                 <option value="diamond">Diamond</option>
@@ -936,7 +936,7 @@
                             <svg id="chartSvg" style="display: none;"></svg>
                             <div class="empty-state" id="emptyState">
                                 <div style="font-size: 20px; margin-bottom: 10px;">📊</div>
-                                <div>Add data items and click "Animate Chart" to preview</div>
+                                <div>Add data items to see preview</div>
                             </div>
                         </div>
                     </div>
@@ -1183,7 +1183,7 @@
                 lineshapeSettings.style.display = 'none';
             }
 
-            updateChart();
+            updatePreview(); // Chart type change requires re-animation
         }
 
         function selectAspectRatio(ratio, element) {
@@ -1203,52 +1203,26 @@
                 chartContainer.style.maxWidth = ratio === '16:9' ? '900px' : '337px';
             }
 
-            // If chart is currently visible, re-animate to show the change
-            const svg = document.getElementById('chartSvg');
-            if (svg.style.display === 'block' && dataItems.length > 0) {
-                animateChart();
-            } else {
-                updateChart();
-            }
+            // Aspect ratio change requires re-animation
+            updatePreview();
         }
 
         function updateChartSizeDisplay(value) {
             chartSizePercent = parseInt(value);
             document.getElementById('chartSizeDisplay').textContent = value + '%';
-
-            // If chart is currently visible, re-animate to show the change
-            const svg = document.getElementById('chartSvg');
-            if (svg.style.display === 'block' && dataItems.length > 0) {
-                animateChart();
-            } else {
-                updateChart();
-            }
+            updatePreview(); // Size change requires re-animation
         }
 
         function updateChartWidthDisplay(value) {
             chartWidthPercent = parseInt(value);
             document.getElementById('chartWidthDisplay').textContent = value + '%';
-
-            // If chart is currently visible, re-animate to show the change
-            const svg = document.getElementById('chartSvg');
-            if (svg.style.display === 'block' && dataItems.length > 0) {
-                animateChart();
-            } else {
-                updateChart();
-            }
+            updatePreview(); // Width change requires re-animation
         }
 
         function updateChartHeightDisplay(value) {
             chartHeightPercent = parseInt(value);
             document.getElementById('chartHeightDisplay').textContent = value + '%';
-
-            // If chart is currently visible, re-animate to show the change
-            const svg = document.getElementById('chartSvg');
-            if (svg.style.display === 'block' && dataItems.length > 0) {
-                animateChart();
-            } else {
-                updateChart();
-            }
+            updatePreview(); // Height change requires re-animation
         }
 
         let draggedDataIndex = null;
@@ -1276,7 +1250,7 @@
                 dataItems.splice(dropIndex, 0, draggedItem);
 
                 updateDataList();
-                updateChart();
+                updatePreview();
             }
 
             draggedDataIndex = null;
@@ -1331,7 +1305,7 @@
 
             currentPaletteIndex = dataItems.length;
             updateDataList();
-            updateChart();
+            updatePreview(); // Color changes don't need re-animation
             updateColorInputFromPalette();
         }
 
@@ -1492,7 +1466,7 @@
 
             dataItems.push({ label, value, color, pattern });
             updateDataList();
-            updateChart();
+            updatePreview();
 
             document.getElementById('labelInput').value = '';
             document.getElementById('valueInput').value = '';
@@ -1507,7 +1481,7 @@
         function removeData(index) {
             dataItems.splice(index, 1);
             updateDataList();
-            updateChart();
+            updatePreview();
 
             if (dataItems.length === 0) {
                 document.getElementById('animateBtn').disabled = true;
@@ -1518,7 +1492,7 @@
             if (newLabel && newLabel.trim()) {
                 dataItems[index].label = newLabel.trim();
                 updateDataList();
-                updateChart();
+                updatePreview();
             }
         }
 
@@ -1527,7 +1501,7 @@
             if (!isNaN(value) && value > 0) {
                 dataItems[index].value = value;
                 updateDataList();
-                updateChart();
+                updatePreview();
             }
         }
 
@@ -1665,7 +1639,8 @@
             });
         }
 
-        function updateChart() {
+        // Update the static preview (final frame without animation)
+        function updatePreview() {
             const svg = document.getElementById('chartSvg');
             const emptyState = document.getElementById('emptyState');
 
@@ -1673,48 +1648,103 @@
             const fontFamily = document.getElementById('fontFamily')?.value || 'Noteworthy, sans-serif';
             document.documentElement.style.setProperty('--chart-font-family', fontFamily);
 
-            // If chart is currently visible, re-animate to show changes
-            if (svg.style.display === 'block' && dataItems.length > 0) {
-                animateChart();
+            if (dataItems.length === 0) {
+                svg.style.display = 'none';
+                emptyState.style.display = 'block';
+                emptyState.innerHTML = '<div style="font-size: 20px; margin-bottom: 10px;">📊</div><div>Add data items to see preview</div>';
                 return;
             }
 
-            // Don't show static preview - keep SVG hidden until animation
-            svg.style.display = 'none';
+            // Show static preview
+            svg.style.display = 'block';
+            emptyState.style.display = 'none';
             svg.innerHTML = '';
 
-            if (dataItems.length === 0) {
-                emptyState.style.display = 'block';
-                emptyState.innerHTML = '<div style="font-size: 20px; margin-bottom: 10px;">📊</div><div>Add data items and click "Animate Chart" to preview</div>';
-            } else {
-                emptyState.style.display = 'block';
-                emptyState.innerHTML = '<div style="font-size: 20px; margin-bottom: 10px;">✨</div><div>Click "Animate Chart" to see your visualization</div>';
-            }
+            // Set up SVG dimensions based on aspect ratio (same as animation)
+            const canvasDims = getCanvasDimensions();
+            const svgWidth = canvasDims.width;
+            const svgHeight = canvasDims.height;
 
-            // Note: We no longer call updateBarChart/updatePieChart/updateLineChart here
-            // The chart will only be shown when animateChart() is called
+            // Remove any existing dimension attributes first
+            svg.removeAttribute('width');
+            svg.removeAttribute('height');
+
+            // Reset all SVG styles to match animation initial state
+            svg.style.width = '';
+            svg.style.height = '';
+            svg.style.maxWidth = '';
+
+            // Set viewBox and styles (exactly matching animation approach)
+            svg.setAttribute('viewBox', `0 0 ${svgWidth} ${svgHeight}`);
+            svg.style.width = 'auto';
+            svg.style.maxWidth = '100%';
+
+            console.log('=== SVG Setup ===');
+            console.log('viewBox:', svg.getAttribute('viewBox'));
+            console.log('clientWidth:', svg.clientWidth);
+            console.log('clientHeight:', svg.clientHeight);
+            console.log('style.width:', svg.style.width);
+
+            // Reinitialize RoughJS after clearing SVG
+            rc = rough.svg(svg);
+
+            // Render the static chart (final frame)
+            if (currentChartType === 'bar') {
+                updateBarChart(svg);
+            } else if (currentChartType === 'pie') {
+                updatePieChart(svg);
+            } else if (currentChartType === 'line') {
+                updateLineChart(svg);
+            }
         }
 
         function updateBarChart(svg) {
-            const svgWidth = svg.clientWidth || 900;
-            const svgHeight = svg.clientHeight || 550;
-            const axisFontSize = parseInt(document.getElementById('axisFontSize').value) || 35;
-            const titleFontSize = parseInt(document.getElementById('titleFontSize').value) || 50;
+            // Get dimensions from viewBox if available, otherwise use defaults
+            const viewBox = svg.getAttribute('viewBox');
+            let svgWidth, svgHeight;
+            if (viewBox) {
+                const dims = viewBox.split(' ');
+                svgWidth = parseFloat(dims[2]);
+                svgHeight = parseFloat(dims[3]);
+                console.log('updateBarChart reading from viewBox - width:', svgWidth, 'height:', svgHeight);
+            } else {
+                svgWidth = svg.clientWidth || 900;
+                svgHeight = svg.clientHeight || 550;
+                console.log('updateBarChart using clientWidth - width:', svgWidth, 'height:', svgHeight);
+            }
+            const baseAxisFontSize = parseInt(document.getElementById('axisFontSize').value) || 35;
+            const baseTitleFontSize = parseInt(document.getElementById('titleFontSize').value) || 50;
+            // Scale fonts to keep visual size consistent across aspect ratios (matching animation)
+            const fontScale = currentAspectRatio === '16:9' ? 1.0 : 1.5;
+            const axisFontSize = baseAxisFontSize * fontScale;
+            const titleFontSize = baseTitleFontSize * fontScale;
             const chartTitle = document.getElementById('chartTitle').value;
 
-            const topPadding = chartTitle ? titleFontSize + 200 : 60;
-            const bottomPadding = axisFontSize + 120; // Increased to give more space for labels
-            const chartHeight = svgHeight - topPadding - bottomPadding;
-            const chartWidth = svgWidth - 120;
+            // Get padding from chart size settings (matching animation)
+            const canvasDims = getCanvasDimensions();
+            const padding = canvasDims.getPadding();
+            const minPadding = { horizontal: 60, vertical: 40 };
 
+            // Calculate padding - minimum needed for axis/labels + chart size setting
+            const topPadding = minPadding.vertical + padding.vertical + (chartTitle ? titleFontSize + 200 : 0);
+            const bottomPadding = minPadding.vertical + padding.vertical + (axisFontSize + 120);
+            const leftPadding = minPadding.horizontal + padding.horizontal + 60; // Extra for Y-axis labels
+            const rightPadding = minPadding.horizontal + padding.horizontal;
+
+            const chartHeight = svgHeight - topPadding - bottomPadding;
             const maxValue = Math.max(...dataItems.map(item => item.value));
             const barCount = dataItems.length;
-            const barSpacing = 30;
-            const barWidth = Math.min(80, 100);
-            const neededWidth = barSpacing + (barWidth + barSpacing) * barCount;
-            const leftPadding = Math.max(60, (svgWidth - neededWidth) / 2);
+
+            // Calculate bar sizing to center bars in available space
+            const availableWidth = svgWidth - leftPadding - rightPadding;
+            // Adjust spacing based on aspect ratio: horizontal needs less spacing
+            const spacingRatio = currentAspectRatio === '16:9' ? 0.2 : 0.3;
+            const totalSpacingWidth = availableWidth * spacingRatio;
+            const barSpacing = totalSpacingWidth / (barCount + 1);
+            const totalBarWidth = availableWidth - totalSpacingWidth;
+            const barWidth = totalBarWidth / barCount;
             const roughness = parseFloat(document.getElementById('roughnessSlider').value);
-            const xAxisEnd = leftPadding + neededWidth;
+            const xAxisEnd = svgWidth - rightPadding;
             const dataLabelFontSize = axisFontSize; // Use same font size as axis
             const yAxisExtension = dataLabelFontSize + 20; // Extra space for data labels above bars
 
@@ -1777,27 +1807,62 @@
                 svg.appendChild(title);
             }
 
-            svg.dataset.bars = JSON.stringify(dataItems.map((item, index) => {
+            // Draw the actual bars for static preview
+            dataItems.forEach((item, index) => {
                 const barHeight = (item.value / maxValue) * chartHeight;
                 const barX = leftPadding + barSpacing + (barWidth + barSpacing) * index;
                 const barY = svgHeight - bottomPadding - barHeight;
 
-                return {
-                    x: barX,
-                    y: barY,
-                    width: barWidth,
-                    height: barHeight,
-                    value: item.value,
-                    label: item.label,
-                    color: item.color,
-                    pattern: item.pattern
-                };
-            }));
+                // Draw the bar
+                const hachureGap = item.pattern === 'dots' ? 12 : (item.pattern === 'solid' ? 1 : 6);
+                const rect = rc.rectangle(barX, barY, barWidth, barHeight, {
+                    fill: item.color,
+                    fillStyle: item.pattern,
+                    roughness: roughness,
+                    strokeWidth: 2,
+                    stroke: '#333',
+                    fillWeight: 2,
+                    hachureAngle: 60,
+                    hachureGap: hachureGap
+                });
+                svg.appendChild(rect);
+
+                // Draw bar label
+                const barLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                barLabel.setAttribute('x', barX + barWidth / 2);
+                barLabel.setAttribute('y', svgHeight - bottomPadding + 30);
+                barLabel.setAttribute('text-anchor', 'middle');
+                barLabel.setAttribute('class', 'bar-label');
+                barLabel.style.fontSize = axisFontSize + 'px';
+                barLabel.style.fontWeight = '600';
+                barLabel.textContent = item.label;
+                svg.appendChild(barLabel);
+
+                // Draw data value label on top of bar
+                const dataLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                dataLabel.setAttribute('x', barX + barWidth / 2);
+                dataLabel.setAttribute('y', barY - 10);
+                dataLabel.setAttribute('text-anchor', 'middle');
+                dataLabel.setAttribute('class', 'bar-label');
+                dataLabel.style.fontSize = dataLabelFontSize + 'px';
+                dataLabel.style.fontWeight = '600';
+                dataLabel.textContent = item.value;
+                svg.appendChild(dataLabel);
+            });
         }
 
         function updatePieChart(svg) {
-            const svgWidth = svg.clientWidth || 900;
-            const svgHeight = svg.clientHeight || 550;
+            // Get dimensions from viewBox if available, otherwise use defaults
+            const viewBox = svg.getAttribute('viewBox');
+            let svgWidth, svgHeight;
+            if (viewBox) {
+                const dims = viewBox.split(' ');
+                svgWidth = parseFloat(dims[2]);
+                svgHeight = parseFloat(dims[3]);
+            } else {
+                svgWidth = svg.clientWidth || 900;
+                svgHeight = svg.clientHeight || 550;
+            }
             const baseTitleFontSize = parseInt(document.getElementById('titleFontSize').value) || 50;
             const basePieDataLabelFontSize = parseInt(document.getElementById('pieDataLabelFontSize').value) || 35;
             // Scale fonts to keep visual size consistent across aspect ratios
@@ -1806,10 +1871,23 @@
             const pieDataLabelFontSize = basePieDataLabelFontSize * fontScale;
             const chartTitle = document.getElementById('chartTitle').value;
 
-            const topOffset = chartTitle ? titleFontSize + 20 : 30;
+            // Get padding from chart size settings (matching animation)
+            const canvasDims = getCanvasDimensions();
+            const padding = canvasDims.getPadding();
+            const minPadding = { horizontal: 60, vertical: 40 };
+            const totalHorizontalPadding = minPadding.horizontal + padding.horizontal;
+            const totalVerticalPadding = minPadding.vertical + padding.vertical;
+            const topOffset = chartTitle ? titleFontSize + 20 : 0;
+
+            // Calculate radius based on available space (chart size affects this)
+            const availableSize = Math.min(
+                svgWidth - totalHorizontalPadding * 2,
+                svgHeight - totalVerticalPadding * 2 - topOffset
+            );
+            const radius = availableSize / 2.8;
+
             const centerX = svgWidth / 2;
             const centerY = svgHeight / 2;
-            const radius = Math.min(svgWidth, svgHeight) * 0.35;
             const totalValue = dataItems.reduce((sum, item) => sum + item.value, 0);
 
             if (chartTitle) {
@@ -1825,46 +1903,87 @@
             }
 
             let currentAngle = -Math.PI / 2;
-            const pieData = dataItems.map((item, index) => {
+            const roughness = parseFloat(document.getElementById('roughnessSlider').value);
+
+            dataItems.forEach((item, index) => {
                 const sliceAngle = (item.value / totalValue) * 2 * Math.PI;
                 const startAngle = currentAngle;
                 const endAngle = currentAngle + sliceAngle;
                 currentAngle = endAngle;
 
-                return {
-                    centerX,
-                    centerY,
-                    radius,
-                    startAngle,
-                    endAngle,
-                    value: item.value,
-                    label: item.label,
-                    color: item.color,
-                    pattern: item.pattern,
-                    percentage: ((item.value / totalValue) * 100).toFixed(1),
-                    fontSize: pieDataLabelFontSize
-                };
-            });
+                // Draw pie slice
+                const hachureGap = item.pattern === 'dots' ? 12 : (item.pattern === 'solid' ? 1 : 6);
+                const arc = rc.arc(centerX, centerY, radius * 2, radius * 2, startAngle, endAngle, true, {
+                    fill: item.color,
+                    fillStyle: item.pattern,
+                    roughness: roughness,
+                    strokeWidth: 2,
+                    stroke: '#333',
+                    fillWeight: 2,
+                    hachureAngle: 60,
+                    hachureGap: hachureGap
+                });
+                svg.appendChild(arc);
 
-            svg.dataset.pieData = JSON.stringify(pieData);
+                // Draw label
+                const midAngle = (startAngle + endAngle) / 2;
+                const labelRadius = radius * 0.7;
+                const labelX = centerX + Math.cos(midAngle) * labelRadius;
+                const labelY = centerY + Math.sin(midAngle) * labelRadius;
+                const percentage = ((item.value / totalValue) * 100).toFixed(1);
+
+                const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                label.setAttribute('x', labelX);
+                label.setAttribute('y', labelY);
+                label.setAttribute('text-anchor', 'middle');
+                label.setAttribute('dominant-baseline', 'middle');
+                label.setAttribute('class', 'bar-label');
+                label.style.fontSize = pieDataLabelFontSize + 'px';
+                label.style.fontWeight = '700';
+                label.textContent = `${item.label}\n${percentage}%`;
+                svg.appendChild(label);
+            });
         }
 
         function updateLineChart(svg) {
-            const svgWidth = svg.clientWidth || 900;
-            const svgHeight = svg.clientHeight || 550;
-            const axisFontSize = parseInt(document.getElementById('axisFontSize').value) || 35;
-            const titleFontSize = parseInt(document.getElementById('titleFontSize').value) || 50;
+            // Get dimensions from viewBox if available, otherwise use defaults
+            const viewBox = svg.getAttribute('viewBox');
+            let svgWidth, svgHeight;
+            if (viewBox) {
+                const dims = viewBox.split(' ');
+                svgWidth = parseFloat(dims[2]);
+                svgHeight = parseFloat(dims[3]);
+            } else {
+                svgWidth = svg.clientWidth || 900;
+                svgHeight = svg.clientHeight || 550;
+            }
+            const baseAxisFontSize = parseInt(document.getElementById('axisFontSize').value) || 35;
+            const baseTitleFontSize = parseInt(document.getElementById('titleFontSize').value) || 50;
+            // Scale fonts to keep visual size consistent across aspect ratios (matching animation)
+            const fontScale = currentAspectRatio === '16:9' ? 1.0 : 1.5;
+            const axisFontSize = baseAxisFontSize * fontScale;
+            const titleFontSize = baseTitleFontSize * fontScale;
             const chartTitle = document.getElementById('chartTitle').value;
 
-            const topPadding = chartTitle ? titleFontSize + 200 : 60;
-            const bottomPadding = axisFontSize + 120;
+            // Get padding from chart size settings (matching animation)
+            const canvasDims = getCanvasDimensions();
+            const padding = canvasDims.getPadding();
+            const minPadding = { horizontal: 60, vertical: 40 };
+
+            // Calculate padding - minimum needed for axis/labels + chart size setting
+            const topPadding = minPadding.vertical + padding.vertical + (chartTitle ? titleFontSize + 200 : 0);
+            const bottomPadding = minPadding.vertical + padding.vertical + (axisFontSize + 120);
+            const leftPadding = minPadding.horizontal + padding.horizontal + 60;
+            const rightPadding = minPadding.horizontal + padding.horizontal;
+
             const chartHeight = svgHeight - topPadding - bottomPadding;
             const maxValue = Math.max(...dataItems.map(item => item.value));
             const pointCount = dataItems.length;
-            const pointSpacing = 120;
-            const neededWidth = (pointCount - 1) * pointSpacing + 40;
-            const leftPadding = Math.max(60, (svgWidth - neededWidth) / 2);
-            const xAxisEnd = leftPadding + neededWidth;
+
+            // Calculate spacing to fit in available width
+            const availableWidth = svgWidth - leftPadding - rightPadding;
+            const pointSpacing = availableWidth / Math.max(1, pointCount - 1);
+            const xAxisEnd = svgWidth - rightPadding;
             const roughness = parseFloat(document.getElementById('roughnessSlider').value);
             const dataLabelFontSize = axisFontSize; // Use same font size as axis
             const yAxisExtension = dataLabelFontSize + 20; // Extra space for data labels above points
@@ -1928,19 +2047,101 @@
                 svg.appendChild(title);
             }
 
-            const lineData = dataItems.map((item, index) => {
+            const datapointShape = document.getElementById('datapointShape').value;
+            const points = [];
+
+            // Draw line connecting points
+            dataItems.forEach((item, index) => {
                 const x = leftPadding + 20 + (index * pointSpacing);
                 const y = svgHeight - bottomPadding - ((item.value / maxValue) * chartHeight);
-                return {
-                    x, y,
-                    value: item.value,
-                    label: item.label,
-                    color: item.color,
-                    pattern: item.pattern
-                };
+                points.push({ x, y, item, index });
             });
 
-            svg.dataset.lineData = JSON.stringify(lineData);
+            // Draw the line
+            if (points.length > 1) {
+                for (let i = 0; i < points.length - 1; i++) {
+                    const line = rc.line(points[i].x, points[i].y, points[i + 1].x, points[i + 1].y, {
+                        roughness: roughness,
+                        strokeWidth: 3,
+                        stroke: '#333'
+                    });
+                    svg.appendChild(line);
+                }
+            }
+
+            // Draw data points
+            points.forEach(({ x, y, item, index }) => {
+                // Draw the shape
+                const shapeSize = 15;
+                let shape;
+                if (datapointShape === 'circle') {
+                    shape = rc.circle(x, y, shapeSize * 2, {
+                        fill: item.color,
+                        fillStyle: 'solid',
+                        roughness: roughness,
+                        strokeWidth: 2,
+                        stroke: '#333'
+                    });
+                } else if (datapointShape === 'square') {
+                    shape = rc.rectangle(x - shapeSize, y - shapeSize, shapeSize * 2, shapeSize * 2, {
+                        fill: item.color,
+                        fillStyle: 'solid',
+                        roughness: roughness,
+                        strokeWidth: 2,
+                        stroke: '#333'
+                    });
+                } else if (datapointShape === 'diamond') {
+                    const points = [
+                        [x, y - shapeSize],
+                        [x + shapeSize, y],
+                        [x, y + shapeSize],
+                        [x - shapeSize, y]
+                    ];
+                    shape = rc.polygon(points, {
+                        fill: item.color,
+                        fillStyle: 'solid',
+                        roughness: roughness,
+                        strokeWidth: 2,
+                        stroke: '#333'
+                    });
+                } else { // triangle
+                    const points = [
+                        [x, y - shapeSize],
+                        [x + shapeSize, y + shapeSize],
+                        [x - shapeSize, y + shapeSize]
+                    ];
+                    shape = rc.polygon(points, {
+                        fill: item.color,
+                        fillStyle: 'solid',
+                        roughness: roughness,
+                        strokeWidth: 2,
+                        stroke: '#333'
+                    });
+                }
+                svg.appendChild(shape);
+
+                // Draw label below point
+                const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                label.setAttribute('x', x);
+                label.setAttribute('y', svgHeight - bottomPadding + 30);
+                label.setAttribute('text-anchor', 'middle');
+                label.setAttribute('class', 'bar-label');
+                label.style.fontSize = axisFontSize + 'px';
+                label.style.fontWeight = '600';
+                label.textContent = item.label;
+                svg.appendChild(label);
+
+                // Draw value above point
+                const valueLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                valueLabel.setAttribute('x', x);
+                valueLabel.setAttribute('y', y - 20);
+                valueLabel.setAttribute('text-anchor', 'middle');
+                valueLabel.setAttribute('class', 'bar-label');
+                valueLabel.style.fontSize = dataLabelFontSize + 'px';
+                valueLabel.style.fontWeight = '600';
+                valueLabel.textContent = item.value;
+                svg.appendChild(valueLabel);
+            });
         }
 
         let currentHue = 0;
@@ -2004,7 +2205,7 @@
             if (editingDataIndex >= 0) {
                 dataItems[editingDataIndex].pattern = patternName;
                 updateDataList();
-                updateChart();
+                updatePreview(); // Pattern change doesn't need re-animation
             } else {
                 updateCurrentPatternPreview();
             }
@@ -2101,7 +2302,7 @@
                 if (editingDataIndex >= 0) {
                     dataItems[editingDataIndex].color = hex;
                     updateDataList();
-                    updateChart();
+                    updatePreview(); // Color change doesn't need re-animation
                 } else {
                     updateCurrentPatternPreview();
                 }
@@ -2123,7 +2324,7 @@
                 if (editingDataIndex >= 0) {
                     dataItems[editingDataIndex].color = hex;
                     updateDataList();
-                    updateChart();
+                    updatePreview(); // Color change doesn't need re-animation
                 } else {
                     updateCurrentPatternPreview();
                 }
