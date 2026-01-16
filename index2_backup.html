@@ -1,0 +1,2192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Animated Bar Chart - Sketch Style</title>
+    <script src="https://cdn.jsdelivr.net/npm/roughjs@4.6.6/bundled/rough.js"></script>
+    <style>
+        @font-face {
+            font-family: 'HMT Regular';
+            src: url('fonts/HmtRegular-WRrv.ttf') format('truetype');
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #fef9e7;
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            background: #fffef7;
+            border-radius: 15px;
+            padding: 40px;
+            box-shadow: 3px 3px 15px rgba(0, 0, 0, 0.2);
+            max-width: 1200px;
+            width: 100%;
+            border: 3px solid #333;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+            text-align: center;
+            font-size: 2.5em;
+        }
+
+        .input-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        input[type="text"],
+        input[type="number"] {
+            padding: 12px 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus,
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            min-width: 150px;
+        }
+
+        input[type="number"] {
+            width: 120px;
+        }
+
+        input[type="color"] {
+            width: 60px;
+            height: 44px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        select {
+            padding: 12px 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            background: white;
+            cursor: pointer;
+        }
+
+        .pattern-selector {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .pattern-option {
+            width: 70px;
+            height: 70px;
+            cursor: pointer;
+            display: inline-block;
+            position: relative;
+        }
+
+        .pattern-option svg {
+            width: 70px;
+            height: 70px;
+            display: block;
+            transition: all 0.2s;
+        }
+
+        .pattern-option:hover svg {
+            transform: scale(1.08);
+        }
+
+        .pattern-option.selected svg {
+            transform: scale(1.1);
+        }
+
+        .pattern-option.selected::after {
+            content: '';
+            position: absolute;
+            top: -4px;
+            left: -4px;
+            right: -4px;
+            bottom: -4px;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            pointer-events: none;
+        }
+
+        button {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .add-btn {
+            background: #667eea;
+            color: white;
+        }
+
+        .add-btn:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+        }
+
+        .remove-btn {
+            background: #e74c3c;
+            color: white;
+            padding: 8px 15px;
+            font-size: 14px;
+        }
+
+        .remove-btn:hover {
+            background: #c0392b;
+        }
+
+        .animate-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            width: 100%;
+            padding: 15px;
+            font-size: 18px;
+            margin-top: 10px;
+        }
+
+        .animate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .animate-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .data-item {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 10px;
+            padding: 10px;
+            background: white;
+            border-radius: 8px;
+        }
+
+        .data-list {
+            margin-top: 20px;
+        }
+
+        .chart-section {
+            margin-top: 40px;
+            padding: 30px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            min-height: 400px;
+        }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            height: 450px;
+        }
+
+        #chartSvg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .bar-label {
+            font-family: 'HMT Regular', sans-serif;
+            font-weight: 600;
+            color: #333;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .bar-value {
+            font-family: 'HMT Regular', sans-serif;
+            font-weight: 700;
+            color: #333;
+            font-size: 16px;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: #999;
+            padding: 50px;
+            font-size: 18px;
+        }
+
+        .settings-section {
+            margin-top: 20px;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+        }
+
+        .settings-group {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .setting-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .setting-item label {
+            flex: 1;
+            font-weight: 600;
+            color: #555;
+            font-size: 14px;
+        }
+
+        .setting-item input[type="range"] {
+            flex: 2;
+            min-width: 200px;
+        }
+
+        .setting-item .value-display {
+            width: 80px;
+            text-align: right;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .data-item {
+            animation: slideIn 0.3s ease;
+        }
+
+        .palette-btn:hover {
+            transform: scale(1.03);
+            border-color: #667eea;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .palette-btn:active {
+            transform: scale(0.98);
+        }
+
+        .color-pattern-preview {
+            width: 60px;
+            height: 44px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .color-pattern-preview:hover {
+            border-color: #667eea;
+            transform: scale(1.05);
+        }
+
+        .edit-popup {
+            display: none;
+            position: fixed;
+            background: white;
+            border: 3px solid #667eea;
+            border-radius: 8px;
+            padding: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            min-width: 280px;
+        }
+
+        .edit-popup.active {
+            display: block;
+        }
+
+        .edit-popup-color {
+            margin-bottom: 12px;
+        }
+
+        .color-picker-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .color-canvas {
+            width: 180px;
+            height: 180px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            cursor: crosshair;
+            position: relative;
+        }
+
+        .color-hue-slider {
+            width: 20px;
+            height: 180px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            cursor: pointer;
+            background: linear-gradient(to bottom,
+                #ff0000 0%,
+                #ffff00 17%,
+                #00ff00 33%,
+                #00ffff 50%,
+                #0000ff 67%,
+                #ff00ff 83%,
+                #ff0000 100%);
+        }
+
+        .color-hex-input {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .color-hex-input label {
+            font-size: 12px;
+            font-weight: 700;
+            color: #555;
+        }
+
+        .color-hex-input input {
+            flex: 1;
+            padding: 6px 10px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 13px;
+            font-family: monospace;
+            text-transform: uppercase;
+        }
+
+        .color-display-small {
+            width: 40px;
+            height: 28px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+        }
+
+        .edit-popup-patterns {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .edit-popup-pattern {
+            width: 50px;
+            height: 50px;
+            cursor: pointer;
+            display: inline-block;
+            position: relative;
+        }
+
+        .edit-popup-pattern svg {
+            width: 50px;
+            height: 50px;
+            display: block;
+            transition: all 0.2s;
+        }
+
+        .edit-popup-pattern:hover svg {
+            transform: scale(1.08);
+        }
+
+        .edit-popup-pattern.selected svg {
+            transform: scale(1.1);
+        }
+
+        .edit-popup-pattern.selected::after {
+            content: '';
+            position: absolute;
+            top: -3px;
+            left: -3px;
+            right: -3px;
+            bottom: -3px;
+            border: 2px solid #667eea;
+            border-radius: 6px;
+            pointer-events: none;
+        }
+
+        .data-item {
+            position: relative;
+        }
+
+        .chart-type-btn {
+            padding: 10px 20px;
+            border: 3px solid #ddd;
+            border-radius: 8px;
+            background: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .chart-type-btn:hover {
+            border-color: #667eea;
+            transform: scale(1.03);
+        }
+
+        .chart-type-btn.selected {
+            border-color: #667eea;
+            background: #667eea;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Animated Bar Chart</h1>
+
+        <div class="input-section">
+            <h2 style="margin-bottom: 20px; color: #555;">Color Palette</h2>
+            <div style="padding: 15px; background: white; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 25px;">
+                <label style="font-size: 14px; color: #555; font-weight: 600; display: block; margin-bottom: 12px;">Choose a color scheme (auto-applies to all items):</label>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+                    <button class="palette-btn" onclick="selectPalette('retro')" style="height: 60px; border: 3px solid #ddd; border-radius: 8px; background: linear-gradient(90deg, #e63946 0%, #e63946 12.5%, #f77f00 12.5%, #f77f00 25%, #fcbf49 25%, #fcbf49 37.5%, #06a77d 37.5%, #06a77d 50%, #118ab2 50%, #118ab2 62.5%, #073b4c 62.5%, #073b4c 75%, #dd6e42 75%, #dd6e42 87.5%, #e8dab2 87.5%, #e8dab2 100%); cursor: pointer; position: relative; overflow: hidden; transition: all 0.3s;">
+                        <span style="position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%); background: rgba(255,255,255,0.95); padding: 4px 12px; border-radius: 4px; font-size: 12px; font-weight: 700; color: #333; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">Retro Warm</span>
+                    </button>
+                    <button class="palette-btn" onclick="selectPalette('pastel')" style="height: 60px; border: 3px solid #ddd; border-radius: 8px; background: linear-gradient(90deg, #ffb5c2 0%, #ffb5c2 12.5%, #ffd4a3 12.5%, #ffd4a3 25%, #fff5ba 25%, #fff5ba 37.5%, #b4e4d4 37.5%, #b4e4d4 50%, #c5a9e8 50%, #c5a9e8 62.5%, #ffccf9 62.5%, #ffccf9 75%, #a8e6cf 75%, #a8e6cf 87.5%, #ffd3b6 87.5%, #ffd3b6 100%); cursor: pointer; position: relative; overflow: hidden; transition: all 0.3s;">
+                        <span style="position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%); background: rgba(255,255,255,0.95); padding: 4px 12px; border-radius: 4px; font-size: 12px; font-weight: 700; color: #333; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">Pastel Soft</span>
+                    </button>
+                    <button class="palette-btn" onclick="selectPalette('vintage')" style="height: 60px; border: 3px solid #ddd; border-radius: 8px; background: linear-gradient(90deg, #8b7e66 0%, #8b7e66 12.5%, #a4907c 12.5%, #a4907c 25%, #c9b8a3 25%, #c9b8a3 37.5%, #7d8570 37.5%, #7d8570 50%, #8e7c68 50%, #8e7c68 62.5%, #b4a088 62.5%, #b4a088 75%, #9b8b7e 75%, #9b8b7e 87.5%, #a89f91 87.5%, #a89f91 100%); cursor: pointer; position: relative; overflow: hidden; transition: all 0.3s;">
+                        <span style="position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%); background: rgba(255,255,255,0.95); padding: 4px 12px; border-radius: 4px; font-size: 12px; font-weight: 700; color: #333; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">Vintage Earth</span>
+                    </button>
+                    <button class="palette-btn" onclick="selectPalette('poster')" style="height: 60px; border: 3px solid #ddd; border-radius: 8px; background: linear-gradient(90deg, #264653 0%, #264653 12.5%, #2a9d8f 12.5%, #2a9d8f 25%, #e9c46a 25%, #e9c46a 37.5%, #f4a261 37.5%, #f4a261 50%, #e76f51 50%, #e76f51 62.5%, #6a994e 62.5%, #6a994e 75%, #bc4749 75%, #bc4749 87.5%, #9d4edd 87.5%, #9d4edd 100%); cursor: pointer; position: relative; overflow: hidden; transition: all 0.3s;">
+                        <span style="position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%); background: rgba(255,255,255,0.95); padding: 4px 12px; border-radius: 4px; font-size: 12px; font-weight: 700; color: #333; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">Poster Bold</span>
+                    </button>
+                    <button class="palette-btn" onclick="selectPalette('sketch')" style="height: 60px; border: 3px solid #ddd; border-radius: 8px; background: linear-gradient(90deg, #457b9d 0%, #457b9d 12.5%, #a8dadc 12.5%, #a8dadc 25%, #f1faee 25%, #f1faee 37.5%, #e63946 37.5%, #e63946 50%, #1d3557 50%, #1d3557 62.5%, #f77f00 62.5%, #f77f00 75%, #06a77d 75%, #06a77d 87.5%, #e9c46a 87.5%, #e9c46a 100%); cursor: pointer; position: relative; overflow: hidden; transition: all 0.3s;">
+                        <span style="position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%); background: rgba(255,255,255,0.95); padding: 4px 12px; border-radius: 4px; font-size: 12px; font-weight: 700; color: #333; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">Sketch Blue</span>
+                    </button>
+                    <button class="palette-btn" onclick="selectPalette('autumn')" style="height: 60px; border: 3px solid #ddd; border-radius: 8px; background: linear-gradient(90deg, #8b4513 0%, #8b4513 12.5%, #d2691e 12.5%, #d2691e 25%, #daa520 25%, #daa520 37.5%, #b8860b 37.5%, #b8860b 50%, #cd853f 50%, #cd853f 62.5%, #a0522d 62.5%, #a0522d 75%, #c19a6b 75%, #c19a6b 87.5%, #e3a857 87.5%, #e3a857 100%); cursor: pointer; position: relative; overflow: hidden; transition: all 0.3s;">
+                        <span style="position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%); background: rgba(255,255,255,0.95); padding: 4px 12px; border-radius: 4px; font-size: 12px; font-weight: 700; color: #333; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">Autumn Leaves</span>
+                    </button>
+                    <button class="palette-btn" onclick="selectPalette('ocean')" style="height: 60px; border: 3px solid #ddd; border-radius: 8px; background: linear-gradient(90deg, #006994 0%, #006994 12.5%, #247ba0 12.5%, #247ba0 25%, #1e96c8 25%, #1e96c8 37.5%, #2cb5e8 37.5%, #2cb5e8 50%, #7fcdff 50%, #7fcdff 62.5%, #4dd0e1 62.5%, #4dd0e1 75%, #00acc1 75%, #00acc1 87.5%, #0097a7 87.5%, #0097a7 100%); cursor: pointer; position: relative; overflow: hidden; transition: all 0.3s;">
+                        <span style="position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%); background: rgba(255,255,255,0.95); padding: 4px 12px; border-radius: 4px; font-size: 12px; font-weight: 700; color: #333; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">Ocean Breeze</span>
+                    </button>
+                    <button class="palette-btn" onclick="selectPalette('forest')" style="height: 60px; border: 3px solid #ddd; border-radius: 8px; background: linear-gradient(90deg, #2d5016 0%, #2d5016 12.5%, #3d6b28 12.5%, #3d6b28 25%, #4a7c3a 25%, #4a7c3a 37.5%, #5a8e4c 37.5%, #5a8e4c 50%, #6ca35f 50%, #6ca35f 62.5%, #7eb773 62.5%, #7eb773 75%, #90ca87 75%, #90ca87 87.5%, #a4d99b 87.5%, #a4d99b 100%); cursor: pointer; position: relative; overflow: hidden; transition: all 0.3s;">
+                        <span style="position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%); background: rgba(255,255,255,0.95); padding: 4px 12px; border-radius: 4px; font-size: 12px; font-weight: 700; color: #333; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">Forest Green</span>
+                    </button>
+                    <button class="palette-btn" onclick="selectPalette('sunset')" style="height: 60px; border: 3px solid #ddd; border-radius: 8px; background: linear-gradient(90deg, #ff6b35 0%, #ff6b35 12.5%, #f7931e 12.5%, #f7931e 25%, #fdc82f 25%, #fdc82f 37.5%, #fbb040 37.5%, #fbb040 50%, #f89c50 50%, #f89c50 62.5%, #f57e5f 62.5%, #f57e5f 75%, #f25f70 75%, #f25f70 87.5%, #ef4180 87.5%, #ef4180 100%); cursor: pointer; position: relative; overflow: hidden; transition: all 0.3s;">
+                        <span style="position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%); background: rgba(255,255,255,0.95); padding: 4px 12px; border-radius: 4px; font-size: 12px; font-weight: 700; color: #333; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">Sunset Glow</span>
+                    </button>
+                    <button class="palette-btn" onclick="selectPalette('candy')" style="height: 60px; border: 3px solid #ddd; border-radius: 8px; background: linear-gradient(90deg, #ff6b9d 0%, #ff6b9d 12.5%, #c44569 12.5%, #c44569 25%, #ffa07a 25%, #ffa07a 37.5%, #fa8072 37.5%, #fa8072 50%, #e0b0ff 50%, #e0b0ff 62.5%, #dda0dd 62.5%, #dda0dd 75%, #ffc0cb 75%, #ffc0cb 87.5%, #ffb6c1 87.5%, #ffb6c1 100%); cursor: pointer; position: relative; overflow: hidden; transition: all 0.3s;">
+                        <span style="position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%); background: rgba(255,255,255,0.95); padding: 4px 12px; border-radius: 4px; font-size: 12px; font-weight: 700; color: #333; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">Candy Pop</span>
+                    </button>
+                    <button class="palette-btn" onclick="selectPalette('earthy')" style="height: 60px; border: 3px solid #ddd; border-radius: 8px; background: linear-gradient(90deg, #936639 0%, #936639 12.5%, #a67c52 12.5%, #a67c52 25%, #b8926b 25%, #b8926b 37.5%, #caa884 37.5%, #caa884 50%, #7c6a5c 50%, #7c6a5c 62.5%, #8d7966 62.5%, #8d7966 75%, #9e8870 75%, #9e8870 87.5%, #af977a 87.5%, #af977a 100%); cursor: pointer; position: relative; overflow: hidden; transition: all 0.3s;">
+                        <span style="position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%); background: rgba(255,255,255,0.95); padding: 4px 12px; border-radius: 4px; font-size: 12px; font-weight: 700; color: #333; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">Earthy Tones</span>
+                    </button>
+                    <button class="palette-btn" onclick="selectPalette('neon')" style="height: 60px; border: 3px solid #ddd; border-radius: 8px; background: linear-gradient(90deg, #ff006e 0%, #ff006e 12.5%, #fb5607 12.5%, #fb5607 25%, #ffbe0b 25%, #ffbe0b 37.5%, #8338ec 37.5%, #8338ec 50%, #3a86ff 50%, #3a86ff 62.5%, #06ffa5 62.5%, #06ffa5 75%, #ff006e 75%, #ff006e 87.5%, #fb5607 87.5%, #fb5607 100%); cursor: pointer; position: relative; overflow: hidden; transition: all 0.3s;">
+                        <span style="position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%); background: rgba(255,255,255,0.95); padding: 4px 12px; border-radius: 4px; font-size: 12px; font-weight: 700; color: #333; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">Neon Bright</span>
+                    </button>
+                    <button class="palette-btn" onclick="selectPalette('muted')" style="height: 60px; border: 3px solid #ddd; border-radius: 8px; background: linear-gradient(90deg, #6c757d 0%, #6c757d 12.5%, #8d99ae 12.5%, #8d99ae 25%, #9ba4b5 25%, #9ba4b5 37.5%, #adb5bd 37.5%, #adb5bd 50%, #b1a7a6 50%, #b1a7a6 62.5%, #c6b9cd 62.5%, #c6b9cd 75%, #d6cbd3 75%, #d6cbd3 87.5%, #e5d4ce 87.5%, #e5d4ce 100%); cursor: pointer; position: relative; overflow: hidden; transition: all 0.3s;">
+                        <span style="position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%); background: rgba(255,255,255,0.95); padding: 4px 12px; border-radius: 4px; font-size: 12px; font-weight: 700; color: #333; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">Muted Grey</span>
+                    </button>
+                </div>
+                <div style="margin-top: 10px; font-size: 12px; color: #777;">Current palette: <span id="currentPalette" style="font-weight: 600; color: #667eea;">Retro Warm</span></div>
+            </div>
+
+            <h2 style="margin-bottom: 20px; color: #555;">Chart Type</h2>
+            <div style="padding: 15px; background: white; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 25px;">
+                <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                    <button class="chart-type-btn selected" data-chart="bar" onclick="selectChartType('bar', this)">Bar Chart</button>
+                    <button class="chart-type-btn" data-chart="pie" onclick="selectChartType('pie', this)">Pie Chart</button>
+                    <button class="chart-type-btn" data-chart="line" onclick="selectChartType('line', this)">Line Chart</button>
+                </div>
+            </div>
+
+            <h2 style="margin-bottom: 20px; color: #555;">Add Data</h2>
+            <div class="input-group">
+                <input type="text" id="labelInput" placeholder="Label (e.g., Product A)" />
+                <input type="number" id="valueInput" placeholder="Value" min="0" />
+                <input type="color" id="colorInput" value="#6b8ef7" title="Bar Color" oninput="updatePatternColors(this.value)" />
+                <button class="add-btn" onclick="addData()">Add Item</button>
+            </div>
+
+            <div style="margin-top: 20px; padding: 15px; background: white; border-radius: 8px; border: 1px solid #ddd;">
+                <label style="font-size: 14px; color: #555; font-weight: 600; display: block; margin-bottom: 12px;">Select Pattern:</label>
+                <div class="pattern-selector">
+                    <div class="pattern-option selected" data-pattern="solid" onclick="selectPattern('solid', this)" title="Solid Fill">
+                        <svg id="preview-solid"></svg>
+                    </div>
+                    <div class="pattern-option" data-pattern="hachure" onclick="selectPattern('hachure', this)" title="Diagonal Lines">
+                        <svg id="preview-hachure"></svg>
+                    </div>
+                    <div class="pattern-option" data-pattern="cross-hatch" onclick="selectPattern('cross-hatch', this)" title="Crossed Lines">
+                        <svg id="preview-cross-hatch"></svg>
+                    </div>
+                    <div class="pattern-option" data-pattern="dots" onclick="selectPattern('dots', this)" title="Dots">
+                        <svg id="preview-dots"></svg>
+                    </div>
+                    <div class="pattern-option" data-pattern="dashed" onclick="selectPattern('dashed', this)" title="Dashed Lines">
+                        <svg id="preview-dashed"></svg>
+                    </div>
+                    <div class="pattern-option" data-pattern="zigzag-line" onclick="selectPattern('zigzag-line', this)" title="Zigzag Line">
+                        <svg id="preview-zigzag-line"></svg>
+                    </div>
+                </div>
+            </div>
+            <input type="hidden" id="patternInput" value="solid" />
+
+            <div class="data-list" id="dataList"></div>
+
+            <div class="settings-section">
+                <h3 style="margin-bottom: 15px; color: #555; font-size: 16px;">Chart Labels</h3>
+                <div class="settings-group">
+                    <div class="setting-item">
+                        <label for="chartTitle">Chart Title:</label>
+                        <input type="text" id="chartTitle" placeholder="Enter chart title" style="flex: 2; min-width: 200px;" oninput="updateChart()">
+                    </div>
+                    <div class="setting-item">
+                        <label for="xAxisLabel">X-Axis Label:</label>
+                        <input type="text" id="xAxisLabel" placeholder="Enter X-axis label" style="flex: 2; min-width: 200px;" oninput="updateChart()">
+                    </div>
+                    <div class="setting-item">
+                        <label for="yAxisLabel">Y-Axis Label:</label>
+                        <input type="text" id="yAxisLabel" placeholder="Enter Y-axis label" style="flex: 2; min-width: 200px;" oninput="updateChart()">
+                    </div>
+                </div>
+            </div>
+
+            <div class="settings-section" style="margin-top: 20px;">
+                <h3 style="margin-bottom: 15px; color: #555; font-size: 16px;">Background</h3>
+                <div class="settings-group">
+                    <div class="setting-item">
+                        <label>Background Type:</label>
+                        <div style="display: flex; gap: 10px; flex: 2;">
+                            <label style="display: flex; align-items: center; gap: 5px; cursor: pointer;">
+                                <input type="radio" name="bgType" value="color" checked onchange="toggleBackgroundType()"> Solid Color
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 5px; cursor: pointer;">
+                                <input type="radio" name="bgType" value="image" onchange="toggleBackgroundType()"> Image
+                            </label>
+                        </div>
+                    </div>
+                    <div class="setting-item" id="bgColorSetting">
+                        <label for="bgColor">Background Color:</label>
+                        <div id="bgColorDisplay" onclick="openBgColorPicker()" style="width: 60px; height: 40px; background: #ffffff; border: 3px solid #333; border-radius: 6px; cursor: pointer; transition: all 0.2s;"></div>
+                        <input type="hidden" id="bgColor" value="#ffffff">
+                    </div>
+                    <div class="setting-item" id="bgImageSetting" style="display: none;">
+                        <label for="bgImage">Background Image:</label>
+                        <input type="file" id="bgImage" accept="image/*" onchange="handleBackgroundImage()" style="flex: 2;">
+                    </div>
+                </div>
+            </div>
+
+            <div class="settings-section" style="margin-top: 20px;">
+                <h3 style="margin-bottom: 15px; color: #555; font-size: 16px;">Animation Settings</h3>
+                <div class="settings-group">
+                    <div class="setting-item">
+                        <label for="durationSlider">Rising Speed:</label>
+                        <input type="range" id="durationSlider" min="500" max="5000" value="2500" step="100"
+                               oninput="updateDurationDisplay(this.value)">
+                        <span class="value-display" id="durationDisplay">2.5s</span>
+                    </div>
+                    <div class="setting-item">
+                        <label for="sketchSlider">Sketch Update Rate:</label>
+                        <input type="range" id="sketchSlider" min="50" max="500" value="100" step="10"
+                               oninput="updateSketchDisplay(this.value)">
+                        <span class="value-display" id="sketchDisplay">100ms</span>
+                    </div>
+                    <div class="setting-item">
+                        <label for="fontSizeSlider">Label Font Size:</label>
+                        <input type="range" id="fontSizeSlider" min="10" max="50" value="28" step="2"
+                               oninput="updateFontSizeDisplay(this.value); updateChart();">
+                        <span class="value-display" id="fontSizeDisplay">28px</span>
+                    </div>
+                    <div class="setting-item">
+                        <label for="roughnessSlider">Sketch Roughness:</label>
+                        <input type="range" id="roughnessSlider" min="0" max="5" value="2" step="0.5"
+                               oninput="updateRoughnessDisplay(this.value)">
+                        <span class="value-display" id="roughnessDisplay">2.0</span>
+                    </div>
+                </div>
+            </div>
+
+            <button class="animate-btn" onclick="animateChart()" id="animateBtn" disabled>
+                Animate Chart
+            </button>
+        </div>
+
+        <div class="chart-section">
+            <div class="chart-container" id="chartContainer">
+                <svg id="chartSvg"></svg>
+                <div class="empty-state" id="emptyState">Add data items above to see the chart</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Color/Pattern Popup -->
+    <div class="edit-popup" id="editPopup">
+        <div class="edit-popup-color">
+            <div class="color-picker-container">
+                <canvas id="colorCanvas" class="color-canvas" width="180" height="180"></canvas>
+                <canvas id="hueSlider" class="color-hue-slider" width="20" height="180"></canvas>
+            </div>
+            <div class="color-hex-input">
+                <label>Hex:</label>
+                <input type="text" id="hexInput" maxlength="7" value="#FF0000" oninput="updateColorFromHex()">
+                <div class="color-display-small" id="colorDisplaySmall"></div>
+            </div>
+        </div>
+        <div class="edit-popup-patterns">
+            <div class="edit-popup-pattern" data-pattern="solid" onclick="selectPopupPattern('solid', this)">
+                <svg id="popup-preview-solid"></svg>
+            </div>
+            <div class="edit-popup-pattern" data-pattern="hachure" onclick="selectPopupPattern('hachure', this)">
+                <svg id="popup-preview-hachure"></svg>
+            </div>
+            <div class="edit-popup-pattern" data-pattern="cross-hatch" onclick="selectPopupPattern('cross-hatch', this)">
+                <svg id="popup-preview-cross-hatch"></svg>
+            </div>
+            <div class="edit-popup-pattern" data-pattern="dots" onclick="selectPopupPattern('dots', this)">
+                <svg id="popup-preview-dots"></svg>
+            </div>
+            <div class="edit-popup-pattern" data-pattern="dashed" onclick="selectPopupPattern('dashed', this)">
+                <svg id="popup-preview-dashed"></svg>
+            </div>
+            <div class="edit-popup-pattern" data-pattern="zigzag-line" onclick="selectPopupPattern('zigzag-line', this)">
+                <svg id="popup-preview-zigzag-line"></svg>
+            </div>
+        </div>
+    </div>
+
+    <!-- Background Color Picker Popup -->
+    <div class="edit-popup" id="bgColorPickerPopup">
+        <div class="edit-popup-color">
+            <div class="color-picker-container">
+                <canvas id="bgColorCanvas" class="color-canvas" width="180" height="180"></canvas>
+                <canvas id="bgHueSlider" class="color-hue-slider" width="20" height="180"></canvas>
+            </div>
+            <div class="color-hex-input">
+                <label>Hex:</label>
+                <input type="text" id="bgHexInput" maxlength="7" value="#FFFFFF" oninput="updateBgColorFromHex()">
+                <div class="color-display-small" id="bgColorDisplaySmall"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let dataItems = [];
+        let rc; // Rough canvas instance
+        let currentPaletteIndex = 0;
+        let editingItemIndex = -1;
+        let modalSelectedPattern = 'solid';
+        let currentChartType = 'bar';
+        let backgroundImage = null;
+
+        // Color palettes - retro and sketch-style
+        const colorPalettes = {
+            'retro': ['#e63946', '#f77f00', '#fcbf49', '#06a77d', '#118ab2', '#073b4c', '#dd6e42', '#e8dab2'],
+            'pastel': ['#ffb5c2', '#ffd4a3', '#fff5ba', '#b4e4d4', '#c5a9e8', '#ffccf9', '#a8e6cf', '#ffd3b6'],
+            'vintage': ['#8b7e66', '#a4907c', '#c9b8a3', '#7d8570', '#8e7c68', '#b4a088', '#9b8b7e', '#a89f91'],
+            'poster': ['#264653', '#2a9d8f', '#e9c46a', '#f4a261', '#e76f51', '#6a994e', '#bc4749', '#9d4edd'],
+            'sketch': ['#457b9d', '#a8dadc', '#f1faee', '#e63946', '#1d3557', '#f77f00', '#06a77d', '#e9c46a'],
+            'autumn': ['#8b4513', '#d2691e', '#daa520', '#b8860b', '#cd853f', '#a0522d', '#c19a6b', '#e3a857'],
+            'ocean': ['#006994', '#247ba0', '#1e96c8', '#2cb5e8', '#7fcdff', '#4dd0e1', '#00acc1', '#0097a7'],
+            'forest': ['#2d5016', '#3d6b28', '#4a7c3a', '#5a8e4c', '#6ca35f', '#7eb773', '#90ca87', '#a4d99b'],
+            'sunset': ['#ff6b35', '#f7931e', '#fdc82f', '#fbb040', '#f89c50', '#f57e5f', '#f25f70', '#ef4180'],
+            'candy': ['#ff6b9d', '#c44569', '#ffa07a', '#fa8072', '#e0b0ff', '#dda0dd', '#ffc0cb', '#ffb6c1'],
+            'earthy': ['#936639', '#a67c52', '#b8926b', '#caa884', '#7c6a5c', '#8d7966', '#9e8870', '#af977a'],
+            'neon': ['#ff006e', '#fb5607', '#ffbe0b', '#8338ec', '#3a86ff', '#06ffa5', '#ff006e', '#fb5607'],
+            'muted': ['#6c757d', '#8d99ae', '#9ba4b5', '#adb5bd', '#b1a7a6', '#c6b9cd', '#d6cbd3', '#e5d4ce']
+        };
+
+        let selectedPalette = 'retro';
+
+        // Initialize Rough.js
+        window.addEventListener('DOMContentLoaded', () => {
+            const svg = document.getElementById('chartSvg');
+            rc = rough.svg(svg);
+            initializePatternPreviews();
+            updateColorInputFromPalette();
+        });
+
+        // Select chart type function
+        function selectChartType(chartType, element) {
+            currentChartType = chartType;
+
+            // Update button styles
+            document.querySelectorAll('.chart-type-btn').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+            element.classList.add('selected');
+
+            // Update chart
+            updateChart();
+        }
+
+        // Select palette function
+        function selectPalette(paletteName) {
+            selectedPalette = paletteName;
+            currentPaletteIndex = 0;
+
+            // Update display
+            const paletteNames = {
+                'retro': 'Retro Warm',
+                'pastel': 'Pastel Soft',
+                'vintage': 'Vintage Earth',
+                'poster': 'Poster Bold',
+                'sketch': 'Sketch Blue',
+                'autumn': 'Autumn Leaves',
+                'ocean': 'Ocean Breeze',
+                'forest': 'Forest Green',
+                'sunset': 'Sunset Glow',
+                'candy': 'Candy Pop',
+                'earthy': 'Earthy Tones',
+                'neon': 'Neon Bright',
+                'muted': 'Muted Grey'
+            };
+            document.getElementById('currentPalette').textContent = paletteNames[paletteName];
+
+            // Apply palette to existing data items
+            const palette = colorPalettes[paletteName];
+            dataItems.forEach((item, index) => {
+                item.color = palette[index % palette.length];
+            });
+
+            // Update the current palette index to continue from where we left off
+            currentPaletteIndex = dataItems.length;
+
+            // Update UI and chart
+            updateDataList();
+            updateChart();
+
+            // Update color input to show next color
+            updateColorInputFromPalette();
+        }
+
+        // Get next color from current palette
+        function getNextPaletteColor() {
+            const palette = colorPalettes[selectedPalette];
+            const color = palette[currentPaletteIndex % palette.length];
+            currentPaletteIndex++;
+            return color;
+        }
+
+        // Update color input with next palette color
+        function updateColorInputFromPalette() {
+            const palette = colorPalettes[selectedPalette];
+            const nextColor = palette[currentPaletteIndex % palette.length];
+            currentPaletteIndex++; // Advance to next color
+            document.getElementById('colorInput').value = nextColor;
+            updatePatternColors(nextColor);
+        }
+
+        // Initialize pattern preview visuals
+        function initializePatternPreviews() {
+            const color = document.getElementById('colorInput').value;
+            updatePatternColors(color);
+        }
+
+        // Update pattern preview colors
+        function updatePatternColors(color) {
+            const patterns = [
+                { name: 'solid', hachureGap: 1 },
+                { name: 'hachure', hachureGap: 6 },
+                { name: 'cross-hatch', hachureGap: 6 },
+                { name: 'dots', hachureGap: 12 },
+                { name: 'dashed', hachureGap: 6 },
+                { name: 'zigzag-line', hachureGap: 6 }
+            ];
+
+            patterns.forEach(patternObj => {
+                const svgElement = document.getElementById(`preview-${patternObj.name}`);
+                if (!svgElement) return;
+
+                // Clear existing content
+                svgElement.innerHTML = '';
+                // Redraw with new color
+                const roughSvg = rough.svg(svgElement);
+                const rect = roughSvg.rectangle(7, 7, 55, 55, {
+                    fill: color,
+                    fillStyle: patternObj.name,
+                    roughness: 2,
+                    strokeWidth: 2,
+                    stroke: '#333',
+                    fillWeight: 2,
+                    hachureAngle: 60,
+                    hachureGap: patternObj.hachureGap
+                });
+                svgElement.appendChild(rect);
+            });
+        }
+
+        // Select pattern function
+        function selectPattern(patternName, element) {
+            // Remove selected class from all options
+            document.querySelectorAll('.pattern-option').forEach(opt => {
+                opt.classList.remove('selected');
+            });
+            // Add selected class to clicked option
+            element.classList.add('selected');
+            // Update hidden input
+            document.getElementById('patternInput').value = patternName;
+        }
+
+        // Update display functions for sliders
+        function updateDurationDisplay(value) {
+            document.getElementById('durationDisplay').textContent = (value / 1000).toFixed(1) + 's';
+        }
+
+        function updateSketchDisplay(value) {
+            document.getElementById('sketchDisplay').textContent = value + 'ms';
+        }
+
+        function updateFontSizeDisplay(value) {
+            document.getElementById('fontSizeDisplay').textContent = value + 'px';
+        }
+
+        function updateRoughnessDisplay(value) {
+            document.getElementById('roughnessDisplay').textContent = parseFloat(value).toFixed(1);
+        }
+
+        function toggleBackgroundType() {
+            const bgType = document.querySelector('input[name="bgType"]:checked').value;
+            const bgColorSetting = document.getElementById('bgColorSetting');
+            const bgImageSetting = document.getElementById('bgImageSetting');
+
+            if (bgType === 'color') {
+                bgColorSetting.style.display = 'flex';
+                bgImageSetting.style.display = 'none';
+                backgroundImage = null;
+            } else {
+                bgColorSetting.style.display = 'none';
+                bgImageSetting.style.display = 'flex';
+            }
+            updateChartBackground();
+        }
+
+        function handleBackgroundImage() {
+            const file = document.getElementById('bgImage').files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    backgroundImage = e.target.result;
+                    updateChartBackground();
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function updateChartBackground() {
+            const chartContainer = document.querySelector('.chart-section');
+            const bgType = document.querySelector('input[name="bgType"]:checked').value;
+
+            if (bgType === 'color') {
+                const bgColor = document.getElementById('bgColor').value;
+                chartContainer.style.background = bgColor;
+                chartContainer.style.backgroundImage = 'none';
+            } else if (backgroundImage) {
+                chartContainer.style.backgroundImage = `url(${backgroundImage})`;
+                chartContainer.style.backgroundSize = 'cover';
+                chartContainer.style.backgroundPosition = 'center';
+            }
+        }
+
+        // Background color picker state
+        let bgCurrentHue = 0;
+        let bgCurrentSaturation = 0;
+        let bgCurrentLightness = 100;
+
+        function openBgColorPicker() {
+            const popup = document.getElementById('bgColorPickerPopup');
+            const bgColorDisplay = document.getElementById('bgColorDisplay');
+
+            // Get current background color
+            const currentBgColor = document.getElementById('bgColor').value;
+
+            // Set color in picker
+            const hsl = hexToHsl(currentBgColor);
+            bgCurrentHue = hsl.h;
+            bgCurrentSaturation = hsl.s;
+            bgCurrentLightness = hsl.l;
+
+            document.getElementById('bgHexInput').value = currentBgColor.toUpperCase();
+            document.getElementById('bgColorDisplaySmall').style.backgroundColor = currentBgColor;
+
+            // Show popup
+            popup.classList.add('active');
+
+            // Position popup below the color display
+            setTimeout(() => {
+                const rect = bgColorDisplay.getBoundingClientRect();
+                popup.style.left = rect.left + 'px';
+                popup.style.top = (rect.bottom + 5) + 'px';
+            }, 0);
+
+            // Initialize color picker if not already done
+            if (!popup.dataset.initialized) {
+                initializeBgColorPicker();
+                popup.dataset.initialized = 'true';
+            } else {
+                drawBgColorPicker();
+            }
+        }
+
+        function closeBgColorPicker() {
+            document.getElementById('bgColorPickerPopup').classList.remove('active');
+        }
+
+        function updateBgColorFromHex() {
+            let hex = document.getElementById('bgHexInput').value;
+            if (!hex.startsWith('#')) hex = '#' + hex;
+
+            if (/^#[0-9A-F]{6}$/i.test(hex)) {
+                const hsl = hexToHsl(hex);
+                bgCurrentHue = hsl.h;
+                bgCurrentSaturation = hsl.s;
+                bgCurrentLightness = hsl.l;
+
+                document.getElementById('bgColorDisplaySmall').style.backgroundColor = hex;
+                drawBgColorPicker();
+
+                // Update background color
+                document.getElementById('bgColor').value = hex;
+                document.getElementById('bgColorDisplay').style.backgroundColor = hex;
+                updateChartBackground();
+            }
+        }
+
+        function drawBgColorPicker() {
+            const canvas = document.getElementById('bgColorCanvas');
+            const ctx = canvas.getContext('2d');
+            const width = canvas.width;
+            const height = canvas.height;
+
+            for (let row = 0; row < height; row++) {
+                const lightness = (1 - row / height) * 100;
+                for (let col = 0; col < width; col++) {
+                    const saturation = (col / width) * 100;
+                    ctx.fillStyle = `hsl(${bgCurrentHue}, ${saturation}%, ${lightness}%)`;
+                    ctx.fillRect(col, row, 1, 1);
+                }
+            }
+        }
+
+        function drawBgHueSlider() {
+            const canvas = document.getElementById('bgHueSlider');
+            const ctx = canvas.getContext('2d');
+            const height = canvas.height;
+
+            for (let i = 0; i < height; i++) {
+                const hue = (i / height) * 360;
+                ctx.fillStyle = `hsl(${hue}, 100%, 50%)`;
+                ctx.fillRect(0, i, 20, 1);
+            }
+        }
+
+        function initializeBgColorPicker() {
+            drawBgHueSlider();
+            drawBgColorPicker();
+
+            // Color canvas click
+            const colorCanvas = document.getElementById('bgColorCanvas');
+            colorCanvas.addEventListener('click', function(e) {
+                const rect = colorCanvas.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+
+                bgCurrentSaturation = (x / colorCanvas.width) * 100;
+                bgCurrentLightness = (1 - y / colorCanvas.height) * 100;
+
+                const hex = hslToHex(bgCurrentHue, bgCurrentSaturation, bgCurrentLightness);
+                document.getElementById('bgHexInput').value = hex;
+                document.getElementById('bgColorDisplaySmall').style.backgroundColor = hex;
+
+                // Update background color
+                document.getElementById('bgColor').value = hex;
+                document.getElementById('bgColorDisplay').style.backgroundColor = hex;
+                updateChartBackground();
+            });
+
+            // Hue slider click
+            const hueSlider = document.getElementById('bgHueSlider');
+            hueSlider.addEventListener('click', function(e) {
+                const rect = hueSlider.getBoundingClientRect();
+                const y = e.clientY - rect.top;
+
+                bgCurrentHue = (y / hueSlider.height) * 360;
+                drawBgColorPicker();
+
+                const hex = hslToHex(bgCurrentHue, bgCurrentSaturation, bgCurrentLightness);
+                document.getElementById('bgHexInput').value = hex;
+                document.getElementById('bgColorDisplaySmall').style.backgroundColor = hex;
+
+                // Update background color
+                document.getElementById('bgColor').value = hex;
+                document.getElementById('bgColorDisplay').style.backgroundColor = hex;
+                updateChartBackground();
+            });
+        }
+
+        // Close popup when clicking outside
+        document.addEventListener('click', function(e) {
+            const popup = document.getElementById('editPopup');
+            const isClickInside = popup.contains(e.target);
+            const isPreviewClick = e.target.classList.contains('color-pattern-preview') ||
+                                   e.target.closest('.color-pattern-preview');
+
+            if (!isClickInside && !isPreviewClick && popup.classList.contains('active')) {
+                closeEditPopup();
+            }
+
+            const bgPopup = document.getElementById('bgColorPickerPopup');
+            const isBgClickInside = bgPopup.contains(e.target);
+            const isBgDisplayClick = e.target.id === 'bgColorDisplay';
+
+            if (!isBgClickInside && !isBgDisplayClick && bgPopup.classList.contains('active')) {
+                closeBgColorPicker();
+            }
+        });
+
+        function addData() {
+            const label = document.getElementById('labelInput').value.trim();
+            const value = parseFloat(document.getElementById('valueInput').value);
+            const color = document.getElementById('colorInput').value;
+            const pattern = document.getElementById('patternInput').value;
+
+            if (!label || !value || value <= 0) {
+                alert('Please enter a valid label and positive value');
+                return;
+            }
+
+            dataItems.push({ label, value, color, pattern });
+            updateDataList();
+            updateChart();
+
+            // Clear inputs
+            document.getElementById('labelInput').value = '';
+            document.getElementById('valueInput').value = '';
+            document.getElementById('labelInput').focus();
+
+            // Auto-select next color from palette
+            updateColorInputFromPalette();
+
+            // Enable animate button
+            document.getElementById('animateBtn').disabled = false;
+        }
+
+        function removeData(index) {
+            dataItems.splice(index, 1);
+            updateDataList();
+            updateChart();
+
+            if (dataItems.length === 0) {
+                document.getElementById('animateBtn').disabled = true;
+            }
+        }
+
+        // Color picker state
+        let currentHue = 0;
+        let currentSaturation = 100;
+        let currentLightness = 50;
+
+        // Helper functions
+        function hslToHex(h, s, l) {
+            l /= 100;
+            const a = s * Math.min(l, 1 - l) / 100;
+            const f = n => {
+                const k = (n + h / 30) % 12;
+                const color = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
+                return Math.round(255 * color).toString(16).padStart(2, '0');
+            };
+            return `#${f(0)}${f(8)}${f(4)}`.toUpperCase();
+        }
+
+        function hexToHsl(hex) {
+            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            if (!result) return { h: 0, s: 0, l: 0 };
+
+            let r = parseInt(result[1], 16) / 255;
+            let g = parseInt(result[2], 16) / 255;
+            let b = parseInt(result[3], 16) / 255;
+
+            const max = Math.max(r, g, b);
+            const min = Math.min(r, g, b);
+            let h, s, l = (max + min) / 2;
+
+            if (max === min) {
+                h = s = 0;
+            } else {
+                const d = max - min;
+                s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+                switch (max) {
+                    case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
+                    case g: h = ((b - r) / d + 2) / 6; break;
+                    case b: h = ((r - g) / d + 4) / 6; break;
+                }
+            }
+
+            return {
+                h: Math.round(h * 360),
+                s: Math.round(s * 100),
+                l: Math.round(l * 100)
+            };
+        }
+
+        // Draw color picker
+        function drawColorPicker() {
+            const canvas = document.getElementById('colorCanvas');
+            const ctx = canvas.getContext('2d');
+            const width = canvas.width;
+            const height = canvas.height;
+
+            // Draw saturation-lightness gradient
+            for (let row = 0; row < height; row++) {
+                const lightness = (1 - row / height) * 100;
+                for (let col = 0; col < width; col++) {
+                    const saturation = (col / width) * 100;
+                    ctx.fillStyle = `hsl(${currentHue}, ${saturation}%, ${lightness}%)`;
+                    ctx.fillRect(col, row, 1, 1);
+                }
+            }
+        }
+
+        // Draw hue slider
+        function drawHueSlider() {
+            const canvas = document.getElementById('hueSlider');
+            const ctx = canvas.getContext('2d');
+            const height = canvas.height;
+
+            for (let i = 0; i < height; i++) {
+                const hue = (i / height) * 360;
+                ctx.fillStyle = `hsl(${hue}, 100%, 50%)`;
+                ctx.fillRect(0, i, 20, 1);
+            }
+        }
+
+        // Update color from hex input
+        function updateColorFromHex() {
+            let hex = document.getElementById('hexInput').value;
+            if (!hex.startsWith('#')) hex = '#' + hex;
+
+            if (/^#[0-9A-F]{6}$/i.test(hex)) {
+                const hsl = hexToHsl(hex);
+                currentHue = hsl.h;
+                currentSaturation = hsl.s;
+                currentLightness = hsl.l;
+
+                document.getElementById('colorDisplaySmall').style.backgroundColor = hex;
+                drawColorPicker();
+                updatePopupPatternPreviews(hex);
+            }
+        }
+
+        // Initialize color picker canvases
+        function initializeColorPicker() {
+            drawHueSlider();
+            drawColorPicker();
+
+            // Color canvas click
+            const colorCanvas = document.getElementById('colorCanvas');
+            colorCanvas.addEventListener('click', function(e) {
+                const rect = colorCanvas.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+
+                currentSaturation = (x / colorCanvas.width) * 100;
+                currentLightness = (1 - y / colorCanvas.height) * 100;
+
+                const hex = hslToHex(currentHue, currentSaturation, currentLightness);
+                document.getElementById('hexInput').value = hex;
+                document.getElementById('colorDisplaySmall').style.backgroundColor = hex;
+                updatePopupPatternPreviews(hex);
+            });
+
+            // Hue slider click
+            const hueSlider = document.getElementById('hueSlider');
+            hueSlider.addEventListener('click', function(e) {
+                const rect = hueSlider.getBoundingClientRect();
+                const y = e.clientY - rect.top;
+
+                currentHue = (y / hueSlider.height) * 360;
+                drawColorPicker();
+
+                const hex = hslToHex(currentHue, currentSaturation, currentLightness);
+                document.getElementById('hexInput').value = hex;
+                document.getElementById('colorDisplaySmall').style.backgroundColor = hex;
+                updatePopupPatternPreviews(hex);
+            });
+        }
+
+        // Popup functions
+        function openEditPopup(index, event) {
+            editingItemIndex = index;
+            const item = dataItems[index];
+            const popup = document.getElementById('editPopup');
+
+            // Set color from item
+            const hsl = hexToHsl(item.color);
+            currentHue = hsl.h;
+            currentSaturation = hsl.s;
+            currentLightness = hsl.l;
+
+            document.getElementById('hexInput').value = item.color.toUpperCase();
+            document.getElementById('colorDisplaySmall').style.backgroundColor = item.color;
+
+            // Draw color picker with current hue
+            drawColorPicker();
+
+            modalSelectedPattern = item.pattern;
+
+            // Update pattern previews
+            updatePopupPatternPreviews(item.color);
+
+            // Select current pattern
+            document.querySelectorAll('.edit-popup-pattern').forEach(opt => {
+                opt.classList.remove('selected');
+                if (opt.dataset.pattern === item.pattern) {
+                    opt.classList.add('selected');
+                }
+            });
+
+            // Show popup first (so it's in the DOM)
+            popup.classList.add('active');
+
+            // Position popup below the clicked element
+            // Use setTimeout to ensure popup is rendered before positioning
+            setTimeout(() => {
+                const rect = event.target.getBoundingClientRect();
+                popup.style.left = rect.left + 'px';
+                popup.style.top = (rect.bottom + 5) + 'px';
+            }, 0);
+
+            // Initialize color picker if not already done
+            if (!popup.dataset.initialized) {
+                initializeColorPicker();
+                popup.dataset.initialized = 'true';
+            }
+        }
+
+        function closeEditPopup() {
+            document.getElementById('editPopup').classList.remove('active');
+
+            // Save changes when closing
+            if (editingItemIndex >= 0) {
+                let newColor = document.getElementById('hexInput').value;
+                if (!newColor.startsWith('#')) newColor = '#' + newColor;
+
+                dataItems[editingItemIndex].color = newColor.toUpperCase();
+                dataItems[editingItemIndex].pattern = modalSelectedPattern;
+                updateDataList();
+                updateChart();
+            }
+
+            editingItemIndex = -1;
+        }
+
+        function selectPopupPattern(patternName, element) {
+            modalSelectedPattern = patternName;
+            document.querySelectorAll('.edit-popup-pattern').forEach(opt => {
+                opt.classList.remove('selected');
+            });
+            element.classList.add('selected');
+
+            // Auto-save when pattern is selected
+            if (editingItemIndex >= 0) {
+                let newColor = document.getElementById('hexInput').value;
+                if (!newColor.startsWith('#')) newColor = '#' + newColor;
+
+                dataItems[editingItemIndex].color = newColor.toUpperCase();
+                dataItems[editingItemIndex].pattern = modalSelectedPattern;
+                updateDataList();
+                updateChart();
+            }
+        }
+
+        function updatePopupPatternPreviews(color) {
+            const patterns = [
+                { name: 'solid', hachureGap: 1 },
+                { name: 'hachure', hachureGap: 6 },
+                { name: 'cross-hatch', hachureGap: 6 },
+                { name: 'dots', hachureGap: 12 },
+                { name: 'dashed', hachureGap: 6 },
+                { name: 'zigzag-line', hachureGap: 6 }
+            ];
+
+            patterns.forEach(patternObj => {
+                const svgElement = document.getElementById(`popup-preview-${patternObj.name}`);
+                if (!svgElement) return;
+
+                svgElement.innerHTML = '';
+                const roughSvg = rough.svg(svgElement);
+                const rect = roughSvg.rectangle(3, 3, 44, 44, {
+                    fill: color,
+                    fillStyle: patternObj.name,
+                    roughness: 2,
+                    strokeWidth: 2,
+                    stroke: '#333',
+                    fillWeight: 2,
+                    hachureAngle: 60,
+                    hachureGap: patternObj.hachureGap
+                });
+                svgElement.appendChild(rect);
+            });
+
+            // Auto-save when color changes
+            if (editingItemIndex >= 0) {
+                dataItems[editingItemIndex].color = color;
+                updateDataList();
+                updateChart();
+            }
+        }
+
+
+        function updateDataList() {
+            const dataList = document.getElementById('dataList');
+
+            if (dataItems.length === 0) {
+                dataList.innerHTML = '';
+                return;
+            }
+
+            dataList.innerHTML = '<h3 style="margin-bottom: 10px; color: #555;">Current Data:</h3>';
+            dataItems.forEach((item, index) => {
+                const div = document.createElement('div');
+                div.className = 'data-item';
+
+                // Create color/pattern preview SVG
+                const previewId = `preview-item-${index}`;
+
+                div.innerHTML = `
+                    <input type="text" value="${item.label}" readonly style="flex: 1;" />
+                    <input type="number" value="${item.value}" readonly style="width: 100px;" />
+                    <svg id="${previewId}" class="color-pattern-preview" onclick="openEditPopup(${index}, event)" title="Click to edit color & pattern"></svg>
+                    <button class="remove-btn" onclick="removeData(${index})">Remove</button>
+                `;
+                dataList.appendChild(div);
+
+                // Draw the pattern preview
+                setTimeout(() => {
+                    const svgElement = document.getElementById(previewId);
+                    if (svgElement) {
+                        const roughSvg = rough.svg(svgElement);
+                        const hachureGap = item.pattern === 'dots' ? 12 : (item.pattern === 'solid' ? 1 : 6);
+                        const rect = roughSvg.rectangle(3, 3, 54, 38, {
+                            fill: item.color,
+                            fillStyle: item.pattern,
+                            roughness: 2,
+                            strokeWidth: 2,
+                            stroke: '#333',
+                            fillWeight: 2,
+                            hachureAngle: 60,
+                            hachureGap: hachureGap
+                        });
+                        svgElement.appendChild(rect);
+                    }
+                }, 0);
+            });
+        }
+
+        function updateChart() {
+            const svg = document.getElementById('chartSvg');
+            const emptyState = document.getElementById('emptyState');
+
+            if (dataItems.length === 0) {
+                emptyState.style.display = 'block';
+                svg.innerHTML = '';
+                return;
+            }
+
+            emptyState.style.display = 'none';
+
+            // Clear SVG
+            svg.innerHTML = '';
+
+            // Call appropriate chart rendering function
+            if (currentChartType === 'bar') {
+                updateBarChart(svg);
+            } else if (currentChartType === 'pie') {
+                updatePieChart(svg);
+            } else if (currentChartType === 'line') {
+                updateLineChart(svg);
+            }
+        }
+
+        function updateBarChart(svg) {
+            const svgWidth = svg.clientWidth || 900;
+            const svgHeight = svg.clientHeight || 450;
+            const labelFontSize = parseInt(document.getElementById('fontSizeSlider').value);
+            const titleFontSize = labelFontSize * 2;
+            const chartTitle = document.getElementById('chartTitle').value;
+
+            // Add extra top padding if there's a title
+            const topPadding = chartTitle ? Math.max(titleFontSize + 40, 80) : 60;
+            const padding = 60;
+            const chartHeight = svgHeight - topPadding - padding;
+            const chartWidth = svgWidth - padding * 2;
+
+            // Find max value for scaling
+            const maxValue = Math.max(...dataItems.map(item => item.value));
+
+            // Calculate bar dimensions
+            const barCount = dataItems.length;
+            const barSpacing = 30;
+            const barWidth = Math.min(80, 100);
+
+            // Calculate actual chart width needed for bars
+            const neededWidth = barSpacing + (barWidth + barSpacing) * barCount;
+
+            // Center the chart by adjusting left padding
+            const leftPadding = Math.max(padding, (svgWidth - neededWidth) / 2);
+            const chartActualWidth = Math.min(neededWidth, chartWidth);
+
+            // Get roughness value
+            const roughness = parseFloat(document.getElementById('roughnessSlider').value);
+
+            // Calculate the X-axis end position
+            const xAxisEnd = leftPadding + neededWidth;
+
+            // Draw sketchy axes
+            const axisY = rc.line(
+                leftPadding,
+                topPadding,
+                leftPadding,
+                svgHeight - padding,
+                {
+                    roughness: roughness,
+                    strokeWidth: 2.5,
+                    stroke: '#333'
+                }
+            );
+            svg.appendChild(axisY);
+
+            const axisX = rc.line(
+                leftPadding,
+                svgHeight - padding,
+                xAxisEnd,
+                svgHeight - padding,
+                {
+                    roughness: roughness,
+                    strokeWidth: 2.5,
+                    stroke: '#333'
+                }
+            );
+            svg.appendChild(axisX);
+
+            // Add axis labels
+            const xAxisLabel = document.getElementById('xAxisLabel').value;
+            const yAxisLabel = document.getElementById('yAxisLabel').value;
+            const xAxisCenter = (leftPadding + xAxisEnd) / 2;
+
+            if (xAxisLabel) {
+                const xLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                xLabel.setAttribute('x', xAxisCenter);
+                xLabel.setAttribute('y', svgHeight - 10);
+                xLabel.setAttribute('text-anchor', 'middle');
+                xLabel.setAttribute('class', 'bar-label');
+                xLabel.style.fontSize = labelFontSize + 'px';
+                xLabel.style.fontWeight = '600';
+                xLabel.textContent = xAxisLabel;
+                svg.appendChild(xLabel);
+            }
+
+            if (yAxisLabel) {
+                const yLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                yLabel.setAttribute('x', -svgHeight / 2);
+                yLabel.setAttribute('y', 20);
+                yLabel.setAttribute('text-anchor', 'middle');
+                yLabel.setAttribute('transform', 'rotate(-90)');
+                yLabel.setAttribute('class', 'bar-label');
+                yLabel.style.fontSize = labelFontSize + 'px';
+                yLabel.style.fontWeight = '600';
+                yLabel.textContent = yAxisLabel;
+                svg.appendChild(yLabel);
+            }
+
+            if (chartTitle) {
+                const title = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                const titleFontSize = labelFontSize * 2;
+                title.setAttribute('x', svgWidth / 2);
+                title.setAttribute('y', Math.max(titleFontSize, 30));
+                title.setAttribute('text-anchor', 'middle');
+                title.setAttribute('class', 'bar-label');
+                title.style.fontSize = titleFontSize + 'px';
+                title.style.fontWeight = '700';
+                title.textContent = chartTitle;
+                svg.appendChild(title);
+            }
+
+            // Store bar data for animation
+            svg.dataset.bars = JSON.stringify(dataItems.map((item, index) => {
+                const barHeight = (item.value / maxValue) * chartHeight;
+                const barX = leftPadding + barSpacing + (barWidth + barSpacing) * index;
+                const barY = svgHeight - padding - barHeight;
+
+                return {
+                    x: barX,
+                    y: barY,
+                    width: barWidth,
+                    height: barHeight,
+                    value: item.value,
+                    label: item.label,
+                    color: item.color,
+                    pattern: item.pattern
+                };
+            }));
+        }
+
+        function updatePieChart(svg) {
+            const svgWidth = svg.clientWidth || 900;
+            const svgHeight = svg.clientHeight || 450;
+            const labelFontSize = parseInt(document.getElementById('fontSizeSlider').value);
+            const titleFontSize = labelFontSize * 2;
+            const chartTitle = document.getElementById('chartTitle').value;
+
+            // Calculate center with adjustment for title
+            const topOffset = chartTitle ? Math.max(titleFontSize + 20, 60) : 30;
+            const centerX = svgWidth / 2;
+            const centerY = (svgHeight + topOffset) / 2;
+            const radius = Math.min(svgWidth, svgHeight - topOffset) * 0.35;
+
+            // Calculate total value
+            const totalValue = dataItems.reduce((sum, item) => sum + item.value, 0);
+
+            // Add chart title
+            if (chartTitle) {
+                const title = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                title.setAttribute('x', svgWidth / 2);
+                title.setAttribute('y', Math.max(titleFontSize, 30));
+                title.setAttribute('text-anchor', 'middle');
+                title.setAttribute('class', 'bar-label');
+                title.style.fontSize = titleFontSize + 'px';
+                title.style.fontWeight = '700';
+                title.textContent = chartTitle;
+                svg.appendChild(title);
+            }
+
+            // Store pie data for animation
+            let currentAngle = -Math.PI / 2; // Start at top
+            const pieData = dataItems.map((item, index) => {
+                const sliceAngle = (item.value / totalValue) * 2 * Math.PI;
+                const startAngle = currentAngle;
+                const endAngle = currentAngle + sliceAngle;
+                currentAngle = endAngle;
+
+                return {
+                    centerX,
+                    centerY,
+                    radius,
+                    startAngle,
+                    endAngle,
+                    value: item.value,
+                    label: item.label,
+                    color: item.color,
+                    pattern: item.pattern,
+                    percentage: ((item.value / totalValue) * 100).toFixed(1)
+                };
+            });
+
+            svg.dataset.pieData = JSON.stringify(pieData);
+        }
+
+        function updateLineChart(svg) {
+            const svgWidth = svg.clientWidth || 900;
+            const svgHeight = svg.clientHeight || 450;
+            const labelFontSize = parseInt(document.getElementById('fontSizeSlider').value);
+            const titleFontSize = labelFontSize * 2;
+            const chartTitle = document.getElementById('chartTitle').value;
+
+            // Add extra top padding if there's a title
+            const topPadding = chartTitle ? Math.max(titleFontSize + 40, 80) : 60;
+            const padding = 60;
+            const chartHeight = svgHeight - topPadding - padding;
+            const chartWidth = svgWidth - padding * 2;
+
+            // Find max value for scaling
+            const maxValue = Math.max(...dataItems.map(item => item.value));
+
+            // Calculate point positions
+            const pointCount = dataItems.length;
+            const pointSpacing = 120; // Fixed spacing between points
+            const neededWidth = (pointCount - 1) * pointSpacing + 40; // Width needed for all points + margins
+
+            // Center the chart by adjusting left padding
+            const leftPadding = Math.max(padding, (svgWidth - neededWidth) / 2);
+            const xAxisEnd = leftPadding + neededWidth;
+
+            // Get roughness value
+            const roughness = parseFloat(document.getElementById('roughnessSlider').value);
+
+            // Draw sketchy axes
+            const axisY = rc.line(
+                leftPadding,
+                topPadding,
+                leftPadding,
+                svgHeight - padding,
+                {
+                    roughness: roughness,
+                    strokeWidth: 2.5,
+                    stroke: '#333'
+                }
+            );
+            svg.appendChild(axisY);
+
+            const axisX = rc.line(
+                leftPadding,
+                svgHeight - padding,
+                xAxisEnd,
+                svgHeight - padding,
+                {
+                    roughness: roughness,
+                    strokeWidth: 2.5,
+                    stroke: '#333'
+                }
+            );
+            svg.appendChild(axisX);
+
+            // Add axis labels
+            const xAxisLabel = document.getElementById('xAxisLabel').value;
+            const yAxisLabel = document.getElementById('yAxisLabel').value;
+            const xAxisCenter = (leftPadding + xAxisEnd) / 2;
+
+            if (xAxisLabel) {
+                const xLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                xLabel.setAttribute('x', xAxisCenter);
+                xLabel.setAttribute('y', svgHeight - 10);
+                xLabel.setAttribute('text-anchor', 'middle');
+                xLabel.setAttribute('class', 'bar-label');
+                xLabel.style.fontSize = labelFontSize + 'px';
+                xLabel.style.fontWeight = '600';
+                xLabel.textContent = xAxisLabel;
+                svg.appendChild(xLabel);
+            }
+
+            if (yAxisLabel) {
+                const yLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                yLabel.setAttribute('x', -svgHeight / 2);
+                yLabel.setAttribute('y', 20);
+                yLabel.setAttribute('text-anchor', 'middle');
+                yLabel.setAttribute('transform', 'rotate(-90)');
+                yLabel.setAttribute('class', 'bar-label');
+                yLabel.style.fontSize = labelFontSize + 'px';
+                yLabel.style.fontWeight = '600';
+                yLabel.textContent = yAxisLabel;
+                svg.appendChild(yLabel);
+            }
+
+            if (chartTitle) {
+                const title = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                const titleFontSize = labelFontSize * 2;
+                title.setAttribute('x', svgWidth / 2);
+                title.setAttribute('y', Math.max(titleFontSize, 30));
+                title.setAttribute('text-anchor', 'middle');
+                title.setAttribute('class', 'bar-label');
+                title.style.fontSize = titleFontSize + 'px';
+                title.style.fontWeight = '700';
+                title.textContent = chartTitle;
+                svg.appendChild(title);
+            }
+
+            // Map point positions for line data
+            const lineData = dataItems.map((item, index) => {
+                const x = leftPadding + 20 + (index * pointSpacing);
+                const y = svgHeight - padding - ((item.value / maxValue) * chartHeight);
+
+                return {
+                    x,
+                    y,
+                    value: item.value,
+                    label: item.label,
+                    color: item.color,
+                    pattern: item.pattern
+                };
+            });
+
+            svg.dataset.lineData = JSON.stringify(lineData);
+        }
+
+        function animateChart() {
+            if (currentChartType === 'bar') {
+                animateBarChart();
+            } else if (currentChartType === 'pie') {
+                animatePieChart();
+            } else if (currentChartType === 'line') {
+                animateLineChart();
+            }
+        }
+
+        function animateBarChart() {
+            const svg = document.getElementById('chartSvg');
+            const svgHeight = svg.clientHeight || 450;
+            const padding = 60;
+
+            const barsData = JSON.parse(svg.dataset.bars || '[]');
+
+            // Remove existing bars (keep axes)
+            const existingBars = svg.querySelectorAll('.bar-group');
+            existingBars.forEach(bar => bar.remove());
+
+            // Animate each bar
+            barsData.forEach((barData, index) => {
+                setTimeout(() => {
+                    drawAnimatedBar(svg, barData, svgHeight, padding, index);
+                }, index * 400);
+            });
+        }
+
+        function animatePieChart() {
+            const svg = document.getElementById('chartSvg');
+            const pieData = JSON.parse(svg.dataset.pieData || '[]');
+
+            // Remove existing slices
+            const existingSlices = svg.querySelectorAll('.pie-slice');
+            existingSlices.forEach(slice => slice.remove());
+
+            // Animate each slice
+            pieData.forEach((sliceData, index) => {
+                setTimeout(() => {
+                    drawAnimatedPieSlice(svg, sliceData, index);
+                }, index * 400);
+            });
+        }
+
+        function animateLineChart() {
+            const svg = document.getElementById('chartSvg');
+            const lineData = JSON.parse(svg.dataset.lineData || '[]');
+
+            // Remove existing line elements
+            const existingElements = svg.querySelectorAll('.line-element');
+            existingElements.forEach(el => el.remove());
+
+            // Draw line segments with animation
+            drawAnimatedLine(svg, lineData);
+        }
+
+        function drawAnimatedPieSlice(svg, sliceData, index) {
+            const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+            group.classList.add('pie-slice');
+
+            svg.appendChild(group);
+
+            // Get animation settings
+            const duration = parseInt(document.getElementById('durationSlider').value);
+            const updateInterval = parseInt(document.getElementById('sketchSlider').value);
+
+            const startTime = Date.now();
+            let lastUpdateTime = 0;
+
+            function animateSlice() {
+                const elapsed = Date.now() - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+
+                // Easing function
+                const eased = progress < 0.5
+                    ? 2 * progress * progress
+                    : 1 - Math.pow(-2 * progress + 2, 2) / 2;
+
+                // Calculate current angle based on progress
+                const currentEndAngle = sliceData.startAngle + (sliceData.endAngle - sliceData.startAngle) * eased;
+
+                // Only redraw at intervals
+                if (elapsed - lastUpdateTime >= updateInterval || progress === 1) {
+                    lastUpdateTime = elapsed;
+
+                    // Remove ALL old elements from group (path and rough.js g elements)
+                    while (group.firstChild) {
+                        group.removeChild(group.firstChild);
+                    }
+
+                    // Draw arc using path
+                    if (currentEndAngle > sliceData.startAngle) {
+                        const startX = sliceData.centerX + sliceData.radius * Math.cos(sliceData.startAngle);
+                        const startY = sliceData.centerY + sliceData.radius * Math.sin(sliceData.startAngle);
+                        const endX = sliceData.centerX + sliceData.radius * Math.cos(currentEndAngle);
+                        const endY = sliceData.centerY + sliceData.radius * Math.sin(currentEndAngle);
+
+                        const largeArcFlag = (currentEndAngle - sliceData.startAngle) > Math.PI ? 1 : 0;
+
+                        const pathData = [
+                            `M ${sliceData.centerX} ${sliceData.centerY}`,
+                            `L ${startX} ${startY}`,
+                            `A ${sliceData.radius} ${sliceData.radius} 0 ${largeArcFlag} 1 ${endX} ${endY}`,
+                            'Z'
+                        ].join(' ');
+
+                        const hachureGap = sliceData.pattern === 'dots' ? 12 : (sliceData.pattern === 'solid' ? 1 : 6);
+                        const roughness = parseFloat(document.getElementById('roughnessSlider').value);
+                        const roughPath = rc.path(pathData, {
+                            fill: sliceData.color,
+                            fillStyle: sliceData.pattern,
+                            roughness: roughness,
+                            strokeWidth: 2.5,
+                            stroke: '#333',
+                            fillWeight: 1.5,
+                            hachureAngle: 60,
+                            hachureGap: hachureGap
+                        });
+
+                        group.appendChild(roughPath);
+                    }
+                }
+
+                // Add label at the end
+                if (progress === 1) {
+                    const midAngle = (sliceData.startAngle + sliceData.endAngle) / 2;
+
+                    // Position label outside the pie chart
+                    const labelRadius = sliceData.radius * 1.25;
+                    const labelX = sliceData.centerX + labelRadius * Math.cos(midAngle);
+                    const labelY = sliceData.centerY + labelRadius * Math.sin(midAngle);
+
+                    // Draw line from slice to label
+                    const lineStartRadius = sliceData.radius * 1.02;
+                    const lineStartX = sliceData.centerX + lineStartRadius * Math.cos(midAngle);
+                    const lineStartY = sliceData.centerY + lineStartRadius * Math.sin(midAngle);
+
+                    const lineEndRadius = sliceData.radius * 1.15;
+                    const lineEndX = sliceData.centerX + lineEndRadius * Math.cos(midAngle);
+                    const lineEndY = sliceData.centerY + lineEndRadius * Math.sin(midAngle);
+
+                    const roughness = parseFloat(document.getElementById('roughnessSlider').value);
+                    const connector = rc.line(lineStartX, lineStartY, lineEndX, lineEndY, {
+                        roughness: roughness * 0.5,
+                        strokeWidth: 1.5,
+                        stroke: '#333'
+                    });
+                    group.appendChild(connector);
+
+                    // Determine text anchor based on position
+                    const textAnchor = Math.cos(midAngle) > 0 ? 'start' : 'end';
+
+                    // Get font size from slider
+                    const labelFontSize = parseInt(document.getElementById('fontSizeSlider').value);
+                    const valueFontSize = Math.max(10, labelFontSize - 2);
+
+                    const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                    label.setAttribute('x', labelX);
+                    label.setAttribute('y', labelY);
+                    label.setAttribute('text-anchor', textAnchor);
+                    label.setAttribute('class', 'bar-label');
+                    label.style.fontSize = labelFontSize + 'px';
+                    label.textContent = sliceData.label;
+                    group.appendChild(label);
+
+                    const value = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                    value.setAttribute('x', labelX);
+                    value.setAttribute('y', labelY + (labelFontSize * 1.15));
+                    value.setAttribute('text-anchor', textAnchor);
+                    value.setAttribute('class', 'bar-value');
+                    value.style.fontSize = valueFontSize + 'px';
+                    value.textContent = `${sliceData.value} (${sliceData.percentage}%)`;
+                    group.appendChild(value);
+                }
+
+                if (progress < 1) {
+                    requestAnimationFrame(animateSlice);
+                }
+            }
+
+            animateSlice();
+        }
+
+        function drawAnimatedLine(svg, lineData) {
+            // Get animation settings
+            const duration = parseInt(document.getElementById('durationSlider').value);
+            const updateInterval = parseInt(document.getElementById('sketchSlider').value);
+            const roughness = parseFloat(document.getElementById('roughnessSlider').value);
+
+            const startTime = Date.now();
+            let lastUpdateTime = 0;
+
+            function animateLine() {
+                const elapsed = Date.now() - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+
+                // Easing function
+                const eased = progress < 0.5
+                    ? 2 * progress * progress
+                    : 1 - Math.pow(-2 * progress + 2, 2) / 2;
+
+                // Calculate progress along the entire path
+                const totalSegments = lineData.length - 1;
+                const totalProgress = eased * totalSegments;
+                const currentSegmentIndex = Math.floor(totalProgress);
+                const segmentProgress = totalProgress - currentSegmentIndex;
+
+                // Only redraw at intervals
+                if (elapsed - lastUpdateTime >= updateInterval || progress === 1) {
+                    lastUpdateTime = elapsed;
+
+                    // Remove old elements
+                    const oldElements = svg.querySelectorAll('.line-element');
+                    oldElements.forEach(el => el.remove());
+
+                    // Draw completed line segments
+                    for (let i = 0; i < currentSegmentIndex; i++) {
+                        const start = lineData[i];
+                        const end = lineData[i + 1];
+
+                        const line = rc.line(start.x, start.y, end.x, end.y, {
+                            roughness: roughness,
+                            strokeWidth: 3,
+                            stroke: start.color
+                        });
+                        line.classList.add('line-element');
+                        svg.appendChild(line);
+                    }
+
+                    // Draw partial segment being animated
+                    if (currentSegmentIndex < totalSegments && segmentProgress > 0) {
+                        const start = lineData[currentSegmentIndex];
+                        const end = lineData[currentSegmentIndex + 1];
+
+                        // Calculate partial end point
+                        const partialX = start.x + (end.x - start.x) * segmentProgress;
+                        const partialY = start.y + (end.y - start.y) * segmentProgress;
+
+                        const line = rc.line(start.x, start.y, partialX, partialY, {
+                            roughness: roughness,
+                            strokeWidth: 3,
+                            stroke: start.color
+                        });
+                        line.classList.add('line-element');
+                        svg.appendChild(line);
+                    }
+
+                    // Get font size from slider
+                    const labelFontSize = parseInt(document.getElementById('fontSizeSlider').value);
+                    const valueFontSize = Math.max(10, labelFontSize - 2);
+
+                    // Draw points and labels for completed segments
+                    const pointsToShow = Math.min(currentSegmentIndex + 1, lineData.length);
+                    for (let i = 0; i < pointsToShow; i++) {
+                        const point = lineData[i];
+
+                        // Draw circle at point
+                        const hachureGap = point.pattern === 'dots' ? 12 : (point.pattern === 'solid' ? 1 : 6);
+                        const circle = rc.circle(point.x, point.y, 14, {
+                            fill: point.color,
+                            fillStyle: point.pattern,
+                            roughness: roughness,
+                            strokeWidth: 2.5,
+                            stroke: '#333',
+                            fillWeight: 1.5,
+                            hachureAngle: 60,
+                            hachureGap: hachureGap
+                        });
+                        circle.classList.add('line-element');
+                        svg.appendChild(circle);
+
+                        // Add label
+                        const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                        label.setAttribute('x', point.x);
+                        label.setAttribute('y', point.y - 20);
+                        label.setAttribute('text-anchor', 'middle');
+                        label.setAttribute('class', 'bar-value');
+                        label.style.fontSize = valueFontSize + 'px';
+                        label.classList.add('line-element');
+                        label.textContent = point.value;
+                        svg.appendChild(label);
+
+                        // Add x-axis label
+                        const xLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                        xLabel.setAttribute('x', point.x);
+                        xLabel.setAttribute('y', svg.clientHeight - 35);
+                        xLabel.setAttribute('text-anchor', 'middle');
+                        xLabel.setAttribute('class', 'bar-label');
+                        xLabel.style.fontSize = labelFontSize + 'px';
+                        xLabel.classList.add('line-element');
+                        xLabel.textContent = point.label;
+                        svg.appendChild(xLabel);
+                    }
+
+                    // If animation is complete, show the last point
+                    if (progress === 1 && pointsToShow < lineData.length) {
+                        const lastPoint = lineData[lineData.length - 1];
+
+                        const hachureGap = lastPoint.pattern === 'dots' ? 12 : (lastPoint.pattern === 'solid' ? 1 : 6);
+                        const circle = rc.circle(lastPoint.x, lastPoint.y, 14, {
+                            fill: lastPoint.color,
+                            fillStyle: lastPoint.pattern,
+                            roughness: roughness,
+                            strokeWidth: 2.5,
+                            stroke: '#333',
+                            fillWeight: 1.5,
+                            hachureAngle: 60,
+                            hachureGap: hachureGap
+                        });
+                        circle.classList.add('line-element');
+                        svg.appendChild(circle);
+
+                        const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                        label.setAttribute('x', lastPoint.x);
+                        label.setAttribute('y', lastPoint.y - 20);
+                        label.setAttribute('text-anchor', 'middle');
+                        label.setAttribute('class', 'bar-value');
+                        label.style.fontSize = valueFontSize + 'px';
+                        label.classList.add('line-element');
+                        label.textContent = lastPoint.value;
+                        svg.appendChild(label);
+
+                        const xLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                        xLabel.setAttribute('x', lastPoint.x);
+                        xLabel.setAttribute('y', svg.clientHeight - 35);
+                        xLabel.setAttribute('text-anchor', 'middle');
+                        xLabel.setAttribute('class', 'bar-label');
+                        xLabel.style.fontSize = labelFontSize + 'px';
+                        xLabel.classList.add('line-element');
+                        xLabel.textContent = lastPoint.label;
+                        svg.appendChild(xLabel);
+                    }
+                }
+
+                if (progress < 1) {
+                    requestAnimationFrame(animateLine);
+                }
+            }
+
+            animateLine();
+        }
+
+        function drawAnimatedBar(svg, barData, svgHeight, padding, index) {
+            const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+            group.classList.add('bar-group');
+
+            // Get font size from slider
+            const labelFontSize = parseInt(document.getElementById('fontSizeSlider').value);
+            const valueFontSize = Math.max(10, labelFontSize - 2);
+
+            // Add label
+            const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            label.setAttribute('x', barData.x + barData.width / 2);
+            label.setAttribute('y', svgHeight - padding + 25);
+            label.setAttribute('text-anchor', 'middle');
+            label.setAttribute('class', 'bar-label');
+            label.style.fontSize = labelFontSize + 'px';
+            label.textContent = barData.label;
+            label.style.opacity = '0';
+            group.appendChild(label);
+
+            // Add value
+            const value = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            value.setAttribute('x', barData.x + barData.width / 2);
+            value.setAttribute('y', svgHeight - padding);
+            value.setAttribute('text-anchor', 'middle');
+            value.setAttribute('class', 'bar-value');
+            value.style.fontSize = valueFontSize + 'px';
+            value.textContent = barData.value;
+            value.style.opacity = '0';
+            group.appendChild(value);
+
+            svg.appendChild(group);
+
+            // Get animation settings from sliders
+            const duration = parseInt(document.getElementById('durationSlider').value);
+            const updateInterval = parseInt(document.getElementById('sketchSlider').value);
+            const roughness = parseFloat(document.getElementById('roughnessSlider').value);
+
+            const startTime = Date.now();
+            let lastUpdateTime = 0;
+
+            function animateGrowth() {
+                const elapsed = Date.now() - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+
+                // Smoother easing function for more natural animation
+                const eased = progress < 0.5
+                    ? 2 * progress * progress
+                    : 1 - Math.pow(-2 * progress + 2, 2) / 2;
+
+                // Update rectangle height and position
+                const currentHeight = barData.height * eased;
+                const currentY = svgHeight - padding - currentHeight;
+
+                // Only redraw at intervals to show the sketchy drawing process
+                if (elapsed - lastUpdateTime >= updateInterval || progress === 1) {
+                    lastUpdateTime = elapsed;
+
+                    // Remove old rect and create new one with current height
+                    const oldRect = group.querySelector('g');
+                    if (oldRect) oldRect.remove();
+
+                    if (currentHeight > 1) {
+                        const hachureGap = barData.pattern === 'dots' ? 12 : (barData.pattern === 'solid' ? 1 : 6);
+                        const newRect = rc.rectangle(
+                            barData.x,
+                            currentY,
+                            barData.width,
+                            currentHeight,
+                            {
+                                fill: barData.color,
+                                fillStyle: barData.pattern,
+                                roughness: roughness,
+                                strokeWidth: 2.5,
+                                stroke: '#333',
+                                fillWeight: 1.5,
+                                hachureAngle: 60,
+                                hachureGap: hachureGap
+                            }
+                        );
+
+                        group.insertBefore(newRect, label);
+                    }
+                }
+
+                // Update value position and opacity
+                value.setAttribute('y', currentY - 10);
+                value.style.opacity = progress;
+                label.style.opacity = progress;
+
+                if (progress < 1) {
+                    requestAnimationFrame(animateGrowth);
+                }
+            }
+
+            animateGrowth();
+        }
+
+        // Allow Enter key to add data
+        document.getElementById('valueInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                addData();
+            }
+        });
+
+        document.getElementById('labelInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                document.getElementById('valueInput').focus();
+            }
+        });
+    </script>
+</body>
+</html>

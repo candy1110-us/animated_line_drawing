@@ -54,21 +54,21 @@
         }
 
         .main-layout {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .settings-row {
             display: grid;
-            grid-template-columns: 1fr 2fr;
+            grid-template-columns: repeat(3, 1fr);
             gap: 20px;
         }
 
-        .left-column {
+        .settings-column {
             display: flex;
             flex-direction: column;
-            gap: 20px;
-        }
-
-        .right-column {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
+            gap: 16px;
         }
 
         .sidebar-panel {
@@ -90,33 +90,22 @@
         }
 
         .chart-container-wrapper {
-            background: transparent;
-            border-radius: 0;
-            padding: 0;
-            box-shadow: none;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 0;
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            min-height: 550px;
         }
 
         .chart-container {
             position: relative;
             width: 100%;
-            height: auto;
-            max-width: 900px;
-            aspect-ratio: 16 / 9; /* Will be updated dynamically */
-            background: #ffffff; /* Default white background */
-            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-            border-radius: 8px;
-            overflow: hidden;
+            height: 550px;
         }
 
         #chartSvg {
             width: 100%;
             height: 100%;
-            display: block;
-            margin: 0 auto;
         }
 
         .empty-state {
@@ -155,20 +144,6 @@
         .chart-type-btns {
             display: flex;
             gap: 10px;
-        }
-
-        /* Aspect Ratio Buttons */
-        .aspect-ratio-btn {
-            color: #6366f1;
-            transition: opacity 0.2s;
-        }
-
-        .aspect-ratio-btn:hover {
-            opacity: 0.7 !important;
-        }
-
-        .aspect-ratio-btn.selected {
-            opacity: 1 !important;
         }
 
 
@@ -656,24 +631,28 @@
 
         /* Bar Chart Specific Styles */
         .bar-label {
-            font-family: var(--chart-font-family, 'Noteworthy', sans-serif);
+            font-family: 'HMT Regular', sans-serif;
             font-weight: 600;
             color: #333;
             text-align: center;
-            /* font-size set inline via JavaScript */
+            font-size: 14px;
         }
 
         .bar-value {
-            font-family: var(--chart-font-family, 'Noteworthy', sans-serif);
+            font-family: 'HMT Regular', sans-serif;
             font-weight: 700;
             color: #333;
-            /* font-size set inline via JavaScript */
+            font-size: 16px;
         }
 
         /* Responsive */
         @media (max-width: 1024px) {
             .main-layout {
-                grid-template-columns: 1fr;
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
             }
         }
     </style>
@@ -686,14 +665,21 @@
         </div>
 
         <div class="main-layout">
-            <!-- Left Column: Data and Settings Panels -->
-            <div class="left-column">
-                <!-- Data Panel -->
-                <div class="sidebar-panel">
-                    <h3>Data</h3>
+            <!-- Settings Row -->
+            <div class="settings-row">
+                <!-- Column 1: Chart Type & Color Palette -->
+                <div class="settings-column">
+                    <div class="sidebar-panel">
+                        <h3>Chart Type</h3>
+                        <div class="chart-type-btns">
+                            <button class="mode-btn selected" data-chart="bar" onclick="selectChartType('bar', this)">Bar</button>
+                            <button class="mode-btn" data-chart="pie" onclick="selectChartType('pie', this)">Pie</button>
+                            <button class="mode-btn" data-chart="line" onclick="selectChartType('line', this)">Line</button>
+                        </div>
+                    </div>
 
-                        <div class="label-input-group" style="margin-bottom: 12px;">
-                            <label>Choose color palette for your chart</label>
+                    <div class="sidebar-panel">
+                        <h3>Color Palette</h3>
                         <div class="custom-palette-dropdown" onclick="togglePaletteDropdown()">
                             <div class="palette-dropdown-selected">
                                 <div id="selectedPaletteStrip" style="width: 70px; height: 20px; border-radius: 4px; background: linear-gradient(90deg, #e63946 0%, #e63946 12.5%, #f77f00 12.5%, #f77f00 25%, #fcbf49 25%, #fcbf49 37.5%, #06a77d 37.5%, #06a77d 50%, #118ab2 50%, #118ab2 62.5%, #073b4c 62.5%, #073b4c 75%, #dd6e42 75%, #dd6e42 87.5%, #e8dab2 87.5%, #e8dab2 100%);"></div>
@@ -755,12 +741,13 @@
                                 </div>
                             </div>
                         </div>
-                        </div>
+                    </div>
+                </div>
 
-                        <div class="label-input-group" style="margin-bottom: 12px;">
-                            <label>Add your data</label>
-                        </div>
-
+                <!-- Column 2: Data Settings -->
+                <div class="settings-column">
+                    <div class="sidebar-panel">
+                        <h3>Data Settings</h3>
                         <div class="input-row">
                             <input type="text" id="labelInput" placeholder="Label" onclick="if(document.getElementById('editPopup').classList.contains('active')) closeEditPopup();" />
                             <input type="number" id="valueInput" placeholder="Value" min="0" onclick="if(document.getElementById('editPopup').classList.contains('active')) closeEditPopup();" />
@@ -773,133 +760,24 @@
                         <input type="hidden" id="patternInput" value="solid" />
 
                         <div id="dataList" style="margin-top: 16px; max-height: 340px; overflow-y: auto;"></div>
+                    </div>
                 </div>
 
-                <!-- Settings Panel -->
-                <div class="sidebar-panel" id="chartSettingsPanel">
-                    <h3>Settings</h3>
-
-                        <!-- Row 1: Chart Type and Canvas Aspect Ratio -->
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
-                            <div>
-                                <label style="display: block; font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 8px;">Chart Type</label>
-                                <div class="chart-type-btns">
-                                    <button class="mode-btn selected" data-chart="bar" onclick="selectChartType('bar', this)" style="padding: 8px; font-size: 13px;">Bar</button>
-                                    <button class="mode-btn" data-chart="pie" onclick="selectChartType('pie', this)" style="padding: 8px; font-size: 13px;">Pie</button>
-                                    <button class="mode-btn" data-chart="line" onclick="selectChartType('line', this)" style="padding: 8px; font-size: 13px;">Line</button>
-                                </div>
-                            </div>
-                            <div>
-                                <label style="display: block; font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 8px;">Aspect Ratio</label>
-                                <div style="display: flex; gap: 16px; align-items: center;">
-                                    <button data-ratio="16:9" onclick="selectAspectRatio('16:9', this)" style="padding: 0; border: none; background: transparent; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 3px; opacity: 1;" class="aspect-ratio-btn selected">
-                                        <svg width="32" height="20" viewBox="0 0 32 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                            <rect x="1" y="1" width="30" height="18" rx="1" stroke="currentColor" stroke-width="2" fill="none"/>
-                                        </svg>
-                                        <span style="font-size: 10px; color: currentColor; font-weight: 600;">16:9</span>
-                                    </button>
-                                    <button data-ratio="9:16" onclick="selectAspectRatio('9:16', this)" style="padding: 0; border: none; background: transparent; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 3px; opacity: 0.4;" class="aspect-ratio-btn">
-                                        <svg width="20" height="32" viewBox="0 0 20 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                            <rect x="1" y="1" width="18" height="30" rx="1" stroke="currentColor" stroke-width="2" fill="none"/>
-                                        </svg>
-                                        <span style="font-size: 10px; color: currentColor; font-weight: 600;">9:16</span>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Row 2: Chart Width and Height (for Bar/Line) or Chart Size (for Pie) -->
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
-                            <!-- Chart Size (for Pie chart only) -->
-                            <div class="slider-group" id="chartSizeSliderGroup" style="margin-bottom: 0; display: none; grid-column: span 2;">
-                                <label>
-                                    <span>Chart Size</span>
-                                    <span class="slider-value" id="chartSizeDisplay">90%</span>
-                                </label>
-                                <input type="range" id="chartSizeSlider" min="50" max="100" value="90" step="5" oninput="updateChartSizeDisplay(this.value)" style="width: 100%;">
-                            </div>
-                            <!-- Chart Width (for Bar and Line charts) -->
-                            <div class="slider-group" id="chartWidthSliderGroup" style="margin-bottom: 0;">
-                                <label>
-                                    <span>Chart Width</span>
-                                    <span class="slider-value" id="chartWidthDisplay">90%</span>
-                                </label>
-                                <input type="range" id="chartWidthSlider" min="50" max="100" value="90" step="5" oninput="updateChartWidthDisplay(this.value)" style="width: 100%;">
-                            </div>
-                            <!-- Chart Height (for Bar and Line charts) -->
-                            <div class="slider-group" id="chartHeightSliderGroup" style="margin-bottom: 0;">
-                                <label>
-                                    <span>Chart Height</span>
-                                    <span class="slider-value" id="chartHeightDisplay">90%</span>
-                                </label>
-                                <input type="range" id="chartHeightSlider" min="50" max="100" value="90" step="5" oninput="updateChartHeightDisplay(this.value)" style="width: 100%;">
-                            </div>
-                        </div>
-
-                        <!-- Row 3: Line Roughness and Duration -->
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
-                            <div class="slider-group" style="margin-bottom: 0;">
-                                <label>
-                                    <span>Line Roughness</span>
-                                    <span class="slider-value" id="roughnessDisplay">2.0</span>
-                                </label>
-                                <input type="range" id="roughnessSlider" min="0" max="5" value="2" step="0.5" oninput="updateRoughnessDisplay(this.value)" style="width: 100%;">
-                            </div>
-                            <div class="slider-group" style="margin-bottom: 0;">
-                                <label>
-                                    <span>Duration</span>
-                                    <span class="slider-value" id="durationDisplay">0.8s</span>
-                                </label>
-                                <input type="range" id="durationSlider" min="500" max="5000" value="800" step="100" oninput="updateDurationDisplay(this.value)" style="width: 100%;">
-                            </div>
-                        </div>
-
-                        <!-- Row 4: Chart Background and Text Font -->
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; align-items: end; margin-bottom: 12px;">
+                <!-- Column 3: Chart Settings -->
+                <div class="settings-column">
+                    <div class="sidebar-panel" id="chartSettingsPanel">
+                        <h3>Chart Settings</h3>
+                        <div style="display: grid; grid-template-columns: 1fr 100px; gap: 8px; align-items: end; margin-bottom: 12px;">
                             <div class="label-input-group" style="margin-bottom: 0;">
-                                <label>Chart Background</label>
-                                <div class="bg-color-display" id="bgColorDisplay" onclick="openBgColorPicker()" style="background: #ffffff; width: 100%; height: 40px; cursor: pointer; border: 2px solid #e0e7ff; border-radius: 8px;"></div>
-                                <input type="hidden" id="bgColor" value="#ffffff">
-                                <input type="hidden" id="bgPattern" value="">
-                            </div>
-                            <div class="label-input-group" style="margin-bottom: 0;">
-                                <label for="fontFamily">Text Font</label>
-                                <select id="fontFamily" onchange="updateChart()" style="width: 100%; padding: 10px 8px; border: 2px solid #e0e7ff; border-radius: 8px; font-size: 13px; background: white; cursor: pointer;">
-                                    <option value="Comic Sans MS, cursive">Comic Sans MS</option>
-                                    <option value="Bradley Hand, Comic Sans MS, cursive">Bradley Hand</option>
-                                    <option value="Marker Felt, Comic Sans MS, cursive">Marker Felt</option>
-                                    <option value="Noteworthy, sans-serif" selected>Noteworthy</option>
-                                    <option value="Snell Roundhand, cursive">Snell Roundhand</option>
-                                    <option value="Apple Chancery, cursive">Apple Chancery</option>
-                                    <option value="Papyrus, fantasy">Papyrus</option>
-                                    <option value="Segoe Script, Comic Sans MS, cursive">Segoe Script</option>
-                                    <option value="Lucida Handwriting, cursive">Lucida Handwriting</option>
-                                    <option value="Segoe Print, Comic Sans MS, sans-serif">Segoe Print</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <!-- Title Row -->
-                        <div style="display: grid; grid-template-columns: 1fr 1fr 100px; gap: 8px; align-items: end; margin-bottom: 12px;">
-                            <div class="label-input-group" style="margin-bottom: 0; grid-column: span 2;">
                                 <label for="chartTitle">Title</label>
                                 <input type="text" id="chartTitle" placeholder="Chart title" oninput="updateChart()" onclick="event.stopPropagation()">
                             </div>
                             <div class="label-input-group" style="margin-bottom: 0;">
                                 <label>Font Size</label>
-                                <input type="number" id="titleFontSize" min="10" max="80" value="50" step="2" oninput="updateChart()" onclick="event.stopPropagation()" style="width: 100%; padding: 10px 8px; border: 2px solid #e0e7ff; border-radius: 8px; font-size: 14px;">
+                                <input type="number" id="titleFontSize" min="10" max="80" value="55" step="2" oninput="updateChart()" onclick="event.stopPropagation()" style="width: 100%; padding: 10px 8px; border: 2px solid #e0e7ff; border-radius: 8px; font-size: 14px;">
                             </div>
                         </div>
 
-                        <!-- Pie Chart Data Label Font Size (shown only for pie chart) -->
-                        <div id="pieDataLabelFontSizeSetting" style="display: none; margin-bottom: 12px;">
-                            <div class="label-input-group" style="margin-bottom: 0;">
-                                <label>Data Label Font Size</label>
-                                <input type="number" id="pieDataLabelFontSize" min="10" max="50" value="35" step="2" oninput="updateChart()" onclick="event.stopPropagation()" style="width: 100%; padding: 10px 8px; border: 2px solid #e0e7ff; border-radius: 8px; font-size: 14px;">
-                            </div>
-                        </div>
-
-                        <!-- Axis Settings (shown only for bar and line charts) -->
                         <div id="axisSettings" style="display: grid; grid-template-columns: 1fr 1fr 100px; gap: 8px; align-items: end; margin-bottom: 12px;">
                             <div class="label-input-group" style="margin-bottom: 0;">
                                 <label for="xAxisLabel">X-Axis</label>
@@ -911,7 +789,20 @@
                             </div>
                             <div class="label-input-group" style="margin-bottom: 0;">
                                 <label>Font Size</label>
-                                <input type="number" id="axisFontSize" min="10" max="50" value="35" step="2" oninput="updateChart()" onclick="event.stopPropagation()" style="width: 100%; padding: 10px 8px; border: 2px solid #e0e7ff; border-radius: 8px; font-size: 14px;">
+                                <input type="number" id="axisFontSize" min="10" max="50" value="40" step="2" oninput="updateChart()" onclick="event.stopPropagation()" style="width: 100%; padding: 10px 8px; border: 2px solid #e0e7ff; border-radius: 8px; font-size: 14px;">
+                            </div>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: 100px 1fr; gap: 8px; align-items: end; margin-bottom: 12px;">
+                            <div class="label-input-group" style="margin-bottom: 0;">
+                                <label>Data Label Size</label>
+                                <input type="number" id="dataLabelFontSize" min="10" max="50" value="30" step="2" oninput="updateChart()" style="width: 100%; padding: 10px 8px; border: 2px solid #e0e7ff; border-radius: 8px; font-size: 14px;">
+                            </div>
+                            <div class="label-input-group" style="margin-bottom: 0;">
+                                <label>Background</label>
+                                <div class="bg-color-display" id="bgColorDisplay" onclick="openBgColorPicker()" style="background: #ffffff; width: 100%; height: 40px; cursor: pointer;"></div>
+                                <input type="hidden" id="bgColor" value="#ffffff">
+                                <input type="hidden" id="bgPattern" value="">
                             </div>
                         </div>
 
@@ -924,32 +815,51 @@
                                 <option value="triangle">Triangle</option>
                             </select>
                         </div>
-                </div>
-            </div>
 
-            <!-- Right Column: Chart Area and Buttons -->
-            <div class="right-column">
-                <!-- Chart Area -->
-                <div class="chart-area">
-                    <div class="chart-container-wrapper">
-                        <div class="chart-container" id="chartContainer">
-                            <svg id="chartSvg" style="display: none;"></svg>
-                            <div class="empty-state" id="emptyState">
-                                <div style="font-size: 20px; margin-bottom: 10px;">📊</div>
-                                <div>Add data items and click "Animate Chart" to preview</div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 12px;">
+                            <div class="slider-group" style="margin-bottom: 0;">
+                                <label>
+                                    <span>Roughness</span>
+                                    <span class="slider-value" id="roughnessDisplay">2.0</span>
+                                </label>
+                                <input type="range" id="roughnessSlider" min="0" max="5" value="2" step="0.5" oninput="updateRoughnessDisplay(this.value)" style="width: 100%;">
+                            </div>
+                            <div class="slider-group" style="margin-bottom: 0;">
+                                <label>
+                                    <span>Duration</span>
+                                    <span class="slider-value" id="durationDisplay">0.8s</span>
+                                </label>
+                                <input type="range" id="durationSlider" min="500" max="5000" value="800" step="100" oninput="updateDurationDisplay(this.value)" style="width: 100%;">
+                            </div>
+                            <div class="slider-group" style="margin-bottom: 0;">
+                                <label>
+                                    <span>Speed</span>
+                                    <span class="slider-value" id="sketchDisplay">100ms</span>
+                                </label>
+                                <input type="range" id="sketchSlider" min="50" max="500" value="100" step="10" oninput="updateSketchDisplay(this.value)" style="width: 100%;">
                             </div>
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <!-- Animate Buttons -->
-                <div class="animate-btn-container" style="display: flex; gap: 12px; justify-content: center;">
-                    <button class="animate-btn" onclick="animateChart()" id="animateBtn" disabled>
-                        ▶ Animate Chart
-                    </button>
-                    <button class="animate-btn" id="downloadGifBtn" disabled>
-                        Download as GIF
-                    </button>
+            <!-- Animate Button -->
+            <div class="animate-btn-container" style="display: flex; gap: 12px; justify-content: center;">
+                <button class="animate-btn" onclick="animateChart()" id="animateBtn" disabled>
+                    ▶ Animate Chart
+                </button>
+                <button class="animate-btn" id="downloadGifBtn" style="display: none;">
+                    Download as GIF
+                </button>
+            </div>
+
+            <!-- Chart Area -->
+            <div class="chart-area">
+                <div class="chart-container-wrapper">
+                    <div class="chart-container" id="chartContainer">
+                        <svg id="chartSvg"></svg>
+                        <div class="empty-state" id="emptyState">Add data items to see your chart</div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1046,10 +956,7 @@
         <hr style="border: none; border-top: 2px solid #e0e7ff; margin: 16px 0;">
 
         <h4 style="margin: 0 0 8px 0; font-size: 14px; font-weight: 700; color: #374151;">Or Upload Custom Image</h4>
-        <div style="display: flex; gap: 8px; align-items: center;">
-            <input type="file" id="bgImage" accept="image/*" onchange="handleBackgroundImage()" style="flex: 1; padding: 6px; border: 2px solid #e0e7ff; border-radius: 6px; font-size: 12px;">
-            <button onclick="clearBackgroundImage()" id="clearBgImageBtn" style="display: none; padding: 8px 12px; background: #ef4444; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600; white-space: nowrap;">Clear</button>
-        </div>
+        <input type="file" id="bgImage" accept="image/*" onchange="handleBackgroundImage()" style="width: 100%; padding: 6px; border: 2px solid #e0e7ff; border-radius: 6px; font-size: 12px;">
     </div>
 
     <script>
@@ -1059,10 +966,6 @@
         let editingItemIndex = -1;
         let modalSelectedPattern = 'solid';
         let currentChartType = 'bar';
-        let currentAspectRatio = '16:9';
-        let chartSizePercent = 90; // Used for pie chart
-        let chartWidthPercent = 90; // Used for bar and line charts
-        let chartHeightPercent = 90; // Used for bar and line charts
         let backgroundImage = null;
 
         const colorPalettes = {
@@ -1146,7 +1049,7 @@
 
         function selectChartType(chartType, element) {
             currentChartType = chartType;
-            document.querySelectorAll('.mode-btn[data-chart]').forEach(btn => {
+            document.querySelectorAll('.mode-btn').forEach(btn => {
                 btn.classList.remove('selected');
             });
             element.classList.add('selected');
@@ -1154,27 +1057,11 @@
             // Show/hide axis settings and line shape settings based on chart type
             const axisSettings = document.getElementById('axisSettings');
             const lineshapeSettings = document.getElementById('lineshapeSettings');
-            const pieDataLabelFontSizeSetting = document.getElementById('pieDataLabelFontSizeSetting');
-
-            // Show/hide size sliders based on chart type
-            const chartSizeSliderGroup = document.getElementById('chartSizeSliderGroup');
-            const chartWidthSliderGroup = document.getElementById('chartWidthSliderGroup');
-            const chartHeightSliderGroup = document.getElementById('chartHeightSliderGroup');
 
             if (chartType === 'pie') {
                 axisSettings.style.display = 'none';
-                pieDataLabelFontSizeSetting.style.display = 'block';
-                // Show single size slider for pie chart
-                chartSizeSliderGroup.style.display = 'block';
-                chartWidthSliderGroup.style.display = 'none';
-                chartHeightSliderGroup.style.display = 'none';
             } else {
                 axisSettings.style.display = 'grid';
-                pieDataLabelFontSizeSetting.style.display = 'none';
-                // Show width and height sliders for bar and line charts
-                chartSizeSliderGroup.style.display = 'none';
-                chartWidthSliderGroup.style.display = 'block';
-                chartHeightSliderGroup.style.display = 'block';
             }
 
             if (chartType === 'line') {
@@ -1184,71 +1071,6 @@
             }
 
             updateChart();
-        }
-
-        function selectAspectRatio(ratio, element) {
-            currentAspectRatio = ratio;
-            document.querySelectorAll('.aspect-ratio-btn').forEach(btn => {
-                btn.classList.remove('selected');
-                btn.style.opacity = '0.4';
-            });
-            element.classList.add('selected');
-            element.style.opacity = '1';
-
-            // Update the preview container aspect ratio
-            const chartContainer = document.querySelector('.chart-container');
-            if (chartContainer) {
-                chartContainer.style.aspectRatio = ratio === '16:9' ? '16 / 9' : '9 / 16';
-                // Adjust max-width for vertical to prevent it from being too wide
-                chartContainer.style.maxWidth = ratio === '16:9' ? '900px' : '337px';
-            }
-
-            // If chart is currently visible, re-animate to show the change
-            const svg = document.getElementById('chartSvg');
-            if (svg.style.display === 'block' && dataItems.length > 0) {
-                animateChart();
-            } else {
-                updateChart();
-            }
-        }
-
-        function updateChartSizeDisplay(value) {
-            chartSizePercent = parseInt(value);
-            document.getElementById('chartSizeDisplay').textContent = value + '%';
-
-            // If chart is currently visible, re-animate to show the change
-            const svg = document.getElementById('chartSvg');
-            if (svg.style.display === 'block' && dataItems.length > 0) {
-                animateChart();
-            } else {
-                updateChart();
-            }
-        }
-
-        function updateChartWidthDisplay(value) {
-            chartWidthPercent = parseInt(value);
-            document.getElementById('chartWidthDisplay').textContent = value + '%';
-
-            // If chart is currently visible, re-animate to show the change
-            const svg = document.getElementById('chartSvg');
-            if (svg.style.display === 'block' && dataItems.length > 0) {
-                animateChart();
-            } else {
-                updateChart();
-            }
-        }
-
-        function updateChartHeightDisplay(value) {
-            chartHeightPercent = parseInt(value);
-            document.getElementById('chartHeightDisplay').textContent = value + '%';
-
-            // If chart is currently visible, re-animate to show the change
-            const svg = document.getElementById('chartSvg');
-            if (svg.style.display === 'block' && dataItems.length > 0) {
-                animateChart();
-            } else {
-                updateChart();
-            }
         }
 
         let draggedDataIndex = null;
@@ -1410,29 +1232,17 @@
                     backgroundImage = e.target.result;
                     updateChartBackground();
                     closeBgColorPicker();
-                    // Show clear button
-                    document.getElementById('clearBgImageBtn').style.display = 'block';
                 };
                 reader.readAsDataURL(file);
             }
         }
 
-        function clearBackgroundImage() {
-            backgroundImage = null;
-            document.getElementById('bgImage').value = ''; // Clear file input
-            document.getElementById('clearBgImageBtn').style.display = 'none';
-            updateChartBackground();
-        }
-
         function updateChartBackground() {
-            const chartContainer = document.querySelector('.chart-container');
-            const bgColor = document.getElementById('bgColor').value || '#ffffff';
+            const chartContainer = document.querySelector('.chart-container-wrapper');
+            const bgColor = document.getElementById('bgColor').value;
             const bgPattern = document.getElementById('bgPattern').value;
 
-            // Apply background only to container (for display and GIF export)
-            if (!chartContainer) return;
-
-            // Always set the background color (default to white if not set)
+            // Always set the background color
             chartContainer.style.backgroundColor = bgColor;
 
             // Apply pattern or custom image as overlay
@@ -1456,7 +1266,7 @@
 
             // Update the preview display
             const bgDisplay = document.getElementById('bgColorDisplay');
-            bgDisplay.style.backgroundColor = bgColor || '#ffffff';
+            bgDisplay.style.backgroundColor = bgColor;
             if (bgPattern) {
                 bgDisplay.style.backgroundImage = `url(${bgPattern})`;
                 bgDisplay.style.backgroundSize = '20px 20px';
@@ -1669,41 +1479,33 @@
             const svg = document.getElementById('chartSvg');
             const emptyState = document.getElementById('emptyState');
 
-            // Update font family CSS variable
-            const fontFamily = document.getElementById('fontFamily')?.value || 'Noteworthy, sans-serif';
-            document.documentElement.style.setProperty('--chart-font-family', fontFamily);
-
-            // If chart is currently visible, re-animate to show changes
-            if (svg.style.display === 'block' && dataItems.length > 0) {
-                animateChart();
+            if (dataItems.length === 0) {
+                emptyState.style.display = 'block';
+                svg.innerHTML = '';
                 return;
             }
 
-            // Don't show static preview - keep SVG hidden until animation
-            svg.style.display = 'none';
+            emptyState.style.display = 'none';
             svg.innerHTML = '';
 
-            if (dataItems.length === 0) {
-                emptyState.style.display = 'block';
-                emptyState.innerHTML = '<div style="font-size: 20px; margin-bottom: 10px;">📊</div><div>Add data items and click "Animate Chart" to preview</div>';
-            } else {
-                emptyState.style.display = 'block';
-                emptyState.innerHTML = '<div style="font-size: 20px; margin-bottom: 10px;">✨</div><div>Click "Animate Chart" to see your visualization</div>';
+            if (currentChartType === 'bar') {
+                updateBarChart(svg);
+            } else if (currentChartType === 'pie') {
+                updatePieChart(svg);
+            } else if (currentChartType === 'line') {
+                updateLineChart(svg);
             }
-
-            // Note: We no longer call updateBarChart/updatePieChart/updateLineChart here
-            // The chart will only be shown when animateChart() is called
         }
 
         function updateBarChart(svg) {
             const svgWidth = svg.clientWidth || 900;
             const svgHeight = svg.clientHeight || 550;
-            const axisFontSize = parseInt(document.getElementById('axisFontSize').value) || 35;
-            const titleFontSize = parseInt(document.getElementById('titleFontSize').value) || 50;
+            const axisFontSize = parseInt(document.getElementById('axisFontSize').value) || 28;
+            const titleFontSize = parseInt(document.getElementById('titleFontSize').value) || 56;
             const chartTitle = document.getElementById('chartTitle').value;
 
-            const topPadding = chartTitle ? titleFontSize + 200 : 60;
-            const bottomPadding = axisFontSize + 120; // Increased to give more space for labels
+            const topPadding = chartTitle ? Math.max(titleFontSize + 40, 80) : 60;
+            const bottomPadding = 80; // Increased to give more space for labels
             const chartHeight = svgHeight - topPadding - bottomPadding;
             const chartWidth = svgWidth - 120;
 
@@ -1715,12 +1517,10 @@
             const leftPadding = Math.max(60, (svgWidth - neededWidth) / 2);
             const roughness = parseFloat(document.getElementById('roughnessSlider').value);
             const xAxisEnd = leftPadding + neededWidth;
-            const dataLabelFontSize = axisFontSize; // Use same font size as axis
-            const yAxisExtension = dataLabelFontSize + 20; // Extra space for data labels above bars
 
             const axisY = rc.line(
                 leftPadding,
-                topPadding - yAxisExtension,
+                topPadding,
                 leftPadding,
                 svgHeight - bottomPadding,
                 { roughness: roughness, strokeWidth: 2.5, stroke: '#333' }
@@ -1743,7 +1543,7 @@
             if (xAxisLabel) {
                 const xLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
                 xLabel.setAttribute('x', xAxisCenter);
-                xLabel.setAttribute('y', svgHeight - bottomPadding + axisFontSize + 80);
+                xLabel.setAttribute('y', svgHeight - 10);
                 xLabel.setAttribute('text-anchor', 'middle');
                 xLabel.setAttribute('class', 'bar-label');
                 xLabel.style.fontSize = axisFontSize + 'px';
@@ -1754,7 +1554,7 @@
 
             if (yAxisLabel) {
                 const yLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-                yLabel.setAttribute('x', -(topPadding + chartHeight / 2));
+                yLabel.setAttribute('x', -svgHeight / 2);
                 yLabel.setAttribute('y', leftPadding - 40);
                 yLabel.setAttribute('text-anchor', 'middle');
                 yLabel.setAttribute('transform', 'rotate(-90)');
@@ -1768,7 +1568,7 @@
             if (chartTitle) {
                 const title = document.createElementNS('http://www.w3.org/2000/svg', 'text');
                 title.setAttribute('x', svgWidth / 2);
-                title.setAttribute('y', topPadding - titleFontSize - 100);
+                title.setAttribute('y', Math.max(titleFontSize, 30));
                 title.setAttribute('text-anchor', 'middle');
                 title.setAttribute('class', 'bar-label');
                 title.style.fontSize = titleFontSize + 'px';
@@ -1798,24 +1598,20 @@
         function updatePieChart(svg) {
             const svgWidth = svg.clientWidth || 900;
             const svgHeight = svg.clientHeight || 550;
-            const baseTitleFontSize = parseInt(document.getElementById('titleFontSize').value) || 50;
-            const basePieDataLabelFontSize = parseInt(document.getElementById('pieDataLabelFontSize').value) || 35;
-            // Scale fonts to keep visual size consistent across aspect ratios
-            const fontScale = currentAspectRatio === '16:9' ? 1.0 : 1.5;
-            const titleFontSize = baseTitleFontSize * fontScale;
-            const pieDataLabelFontSize = basePieDataLabelFontSize * fontScale;
+            const titleFontSize = parseInt(document.getElementById('titleFontSize').value) || 56;
+            const axisFontSize = parseInt(document.getElementById('axisFontSize').value) || 28;
             const chartTitle = document.getElementById('chartTitle').value;
 
-            const topOffset = chartTitle ? titleFontSize + 20 : 30;
+            const topOffset = chartTitle ? Math.max(titleFontSize + 20, 60) : 30;
             const centerX = svgWidth / 2;
-            const centerY = svgHeight / 2;
-            const radius = Math.min(svgWidth, svgHeight) * 0.35;
+            const centerY = (svgHeight + topOffset) / 2;
+            const radius = Math.min(svgWidth, svgHeight - topOffset) * 0.30;
             const totalValue = dataItems.reduce((sum, item) => sum + item.value, 0);
 
             if (chartTitle) {
                 const title = document.createElementNS('http://www.w3.org/2000/svg', 'text');
                 title.setAttribute('x', svgWidth / 2);
-                title.setAttribute('y', centerY - radius - 130);
+                title.setAttribute('y', Math.max(titleFontSize, 30));
                 title.setAttribute('text-anchor', 'middle');
                 title.setAttribute('class', 'bar-label');
                 title.style.fontSize = titleFontSize + 'px';
@@ -1842,7 +1638,7 @@
                     color: item.color,
                     pattern: item.pattern,
                     percentage: ((item.value / totalValue) * 100).toFixed(1),
-                    fontSize: pieDataLabelFontSize
+                    fontSize: axisFontSize
                 };
             });
 
@@ -1852,12 +1648,12 @@
         function updateLineChart(svg) {
             const svgWidth = svg.clientWidth || 900;
             const svgHeight = svg.clientHeight || 550;
-            const axisFontSize = parseInt(document.getElementById('axisFontSize').value) || 35;
-            const titleFontSize = parseInt(document.getElementById('titleFontSize').value) || 50;
+            const axisFontSize = parseInt(document.getElementById('axisFontSize').value) || 28;
+            const titleFontSize = parseInt(document.getElementById('titleFontSize').value) || 56;
             const chartTitle = document.getElementById('chartTitle').value;
 
-            const topPadding = chartTitle ? titleFontSize + 200 : 60;
-            const bottomPadding = axisFontSize + 120;
+            const topPadding = chartTitle ? Math.max(titleFontSize + 40, 80) : 60;
+            const bottomPadding = 80;
             const chartHeight = svgHeight - topPadding - bottomPadding;
             const maxValue = Math.max(...dataItems.map(item => item.value));
             const pointCount = dataItems.length;
@@ -1866,12 +1662,10 @@
             const leftPadding = Math.max(60, (svgWidth - neededWidth) / 2);
             const xAxisEnd = leftPadding + neededWidth;
             const roughness = parseFloat(document.getElementById('roughnessSlider').value);
-            const dataLabelFontSize = axisFontSize; // Use same font size as axis
-            const yAxisExtension = dataLabelFontSize + 20; // Extra space for data labels above points
 
             const axisY = rc.line(
                 leftPadding,
-                topPadding - yAxisExtension,
+                topPadding,
                 leftPadding,
                 svgHeight - bottomPadding,
                 { roughness: roughness, strokeWidth: 2.5, stroke: '#333' }
@@ -1894,7 +1688,7 @@
             if (xAxisLabel) {
                 const xLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
                 xLabel.setAttribute('x', xAxisCenter);
-                xLabel.setAttribute('y', svgHeight - bottomPadding + axisFontSize + 80);
+                xLabel.setAttribute('y', svgHeight - 10);
                 xLabel.setAttribute('text-anchor', 'middle');
                 xLabel.setAttribute('class', 'bar-label');
                 xLabel.style.fontSize = axisFontSize + 'px';
@@ -1905,7 +1699,7 @@
 
             if (yAxisLabel) {
                 const yLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-                yLabel.setAttribute('x', -(topPadding + chartHeight / 2));
+                yLabel.setAttribute('x', -svgHeight / 2);
                 yLabel.setAttribute('y', leftPadding - 40);
                 yLabel.setAttribute('text-anchor', 'middle');
                 yLabel.setAttribute('transform', 'rotate(-90)');
@@ -1919,7 +1713,7 @@
             if (chartTitle) {
                 const title = document.createElementNS('http://www.w3.org/2000/svg', 'text');
                 title.setAttribute('x', svgWidth / 2);
-                title.setAttribute('y', topPadding - titleFontSize - 100);
+                title.setAttribute('y', Math.max(titleFontSize, 30));
                 title.setAttribute('text-anchor', 'middle');
                 title.setAttribute('class', 'bar-label');
                 title.style.fontSize = titleFontSize + 'px';
@@ -2299,63 +2093,22 @@
 
             const bgPopup = document.getElementById('bgColorPickerPopup');
             const isBgClickInside = bgPopup.contains(e.target);
-            const isBgDisplayClick = e.target.id === 'bgColorDisplay' || e.target.closest('#bgColorDisplay');
+            const isBgDisplayClick = e.target.id === 'bgColorDisplay';
 
             if (!isBgClickInside && !isBgDisplayClick && bgPopup.classList.contains('active')) {
                 closeBgColorPicker();
             }
         });
 
-        let isCreatingGif = false;
-
-        function getCanvasDimensions() {
-            // Calculate canvas dimensions based on aspect ratio
-            const baseWidth = currentAspectRatio === '16:9' ? 1920 : 1080;
-            const baseHeight = currentAspectRatio === '16:9' ? 1080 : 1920;
-
-            return {
-                width: baseWidth,
-                height: baseHeight,
-                // Calculate padding based on chart type
-                // For pie chart: use chartSizePercent for both dimensions
-                // For bar and line charts: use chartWidthPercent and chartHeightPercent separately
-                getPadding: function() {
-                    let horizontalPaddingPercent, verticalPaddingPercent;
-
-                    if (currentChartType === 'pie') {
-                        // Pie chart uses same percentage for both dimensions
-                        const paddingPercent = (100 - chartSizePercent) / 2;
-                        horizontalPaddingPercent = paddingPercent;
-                        verticalPaddingPercent = paddingPercent;
-                    } else {
-                        // Bar and Line charts use separate percentages
-                        horizontalPaddingPercent = (100 - chartWidthPercent) / 2;
-                        verticalPaddingPercent = (100 - chartHeightPercent) / 2;
-                    }
-
-                    return {
-                        horizontal: (this.width * horizontalPaddingPercent) / 100,
-                        vertical: (this.height * verticalPaddingPercent) / 100
-                    };
-                }
-            };
-        }
-
         function animateChart() {
             if (dataItems.length === 0) return;
 
             const svg = document.getElementById('chartSvg');
-            const emptyState = document.getElementById('emptyState');
-
-            // Show SVG and hide empty state when animation starts
-            svg.style.display = 'block';
-            emptyState.style.display = 'none';
-
-            // Disable download button until animation completes
-            const downloadBtn = document.getElementById('downloadGifBtn');
-            if (downloadBtn) downloadBtn.disabled = true;
-
             svg.innerHTML = '';
+
+            // Hide download button when starting new animation
+            const downloadBtn = document.getElementById('downloadGifBtn');
+            if (downloadBtn) downloadBtn.style.display = 'none';
 
             if (currentChartType === 'bar') {
                 animateBarChart();
@@ -2368,48 +2121,24 @@
 
         function animateBarChart() {
             const svg = document.getElementById('chartSvg');
-            const canvasDims = getCanvasDimensions();
-            const padding = canvasDims.getPadding();
-
-            // Set SVG to canvas dimensions
-            const svgWidth = canvasDims.width;
-            const svgHeight = canvasDims.height;
-            svg.setAttribute('viewBox', `0 0 ${svgWidth} ${svgHeight}`);
-            svg.style.width = 'auto';
-            svg.style.maxWidth = '100%';
-
-            const baseAxisFontSize = parseInt(document.getElementById('axisFontSize').value) || 35;
-            const baseTitleFontSize = parseInt(document.getElementById('titleFontSize').value) || 50;
-            // Scale fonts to keep visual size consistent across aspect ratios
-            const fontScale = currentAspectRatio === '16:9' ? 1.0 : 1.5;
-            const axisFontSize = baseAxisFontSize * fontScale;
-            const titleFontSize = baseTitleFontSize * fontScale;
+            const svgWidth = svg.clientWidth || 900;
+            const svgHeight = svg.clientHeight || 550;
+            const axisFontSize = parseInt(document.getElementById('axisFontSize').value) || 28;
+            const titleFontSize = parseInt(document.getElementById('titleFontSize').value) || 56;
             const chartTitle = document.getElementById('chartTitle').value;
-
-            // Calculate padding - minimum needed for axis/labels + chart size setting
-            const minPadding = { horizontal: 60, vertical: 40 };
-            const topPadding = minPadding.vertical + padding.vertical + (chartTitle ? titleFontSize + 200 : 0);
-            const bottomPadding = minPadding.vertical + padding.vertical + (axisFontSize + 120);
-            const leftPadding = minPadding.horizontal + padding.horizontal + 60; // Extra for Y-axis labels
-            const rightPadding = minPadding.horizontal + padding.horizontal;
-
+            const topPadding = chartTitle ? Math.max(titleFontSize + 40, 80) : 60;
+            const bottomPadding = 80;
+            const chartHeight = svgHeight - topPadding - bottomPadding;
             const maxValue = Math.max(...dataItems.map(item => item.value));
             const barCount = dataItems.length;
-
-            // Calculate bar sizing to center bars in available space
-            const availableWidth = svgWidth - leftPadding - rightPadding;
-            // Adjust spacing based on aspect ratio: horizontal needs less spacing
-            const spacingRatio = currentAspectRatio === '16:9' ? 0.2 : 0.3;
-            const totalSpacingWidth = availableWidth * spacingRatio;
-            const barSpacing = totalSpacingWidth / (barCount + 1);
-            const totalBarWidth = availableWidth - totalSpacingWidth;
-            const barWidth = totalBarWidth / barCount;
-
-            const chartHeight = svgHeight - topPadding - bottomPadding;
+            const barSpacing = 30;
+            const barWidth = Math.min(80, 100);
+            const neededWidth = barSpacing + (barWidth + barSpacing) * barCount;
+            const leftPadding = Math.max(60, (svgWidth - neededWidth) / 2);
             const roughness = parseFloat(document.getElementById('roughnessSlider').value);
-            const xAxisEnd = svgWidth - rightPadding;
+            const xAxisEnd = leftPadding + neededWidth;
             const duration = parseInt(document.getElementById('durationSlider').value);
-            const sketchInterval = 80; // Fixed speed
+            const sketchInterval = parseInt(document.getElementById('sketchSlider').value);
 
             const axisY = rc.line(leftPadding, topPadding, leftPadding, svgHeight - bottomPadding,
                 { roughness: roughness, strokeWidth: 2.5, stroke: '#333' });
@@ -2426,7 +2155,7 @@
             if (xAxisLabel) {
                 const xLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
                 xLabel.setAttribute('x', xAxisCenter);
-                xLabel.setAttribute('y', svgHeight - bottomPadding + axisFontSize + 80);
+                xLabel.setAttribute('y', svgHeight - 10);
                 xLabel.setAttribute('text-anchor', 'middle');
                 xLabel.setAttribute('class', 'bar-label');
                 xLabel.style.fontSize = axisFontSize + 'px';
@@ -2437,7 +2166,7 @@
 
             if (yAxisLabel) {
                 const yLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-                yLabel.setAttribute('x', -(topPadding + chartHeight / 2));
+                yLabel.setAttribute('x', -svgHeight / 2);
                 yLabel.setAttribute('y', leftPadding - 40);
                 yLabel.setAttribute('text-anchor', 'middle');
                 yLabel.setAttribute('transform', 'rotate(-90)');
@@ -2451,7 +2180,7 @@
             if (chartTitle) {
                 const title = document.createElementNS('http://www.w3.org/2000/svg', 'text');
                 title.setAttribute('x', svgWidth / 2);
-                title.setAttribute('y', topPadding - titleFontSize - 100);
+                title.setAttribute('y', Math.max(titleFontSize, 30));
                 title.setAttribute('text-anchor', 'middle');
                 title.setAttribute('class', 'bar-label');
                 title.style.fontSize = titleFontSize + 'px';
@@ -2470,7 +2199,7 @@
 
                 const labelText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
                 labelText.setAttribute('x', barX + barWidth / 2);
-                labelText.setAttribute('y', svgHeight - bottomPadding + 50);
+                labelText.setAttribute('y', svgHeight - bottomPadding + 25);
                 labelText.setAttribute('text-anchor', 'middle');
                 labelText.setAttribute('class', 'bar-label');
                 labelText.style.fontSize = axisFontSize + 'px';
@@ -2509,10 +2238,11 @@
                     if (progress === 1) {
                         const valueText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
                         valueText.setAttribute('x', barX + barWidth / 2);
-                        valueText.setAttribute('y', currentY - 30);
+                        valueText.setAttribute('y', currentY - 8);
                         valueText.setAttribute('text-anchor', 'middle');
                         valueText.setAttribute('class', 'bar-value');
-                        valueText.style.fontSize = axisFontSize + 'px';
+                        const dataLabelFontSize = parseInt(document.getElementById('dataLabelFontSize')?.value) || 24;
+                        valueText.style.fontSize = dataLabelFontSize + 'px';
                         valueText.textContent = item.value;
                         barGroup.appendChild(valueText);
                     }
@@ -2523,9 +2253,9 @@
                         animationFrame = requestAnimationFrame(animate);
                     }, sketchInterval);
                 } else {
-                    // Animation complete - enable download button
+                    // Animation complete - show download button
                     const downloadBtn = document.getElementById('downloadGifBtn');
-                    if (downloadBtn) downloadBtn.disabled = false;
+                    if (downloadBtn) downloadBtn.style.display = 'block';
                 }
             }
 
@@ -2534,49 +2264,24 @@
 
         function animatePieChart() {
             const svg = document.getElementById('chartSvg');
-            const canvasDims = getCanvasDimensions();
-            const padding = canvasDims.getPadding();
-
-            // Set SVG to canvas dimensions
-            const svgWidth = canvasDims.width;
-            const svgHeight = canvasDims.height;
-            svg.setAttribute('viewBox', `0 0 ${svgWidth} ${svgHeight}`);
-            svg.style.width = 'auto';
-            svg.style.maxWidth = '100%';
-
-            const baseTitleFontSize = parseInt(document.getElementById('titleFontSize').value) || 50;
-            const basePieDataLabelFontSize = parseInt(document.getElementById('pieDataLabelFontSize').value) || 35;
-            // Scale fonts to keep visual size consistent across aspect ratios
-            const fontScale = currentAspectRatio === '16:9' ? 1.0 : 1.5;
-            const titleFontSize = baseTitleFontSize * fontScale;
-            const pieDataLabelFontSize = basePieDataLabelFontSize * fontScale;
+            const svgWidth = svg.clientWidth || 900;
+            const svgHeight = svg.clientHeight || 550;
+            const titleFontSize = parseInt(document.getElementById('titleFontSize').value) || 56;
+            const axisFontSize = parseInt(document.getElementById('axisFontSize').value) || 28;
             const chartTitle = document.getElementById('chartTitle').value;
-
-            // Calculate padding for pie chart
-            const minPadding = { horizontal: 60, vertical: 40 };
-            const totalHorizontalPadding = minPadding.horizontal + padding.horizontal;
-            const totalVerticalPadding = minPadding.vertical + padding.vertical;
-            const topOffset = chartTitle ? titleFontSize + 20 : 0;
-
-            // Calculate radius based on available space (chart size affects this)
-            const availableSize = Math.min(
-                svgWidth - totalHorizontalPadding * 2,
-                svgHeight - totalVerticalPadding * 2 - topOffset
-            );
-            const radius = availableSize / 2.8; // Leave room for labels
-            const labelRadius = radius + Math.min(pieDataLabelFontSize * 3, radius * 0.4); // Space for labels outside
-
+            const topOffset = chartTitle ? Math.max(titleFontSize + 20, 60) : 30;
             const centerX = svgWidth / 2;
-            const centerY = svgHeight / 2;
+            const centerY = (svgHeight + topOffset) / 2;
+            const radius = Math.min(svgWidth, svgHeight - topOffset) * 0.30;
             const totalValue = dataItems.reduce((sum, item) => sum + item.value, 0);
             const roughness = parseFloat(document.getElementById('roughnessSlider').value);
             const duration = parseInt(document.getElementById('durationSlider').value);
-            const sketchInterval = 80; // Fixed speed
+            const sketchInterval = parseInt(document.getElementById('sketchSlider').value);
 
             if (chartTitle) {
                 const title = document.createElementNS('http://www.w3.org/2000/svg', 'text');
                 title.setAttribute('x', svgWidth / 2);
-                title.setAttribute('y', centerY - radius - 130);
+                title.setAttribute('y', Math.max(titleFontSize, 30));
                 title.setAttribute('text-anchor', 'middle');
                 title.setAttribute('class', 'bar-label');
                 title.style.fontSize = titleFontSize + 'px';
@@ -2642,7 +2347,8 @@
                             labelText.setAttribute('text-anchor', 'middle');
                             labelText.setAttribute('dominant-baseline', 'middle');
                             labelText.setAttribute('class', 'bar-label');
-                            labelText.style.fontSize = pieDataLabelFontSize + 'px';
+                            const dataLabelFontSize = parseInt(document.getElementById('dataLabelFontSize')?.value) || 24;
+                            labelText.style.fontSize = dataLabelFontSize + 'px';
                             labelText.style.fontWeight = '700';
                             const percentage = ((item.value / totalValue) * 100).toFixed(1);
                             labelText.textContent = `${item.label} (${percentage}%)`;
@@ -2656,9 +2362,9 @@
                         requestAnimationFrame(animate);
                     }, sketchInterval);
                 } else {
-                    // Animation complete - enable download button
+                    // Animation complete - show download button
                     const downloadBtn = document.getElementById('downloadGifBtn');
-                    if (downloadBtn) downloadBtn.disabled = false;
+                    if (downloadBtn) downloadBtn.style.display = 'block';
                 }
             }
 
@@ -2667,43 +2373,23 @@
 
         function animateLineChart() {
             const svg = document.getElementById('chartSvg');
-            const canvasDims = getCanvasDimensions();
-            const padding = canvasDims.getPadding();
-
-            // Set SVG to canvas dimensions
-            const svgWidth = canvasDims.width;
-            const svgHeight = canvasDims.height;
-            svg.setAttribute('viewBox', `0 0 ${svgWidth} ${svgHeight}`);
-            svg.style.width = 'auto';
-            svg.style.maxWidth = '100%';
-
-            const baseAxisFontSize = parseInt(document.getElementById('axisFontSize').value) || 35;
-            const baseTitleFontSize = parseInt(document.getElementById('titleFontSize').value) || 50;
-            // Scale fonts to keep visual size consistent across aspect ratios
-            const fontScale = currentAspectRatio === '16:9' ? 1.0 : 1.5;
-            const axisFontSize = baseAxisFontSize * fontScale;
-            const titleFontSize = baseTitleFontSize * fontScale;
+            const svgWidth = svg.clientWidth || 900;
+            const svgHeight = svg.clientHeight || 550;
+            const axisFontSize = parseInt(document.getElementById('axisFontSize').value) || 28;
+            const titleFontSize = parseInt(document.getElementById('titleFontSize').value) || 56;
             const chartTitle = document.getElementById('chartTitle').value;
-
-            // Calculate padding - minimum needed for axis/labels + chart size setting
-            const minPadding = { horizontal: 60, vertical: 40 };
-            const topPadding = minPadding.vertical + padding.vertical + (chartTitle ? titleFontSize + 200 : 0);
-            const bottomPadding = minPadding.vertical + padding.vertical + (axisFontSize + 120);
-            const leftPadding = minPadding.horizontal + padding.horizontal + 60; // Extra for Y-axis labels
-            const rightPadding = minPadding.horizontal + padding.horizontal;
-
+            const topPadding = chartTitle ? Math.max(titleFontSize + 40, 80) : 60;
+            const bottomPadding = 80;
+            const chartHeight = svgHeight - topPadding - bottomPadding;
             const maxValue = Math.max(...dataItems.map(item => item.value));
             const pointCount = dataItems.length;
-
-            // Calculate point spacing based on available space
-            const availableWidth = svgWidth - leftPadding - rightPadding;
-            const pointSpacing = pointCount > 1 ? availableWidth / (pointCount - 1) : availableWidth;
-
-            const chartHeight = svgHeight - topPadding - bottomPadding;
-            const xAxisEnd = svgWidth - rightPadding;
+            const pointSpacing = 120;
+            const neededWidth = (pointCount - 1) * pointSpacing + 40;
+            const leftPadding = Math.max(60, (svgWidth - neededWidth) / 2);
+            const xAxisEnd = leftPadding + neededWidth;
             const roughness = parseFloat(document.getElementById('roughnessSlider').value);
             const duration = parseInt(document.getElementById('durationSlider').value);
-            const sketchInterval = 80; // Fixed speed
+            const sketchInterval = parseInt(document.getElementById('sketchSlider').value);
             const datapointShape = document.getElementById('datapointShape')?.value || 'circle';
 
             const axisY = rc.line(leftPadding, topPadding, leftPadding, svgHeight - bottomPadding,
@@ -2721,7 +2407,7 @@
             if (xAxisLabel) {
                 const xLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
                 xLabel.setAttribute('x', xAxisCenter);
-                xLabel.setAttribute('y', svgHeight - bottomPadding + axisFontSize + 80);
+                xLabel.setAttribute('y', svgHeight - 10);
                 xLabel.setAttribute('text-anchor', 'middle');
                 xLabel.setAttribute('class', 'bar-label');
                 xLabel.style.fontSize = axisFontSize + 'px';
@@ -2732,7 +2418,7 @@
 
             if (yAxisLabel) {
                 const yLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-                yLabel.setAttribute('x', -(topPadding + chartHeight / 2));
+                yLabel.setAttribute('x', -svgHeight / 2);
                 yLabel.setAttribute('y', leftPadding - 40);
                 yLabel.setAttribute('text-anchor', 'middle');
                 yLabel.setAttribute('transform', 'rotate(-90)');
@@ -2746,7 +2432,7 @@
             if (chartTitle) {
                 const title = document.createElementNS('http://www.w3.org/2000/svg', 'text');
                 title.setAttribute('x', svgWidth / 2);
-                title.setAttribute('y', topPadding - titleFontSize - 100);
+                title.setAttribute('y', Math.max(titleFontSize, 30));
                 title.setAttribute('text-anchor', 'middle');
                 title.setAttribute('class', 'bar-label');
                 title.style.fontSize = titleFontSize + 'px';
@@ -2761,7 +2447,7 @@
 
                 const labelText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
                 labelText.setAttribute('x', x);
-                labelText.setAttribute('y', svgHeight - bottomPadding + 50);
+                labelText.setAttribute('y', svgHeight - bottomPadding + 25);
                 labelText.setAttribute('text-anchor', 'middle');
                 labelText.setAttribute('class', 'bar-label');
                 labelText.style.fontSize = axisFontSize + 'px';
@@ -2857,10 +2543,11 @@
                     if (progress === 1) {
                         const valueText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
                         valueText.setAttribute('x', points[i].x);
-                        valueText.setAttribute('y', points[i].y - 40);
+                        valueText.setAttribute('y', points[i].y - 15);
                         valueText.setAttribute('text-anchor', 'middle');
                         valueText.setAttribute('class', 'bar-value');
-                        valueText.style.fontSize = axisFontSize + 'px';
+                        const dataLabelFontSize = parseInt(document.getElementById('dataLabelFontSize')?.value) || 24;
+                        valueText.style.fontSize = dataLabelFontSize + 'px';
                         valueText.textContent = points[i].item.value;
                         pointGroups[i].appendChild(valueText);
                     }
@@ -2871,9 +2558,9 @@
                         requestAnimationFrame(animate);
                     }, sketchInterval);
                 } else {
-                    // Animation complete - enable download button
+                    // Animation complete - show download button
                     const downloadBtn = document.getElementById('downloadGifBtn');
-                    if (downloadBtn) downloadBtn.disabled = false;
+                    if (downloadBtn) downloadBtn.style.display = 'block';
                 }
             }
 
@@ -2882,10 +2569,6 @@
 
         // Prevent Chart Settings panel clicks from opening data popup
         document.addEventListener('DOMContentLoaded', function() {
-            // Initialize font family on page load
-            const fontFamily = document.getElementById('fontFamily')?.value || 'Noteworthy, sans-serif';
-            document.documentElement.style.setProperty('--chart-font-family', fontFamily);
-
             const chartSettingsPanel = document.getElementById('chartSettingsPanel');
             if (chartSettingsPanel) {
                 chartSettingsPanel.addEventListener('click', function(e) {
@@ -2917,7 +2600,6 @@
             downloadGifBtn.addEventListener('click', async () => {
                 downloadGifBtn.disabled = true;
                 downloadGifBtn.textContent = 'Creating GIF...';
-                isCreatingGif = true;
 
                 try {
                     await captureChartAnimationAsGif();
@@ -2925,7 +2607,6 @@
                     setTimeout(() => {
                         downloadGifBtn.textContent = 'Download as GIF';
                         downloadGifBtn.disabled = false;
-                        isCreatingGif = false;
                     }, 2000);
                 } catch (error) {
                     console.error('Error creating GIF:', error);
@@ -2933,7 +2614,6 @@
                     setTimeout(() => {
                         downloadGifBtn.textContent = 'Download as GIF';
                         downloadGifBtn.disabled = false;
-                        isCreatingGif = false;
                     }, 3000);
                 }
             });
@@ -2952,174 +2632,137 @@
             if (document.fonts) {
                 console.log('Waiting for fonts to load...');
                 await document.fonts.ready;
-                await new Promise(resolve => setTimeout(resolve, 500));
+                await new Promise(resolve => setTimeout(resolve, 100));
                 console.log('Fonts loaded');
             }
 
-            // System fonts are used, no need to load custom fonts
-            console.log('Using system font for GIF export');
+            const animDuration = parseFloat(document.getElementById('durationSlider').value);
+            const sketchInterval = parseInt(document.getElementById('sketchSlider').value);
 
-            // Preload background pattern if present
+            // Use very low frame count - capturing is slow
+            // Aim for just 8-10 frames total for reasonable export time
+            const totalFrames = Math.max(8, Math.min(10, Math.floor(animDuration * 2)));
+            const captureInterval = (animDuration * 1000) / totalFrames;
+
+            const chartContainerWrapper = document.querySelector('.chart-container-wrapper');
+            const svg = document.getElementById('chartSvg');
+
+            if (!chartContainerWrapper || !svg) {
+                throw new Error('Chart elements not found');
+            }
+
+            console.log('Capturing animation as GIF:', { totalFrames, animDuration, captureInterval });
+
+            // Show progress to user
+            const downloadBtn = document.getElementById('downloadGifBtn');
+            const originalBtnText = downloadBtn ? downloadBtn.textContent : '';
+            if (downloadBtn) {
+                downloadBtn.textContent = `Capturing ${totalFrames} frames...`;
+                downloadBtn.disabled = true;
+            }
+
+            const rect = chartContainerWrapper.getBoundingClientRect();
+            const canvasWidth = Math.floor(rect.width);
+            const canvasHeight = Math.floor(rect.height);
+
+            // Get user's chosen background color and pattern
+            const userBgColor = document.getElementById('bgColor').value || '#ffffff';
             const bgPattern = document.getElementById('bgPattern').value;
+
+            // Preload background pattern image if exists
+            let bgPatternImage = null;
             if (bgPattern) {
-                console.log('Preloading background pattern:', bgPattern);
-                await new Promise((resolve, reject) => {
+                bgPatternImage = await new Promise((resolve) => {
                     const img = new Image();
-                    img.onload = () => {
-                        console.log('Background pattern loaded successfully');
-                        resolve();
-                    };
+                    img.crossOrigin = 'anonymous';
+                    img.onload = () => resolve(img);
                     img.onerror = () => {
-                        console.warn('Background pattern failed to load, continuing anyway');
-                        resolve(); // Continue even if pattern fails to load
+                        console.warn('Failed to load background pattern, continuing without it');
+                        resolve(null);
                     };
                     img.src = bgPattern;
-                    // Timeout after 5 seconds
-                    setTimeout(() => {
-                        console.warn('Background pattern load timeout, continuing anyway');
-                        resolve();
-                    }, 5000);
                 });
             }
 
-            const animDuration = parseFloat(document.getElementById('durationSlider').value); // in milliseconds
-            const fps = 10;
-            const captureInterval = 1000 / fps;
-            const totalFrames = Math.ceil((animDuration / 1000) * fps); // Convert ms to seconds
-
-            const chartContainer = document.querySelector('.chart-container');
-            if (!chartContainer) {
-                throw new Error('Chart container not found');
-            }
-
-            console.log('Capturing animation as GIF:', { totalFrames, animDuration, fps });
-
-            const userBgColor = document.getElementById('bgColor').value || '#ffffff';
-
             const images = [];
 
-            // Start the animation to set up SVG viewBox
+            // Start the animation
             animateChart();
 
-            // Wait for first frame setup (SVG viewBox gets set)
-            await new Promise(resolve => setTimeout(resolve, 50));
+            // Wait a bit for animation to start
+            await new Promise(resolve => setTimeout(resolve, 200));
 
-            // Get dimensions from canvas settings (aspect ratio and size)
-            const canvasDims = getCanvasDimensions();
-            const canvasWidth = canvasDims.width;
-            const canvasHeight = canvasDims.height;
+            // Pre-create a pattern canvas once if needed (optimization)
+            let patternCanvas = null;
+            if (bgPatternImage) {
+                patternCanvas = document.createElement('canvas');
+                patternCanvas.width = canvasWidth * 2;
+                patternCanvas.height = canvasHeight * 2;
+                const patternCtx = patternCanvas.getContext('2d');
+                patternCtx.scale(2, 2);
+                patternCtx.fillStyle = userBgColor;
+                patternCtx.fillRect(0, 0, canvasWidth, canvasHeight);
+                patternCtx.globalCompositeOperation = 'multiply';
+                const patternScale = 0.85;
+                const scaledWidth = bgPatternImage.width * patternScale;
+                const scaledHeight = bgPatternImage.height * patternScale;
+                for (let y = 0; y < canvasHeight; y += scaledHeight) {
+                    for (let x = 0; x < canvasWidth; x += scaledWidth) {
+                        patternCtx.drawImage(bgPatternImage, x, y, scaledWidth, scaledHeight);
+                    }
+                }
+            }
 
-            console.log('Canvas dimensions:', { canvasWidth, canvasHeight, aspectRatio: currentAspectRatio });
-
-            // Restart animation from beginning for clean capture
-            animateChart();
-
-            // Small wait for first render of restarted animation
-            await new Promise(resolve => setTimeout(resolve, 50));
-
-            // Get the actual rendered size of the container
-            const containerRect = chartContainer.getBoundingClientRect();
-            const displayWidth = Math.round(containerRect.width);
-            const displayHeight = Math.round(containerRect.height);
-
-            console.log('Container actual display size:', { displayWidth, displayHeight });
-
-            // Capture frames during animation
+            // Capture frames during the animation using html2canvas
             for (let i = 0; i < totalFrames; i++) {
-                // Capture first, then wait (so we capture frame 0)
-                try {
-                    // Get the SVG element to verify viewBox
-                    const svg = document.getElementById('chartSvg');
-                    const viewBox = svg.getAttribute('viewBox');
-                    console.log('SVG viewBox:', viewBox);
+                if (downloadBtn) {
+                    downloadBtn.textContent = `Frame ${i + 1}/${totalFrames}`;
+                }
 
-                    const canvas = await html2canvas(chartContainer, {
+                try {
+                    // Use html2canvas - it's faster than SVG serialization
+                    const canvas = await html2canvas(chartContainerWrapper, {
                         backgroundColor: userBgColor,
-                        scale: canvasWidth / displayWidth, // Scale up to target resolution
+                        scale: 1.5,
                         logging: false,
                         useCORS: true,
-                        allowTaint: true,
-                        foreignObjectRendering: false,
-                        imageTimeout: 15000,
-                        removeContainer: true,
-                        onclone: function(clonedDoc) {
-                            const selectedFont = document.getElementById('fontFamily')?.value || 'Noteworthy, sans-serif';
-
-                            // Remove visual artifacts only - don't change dimensions
-                            const clonedContainer = clonedDoc.querySelector('.chart-container');
-
-                            if (clonedContainer) {
-                                // Remove visual artifacts
-                                clonedContainer.style.boxShadow = 'none';
-                                clonedContainer.style.borderRadius = '0';
-                            }
-
-                            const style = clonedDoc.createElement('style');
-                            style.textContent = `
-                                * {
-                                    font-family: ${selectedFont} !important;
-                                }
-                                .bar-label, .bar-value, text {
-                                    font-family: ${selectedFont} !important;
-                                }
-                                .chart-container {
-                                    background-color: ${userBgColor} !important;
-                                    box-shadow: none !important;
-                                    border-radius: 0 !important;
-                                }
-                            `;
-                            clonedDoc.head.appendChild(style);
-                        }
+                        allowTaint: false
                     });
 
-                    if (canvas && canvas.width > 0 && canvas.height > 0) {
-                        // Verify dimensions match expected
-                        console.log(`Frame ${i + 1}/${totalFrames}: ${canvas.width}x${canvas.height} (expected: ${canvasWidth}x${canvasHeight})`);
-
-                        // If dimensions don't match exactly, resize the canvas
-                        if (canvas.width !== canvasWidth || canvas.height !== canvasHeight) {
-                            const resizedCanvas = document.createElement('canvas');
-                            resizedCanvas.width = canvasWidth;
-                            resizedCanvas.height = canvasHeight;
-                            const ctx = resizedCanvas.getContext('2d');
-                            ctx.drawImage(canvas, 0, 0, canvasWidth, canvasHeight);
-                            images.push(resizedCanvas.toDataURL('image/png'));
-                        } else {
-                            images.push(canvas.toDataURL('image/png'));
-                        }
-                    } else {
-                        console.error(`Frame ${i + 1} canvas is invalid`);
-                        throw new Error(`Failed to capture frame ${i + 1}: Invalid canvas`);
-                    }
+                    images.push(canvas.toDataURL('image/png'));
+                    console.log(`Captured frame ${i + 1}/${totalFrames}`);
                 } catch (error) {
                     console.error('Error capturing frame:', error);
-                    throw new Error(`Failed to capture frame ${i + 1}: ${error.message}`);
                 }
 
-                // Wait before next capture (except after last frame)
-                if (i < totalFrames - 1) {
-                    await new Promise(resolve => setTimeout(resolve, captureInterval));
-                }
+                // Wait for next frame
+                await new Promise(resolve => setTimeout(resolve, captureInterval));
             }
 
             if (images.length === 0) {
                 throw new Error('No frames captured');
             }
 
-            console.log('Creating GIF from', images.length, 'frames...', { canvasWidth, canvasHeight });
+            // Update progress for GIF creation
+            if (downloadBtn) {
+                downloadBtn.textContent = 'Creating GIF...';
+            }
 
+            console.log('Creating GIF from', images.length, 'frames...');
             return new Promise((resolve, reject) => {
-                const gifOptions = {
+                gifshot.createGIF({
                     images: images,
-                    gifWidth: canvasWidth,
-                    gifHeight: canvasHeight,
-                    interval: 0.1,
-                    sampleInterval: 10,
-                    numWorkers: 2
-                };
+                    gifWidth: canvasWidth * 2, // Match canvas scale
+                    gifHeight: canvasHeight * 2,
+                    interval: 1 / fps, // Use fps
+                    numFrames: images.length,
+                    frameDuration: 1
+                }, (obj) => {
+                    if (downloadBtn) {
+                        downloadBtn.textContent = originalBtnText || 'Download as GIF';
+                        downloadBtn.disabled = false;
+                    }
 
-                gifshot.createGIF(gifOptions, (obj) => {
-                    console.log('GIF creation callback', obj);
                     if (!obj.error) {
                         const a = document.createElement('a');
                         a.href = obj.image;
@@ -3129,7 +2772,6 @@
                         document.body.removeChild(a);
                         resolve();
                     } else {
-                        console.error('GIF creation error:', obj.error);
                         reject(new Error(obj.error));
                     }
                 });
