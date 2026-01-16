@@ -155,10 +155,6 @@
       width: 100%;
     }
 
-    .nav-menu a.active {
-      color: #6ba3ff;
-      font-weight: 700;
-    }
 
     /* Squiggle decoration */
     .squiggle {
@@ -171,7 +167,7 @@
     /* Portfolio Grid */
     .portfolio-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(210px, 0.7fr));
       gap: 40px;
       padding: 20px 0;
     }
@@ -180,7 +176,7 @@
     .product-card {
       background: white;
       border-radius: 20px;
-      padding: 30px;
+      padding: 20px;
       position: relative;
       transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
       cursor: pointer;
@@ -191,7 +187,9 @@
         3px 3px 0px rgba(0, 0, 0, 0.05),
         6px 6px 0px rgba(107, 163, 255, 0.08);
       border: 1px solid rgba(45, 52, 54, 0.15);
-      min-height: 280px;
+      min-height: 200px;
+      max-width: 350px;
+      margin: 0 auto;
     }
 
 
@@ -233,12 +231,13 @@
 
     .product-title {
       font-family: 'HmtRegular', 'Inter', sans-serif;
-      font-size: 2rem;
-      font-weight: 700;
+      font-size: 2.5rem;
+      font-weight: 800;
       color: #2d3436;
       margin-bottom: 15px;
       margin-top: 20px;
       line-height: 1.2;
+      text-align: center;
     }
 
     .product-description {
@@ -248,27 +247,20 @@
       margin-bottom: 20px;
     }
 
-    .product-tag {
-      display: inline-block;
-      padding: 6px 16px;
-      background: linear-gradient(135deg, #d4e7ff 0%, #a8d0ff 100%);
-      border: none;
-      border-radius: 20px;
-      font-size: 0.85rem;
-      font-weight: 600;
-      color: #2d3436;
-      margin-top: auto;
-      transform: rotate(-2deg);
-    }
 
     /* Product Icon/Emoji */
     .product-icon {
-      width: 140px;
-      height: 140px;
+      width: 280px;
+      height: 280px;
       margin: 0 auto 20px auto;
       display: block;
       object-fit: contain;
-      filter: drop-shadow(3px 3px 0px rgba(0, 0, 0, 0.1));
+      filter: none;
+    }
+
+    .product-icon.chart-icon {
+      width: 300px;
+      height: 300px;
     }
 
     /* Color variations for cards */
@@ -340,6 +332,14 @@
       }
     }
 
+    /* Product Icon/Emoji */
+    .product-icon.emoji {
+      font-size: 6rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
     /* Fun hover effects for icons */
     .product-card:hover .product-icon {
       animation: wiggle 0.5s ease-in-out;
@@ -353,16 +353,6 @@
   </style>
 </head>
 <body>
-  <script>
-    // Reload GIF every 30 seconds to replay it
-    setInterval(function() {
-      const gifElement = document.querySelector('.profile-image');
-      if (gifElement) {
-        const timestamp = new Date().getTime();
-        gifElement.src = 'images/mefn.gif?t=' + timestamp;
-      }
-    }, 30000); // 30 seconds
-  </script>
   <!-- Doodle decorations -->
   <svg class="doodle-arrow arrow-1" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
     <path d="M 10 50 Q 30 30, 50 50 T 90 50" stroke="#6ba3ff" stroke-width="3" fill="none" stroke-linecap="round"/>
@@ -380,33 +370,62 @@
         <img src="images/mefn.gif" alt="Trân illustration" class="profile-image">
         <h1>My Content Toolbox</h1>
       </div>
-      <!-- Navigation menu - commented out for now
-      <nav class="nav-menu">
-        <a href="index.html" class="active">Dự án</a>
-        <a href="#about">Về Xào</a>
-        <a href="#blog">Blog</a>
-        <a href="#contact">Liên hệ</a>
-      </nav>
-      -->
     </header>
 
     <div class="portfolio-grid">
       <!-- Product 1: Animate Line Drawing -->
       <a href="index1.html" class="product-card">
         <span class="card-number">01</span>
-        <div class="product-icon" style="font-size: 6rem; display: flex; align-items: center; justify-content: center;">🎨</div>
-        <h2 class="product-title">Animate Line Drawing</h2>
+        <h1 class="product-title">Animate Line Drawing</h1>
+        <img src="images/snail.gif" alt="Snail animation" class="product-icon"> 
         <p class="product-description">Transform your SVG paths into mesmerizing hand-drawn animations. Perfect for logos, illustrations, and creative graphics.</p>
       </a>
 
       <!-- Product 2: Animate Charts -->
       <a href="index2.html" class="product-card">
         <span class="card-number">02</span>
-        <div class="product-icon" style="font-size: 6rem; display: flex; align-items: center; justify-content: center;">📈</div>
-        <h2 class="product-title">Animate Charts</h2>
+        <h1 class="product-title">Animate Charts</h1>
+        <img src="images/chart.gif" alt="Chart animation" class="product-icon chart-icon">
+        
         <p class="product-description">Create stunning animated charts with a sketch aesthetic. Bar charts, pie charts, and line graphs that come to life.</p>
       </a>
     </div>
   </div>
+
+  <script>
+    // Handle GIF pause and replay with 10 second delay
+    document.addEventListener('DOMContentLoaded', function() {
+      const gifImages = document.querySelectorAll('.product-icon');
+
+      gifImages.forEach(img => {
+        const originalSrc = img.src.split('?')[0]; // Remove any existing query params
+        let isFirstLoad = true;
+
+        // Function to reload GIF
+        function reloadGif() {
+          // Force reload by adding timestamp
+          const timestamp = new Date().getTime();
+          img.src = originalSrc + '?nocache=' + timestamp;
+        }
+
+        // Listen for when image loads
+        img.addEventListener('load', function() {
+          if (isFirstLoad) {
+            isFirstLoad = false;
+            // After first load, wait 10 seconds then reload
+            setTimeout(reloadGif, 10000);
+          } else {
+            // Subsequent loads, continue the 10 second cycle
+            setTimeout(reloadGif, 10000);
+          }
+        });
+
+        // Trigger initial load
+        if (img.complete) {
+          img.dispatchEvent(new Event('load'));
+        }
+      });
+    });
+  </script>
 </body>
 </html>
