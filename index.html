@@ -167,9 +167,10 @@
     /* Portfolio Grid */
     .portfolio-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(210px, 0.7fr));
+      grid-template-columns: repeat(2, minmax(210px, 400px));
       gap: 40px;
       padding: 20px 0;
+      justify-content: center;
     }
 
     /* Product Cards */
@@ -340,16 +341,7 @@
       justify-content: center;
     }
 
-    /* Fun hover effects for icons */
-    .product-card:hover .product-icon {
-      animation: wiggle 0.5s ease-in-out;
-    }
-
-    @keyframes wiggle {
-      0%, 100% { transform: rotate(0deg); }
-      25% { transform: rotate(-10deg); }
-      75% { transform: rotate(10deg); }
-    }
+    /* Removed wiggle animation on hover - GIF replay handled by JavaScript */
   </style>
 </head>
 <body>
@@ -378,7 +370,7 @@
         <span class="card-number">01</span>
         <h1 class="product-title">Animate Line Drawing</h1>
         <img src="images/snail.gif" alt="Snail animation" class="product-icon"> 
-        <p class="product-description">Transform your SVG paths into mesmerizing hand-drawn animations. Perfect for logos, illustrations, and creative graphics.</p>
+        <p class="product-description">Transform your drawing into mesmerizing hand-drawn animations.</p>
       </a>
 
       <!-- Product 2: Animate Charts -->
@@ -387,19 +379,19 @@
         <h1 class="product-title">Animate Charts</h1>
         <img src="images/chart.gif" alt="Chart animation" class="product-icon chart-icon">
         
-        <p class="product-description">Create stunning animated charts with a sketch aesthetic. Bar charts, pie charts, and line graphs that come to life.</p>
+        <p class="product-description">Create stunning animated bar / pie / line charts with a sketch aesthetic.</p>
       </a>
     </div>
   </div>
 
   <script>
-    // Handle GIF pause and replay with 10 second delay
+    // Handle GIF replay on hover
     document.addEventListener('DOMContentLoaded', function() {
-      const gifImages = document.querySelectorAll('.product-icon');
+      const productCards = document.querySelectorAll('.product-card');
 
-      gifImages.forEach(img => {
+      productCards.forEach(card => {
+        const img = card.querySelector('.product-icon');
         const originalSrc = img.src.split('?')[0]; // Remove any existing query params
-        let isFirstLoad = true;
 
         // Function to reload GIF
         function reloadGif() {
@@ -408,22 +400,8 @@
           img.src = originalSrc + '?nocache=' + timestamp;
         }
 
-        // Listen for when image loads
-        img.addEventListener('load', function() {
-          if (isFirstLoad) {
-            isFirstLoad = false;
-            // After first load, wait 10 seconds then reload
-            setTimeout(reloadGif, 10000);
-          } else {
-            // Subsequent loads, continue the 10 second cycle
-            setTimeout(reloadGif, 10000);
-          }
-        });
-
-        // Trigger initial load
-        if (img.complete) {
-          img.dispatchEvent(new Event('load'));
-        }
+        // Replay GIF on card hover
+        card.addEventListener('mouseenter', reloadGif);
       });
     });
   </script>

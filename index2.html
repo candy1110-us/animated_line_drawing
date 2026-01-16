@@ -20,37 +20,105 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background: linear-gradient(135deg, #e0e7ff 0%, #f3e7e9 100%);
-            background-attachment: fixed;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background-color: #ecebe4;
+            background-image: url('data:image/svg+xml;utf8,<svg width="28" height="28" xmlns="http://www.w3.org/2000/svg"><circle cx="14" cy="14" r="1" fill="%23d2d1c7"/></svg>');
+            background-size: 28px 28px;
             min-height: 100vh;
-            padding: 20px;
+            padding: 40px 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Doodle decorations */
+        body::before,
+        body::after {
+            content: '';
+            position: fixed;
+            border-radius: 50%;
+            opacity: 0.15;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        body::before {
+            background: #6ba3ff;
+            width: 50vh;
+            height: 50vh;
+            top: 20%;
+            left: -10vh;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        body::after {
+            background: #f59e0b;
+            width: 150px;
+            height: 150px;
+            bottom: 15%;
+            right: 8%;
+            animation: float 8s ease-in-out infinite reverse;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(5deg); }
         }
 
         .container {
             max-width: 1600px;
             margin: 0 auto;
+            position: relative;
+            z-index: 1;
         }
 
         .header {
-            background: linear-gradient(135deg, #818cf8 0%, #a78bfa 100%);
-            padding: 35px 30px;
+            background: transparent;
+            padding: 20px 30px;
+            margin-bottom: 30px;
             text-align: center;
-            border-radius: 16px;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 15px rgba(129, 140, 248, 0.25);
+            position: relative;
+        }
+
+        .logo-link {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            overflow: hidden;
+            background: white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 100;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .logo-link:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.25);
+        }
+
+        .header-logo {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .header-content {
+            text-align: center;
         }
 
         .header h1 {
-            font-size: 32px;
-            color: white;
-            margin-bottom: 8px;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            font-family: 'HMT Regular', 'Inter', sans-serif;
+            font-size: 3.5rem;
+            color: #2d3436;
+            margin-bottom: 12px;
+            text-shadow: 3px 3px 0px rgba(107, 163, 255, 0.3);
         }
 
         .header p {
-            color: rgba(255,255,255,0.9);
-            font-size: 15px;
+            color: #636e72;
+            font-size: 1.1rem;
         }
 
         .main-layout {
@@ -100,17 +168,20 @@
 
         .sidebar-panel {
             background: white;
-            border-radius: 16px;
-            padding: 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            border-radius: 20px;
+            padding: 24px;
+            box-shadow:
+                3px 3px 0px rgba(0, 0, 0, 0.05),
+                6px 6px 0px rgba(107, 163, 255, 0.08);
+            border: 1px solid rgba(45, 52, 54, 0.15);
             overflow-x: hidden;
-            min-width: 0; /* Allows content to shrink */
-            flex-shrink: 0; /* Prevents panels from shrinking vertically */
+            min-width: 0;
+            flex-shrink: 0;
         }
 
         .sidebar-panel h3 {
             font-size: 16px;
-            color: #4f46e5;
+            color: #2d3436;
             margin-bottom: 16px;
             font-weight: 600;
         }
@@ -138,7 +209,7 @@
             aspect-ratio: 16 / 9; /* Will be updated dynamically */
             background: #ffffff; /* Default white background */
             box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-            border-radius: 8px;
+            border-radius: 20px;
             overflow: hidden;
         }
 
@@ -160,26 +231,31 @@
         .mode-btn {
             flex: 1;
             padding: 12px;
-            border: 2px solid #e0e7ff;
-            border-radius: 8px;
+            border: 2px solid rgba(45, 52, 54, 0.15);
+            border-radius: 12px;
             background: white;
-            color: #6366f1;
+            color: #2d3436;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 2px 2px 0px rgba(107, 163, 255, 0.1);
             font-size: 14px;
         }
 
         .mode-btn:hover {
-            border-color: #818cf8;
-            background: #f5f3ff;
+            border-color: #6ba3ff;
+            background: #f8f9ff;
+            transform: translateY(-2px);
+            box-shadow: 3px 3px 0px rgba(107, 163, 255, 0.2);
         }
 
         .mode-btn.active,
         .mode-btn.selected {
-            border-color: #818cf8;
-            background: #818cf8;
+            border-color: #6ba3ff;
+            background: #6ba3ff;
             color: white;
+            transform: translateY(-2px);
+            box-shadow: 3px 3px 0px rgba(0, 0, 0, 0.1);
         }
 
         .chart-type-btns {
@@ -214,10 +290,10 @@
 
         .input-row input[type="text"] {
             padding: 10px 12px;
-            border: 2px solid #e0e7ff;
-            border-radius: 8px;
+            border: 2px solid rgba(45, 52, 54, 0.15);
+            border-radius: 12px;
             font-size: 14px;
-            transition: border-color 0.2s;
+            transition: all 0.2s;
             position: relative;
             z-index: 50;
             min-width: 0;
@@ -225,10 +301,10 @@
 
         .input-row input[type="number"] {
             padding: 10px 12px;
-            border: 2px solid #e0e7ff;
-            border-radius: 8px;
+            border: 2px solid rgba(45, 52, 54, 0.15);
+            border-radius: 12px;
             font-size: 14px;
-            transition: border-color 0.2s;
+            transition: all 0.2s;
             position: relative;
             z-index: 50;
             min-width: 0;
@@ -236,7 +312,8 @@
 
         .input-row input:focus {
             outline: none;
-            border-color: #818cf8;
+            border-color: #6ba3ff;
+            box-shadow: 0 0 0 3px rgba(107, 163, 255, 0.1);
         }
 
         .color-pattern-preview {
@@ -244,19 +321,21 @@
             max-width: 60px;
             min-width: 50px;
             height: 44px;
-            border: 2px solid #e0e7ff;
-            border-radius: 8px;
+            border: 2px solid rgba(45, 52, 54, 0.15);
+            border-radius: 12px;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
             flex-shrink: 0;
             position: relative;
             z-index: 10;
             overflow: hidden;
+            box-shadow: 2px 2px 0px rgba(107, 163, 255, 0.1);
         }
 
         .color-pattern-preview:hover {
-            border-color: #818cf8;
-            transform: scale(1.05);
+            border-color: #6ba3ff;
+            transform: translateY(-2px);
+            box-shadow: 3px 3px 0px rgba(107, 163, 255, 0.2);
         }
 
         .color-pattern-preview svg {
@@ -276,24 +355,25 @@
             min-width: 50px;
             height: 44px;
             padding: 0;
-            border: none;
-            border-radius: 8px;
-            background: linear-gradient(135deg, #818cf8 0%, #6366f1 100%);
+            border: 2px solid #6ba3ff;
+            border-radius: 12px;
+            background: #6ba3ff;
             color: white;
             font-weight: 700;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
             font-size: 20px;
             display: flex;
             align-items: center;
             justify-content: center;
             position: relative;
             z-index: 100;
+            box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.1);
         }
 
         .add-btn:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(129, 140, 248, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 3px 3px 0px rgba(107, 163, 255, 0.3);
         }
 
         /* Data Table */
@@ -325,14 +405,16 @@
         .data-table input[type="number"] {
             width: 100%;
             padding: 6px 8px;
-            border: 1px solid #e0e7ff;
-            border-radius: 4px;
+            border: 1px solid rgba(45, 52, 54, 0.15);
+            border-radius: 8px;
             font-size: 13px;
+            transition: all 0.2s;
         }
 
         .data-table input:focus {
             outline: none;
-            border-color: #818cf8;
+            border-color: #6ba3ff;
+            box-shadow: 0 0 0 2px rgba(107, 163, 255, 0.1);
         }
 
         .data-table svg {
@@ -379,17 +461,21 @@
             align-items: center;
             gap: 10px;
             padding: 10px 12px;
-            border: 2px solid #e0e7ff;
-            border-radius: 8px;
+            border: 2px solid rgba(45, 52, 54, 0.15);
+            border-radius: 12px;
             background: white;
             cursor: pointer;
             font-size: 14px;
             font-weight: 500;
             color: #374151;
+            transition: all 0.2s;
+            box-shadow: 2px 2px 0px rgba(107, 163, 255, 0.1);
         }
 
         .palette-dropdown-selected:hover {
-            border-color: #818cf8;
+            border-color: #6ba3ff;
+            transform: translateY(-2px);
+            box-shadow: 3px 3px 0px rgba(107, 163, 255, 0.2);
         }
 
         .palette-dropdown-options {
@@ -399,9 +485,9 @@
             right: 0;
             margin-top: 4px;
             background: white;
-            border: 2px solid #818cf8;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            border: 2px solid #6ba3ff;
+            border-radius: 12px;
+            box-shadow: 0 6px 16px rgba(107, 163, 255, 0.25);
             max-height: 300px;
             overflow-y: auto;
             z-index: 1000;
@@ -438,15 +524,16 @@
         .label-input-group input {
             width: 100%;
             padding: 10px 12px;
-            border: 2px solid #e0e7ff;
-            border-radius: 8px;
+            border: 2px solid rgba(45, 52, 54, 0.15);
+            border-radius: 12px;
             font-size: 14px;
-            transition: border-color 0.2s;
+            transition: all 0.2s;
         }
 
         .label-input-group input:focus {
             outline: none;
-            border-color: #818cf8;
+            border-color: #6ba3ff;
+            box-shadow: 0 0 0 3px rgba(107, 163, 255, 0.1);
         }
 
         /* Background Section */
@@ -468,22 +555,24 @@
         .bg-color-display {
             width: 60px;
             height: 40px;
-            border: 2px solid #e0e7ff;
-            border-radius: 8px;
+            border: 2px solid rgba(45, 52, 54, 0.15);
+            border-radius: 12px;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 2px 2px 0px rgba(107, 163, 255, 0.1);
         }
 
         .bg-color-display:hover {
-            border-color: #818cf8;
-            transform: scale(1.05);
+            border-color: #6ba3ff;
+            transform: translateY(-2px);
+            box-shadow: 3px 3px 0px rgba(107, 163, 255, 0.2);
         }
 
         .bg-image-input {
             width: 100%;
             padding: 8px;
-            border: 2px solid #e0e7ff;
-            border-radius: 8px;
+            border: 2px solid rgba(45, 52, 54, 0.15);
+            border-radius: 12px;
             font-size: 13px;
         }
 
@@ -691,6 +780,278 @@
             pointer-events: none;
         }
 
+        /* Reusable Utility Classes */
+
+        /* Grid layouts */
+        .grid-2col-gap12 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .grid-2col-100-gap8 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 100px;
+            gap: 8px;
+            align-items: end;
+        }
+
+        .grid-4col-gap8 {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+        }
+
+        /* Flex layouts */
+        .flex-gap12 {
+            display: flex;
+            gap: 12px;
+        }
+
+        .flex-gap8-center {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .flex-gap16-center {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+        }
+
+        .flex-col-center-gap3 {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 3px;
+        }
+
+        .flex-center {
+            display: flex;
+            justify-content: center;
+        }
+
+        /* Spacing utilities */
+        .mb-0 {
+            margin-bottom: 0;
+        }
+
+        .mb-8 {
+            margin-bottom: 8px;
+        }
+
+        .mb-12 {
+            margin-bottom: 12px;
+        }
+
+        .mt-16 {
+            margin-top: 16px;
+        }
+
+        /* Common label styles */
+        .section-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 8px;
+        }
+
+        .label-fontsize-10 {
+            font-size: 10px;
+            color: currentColor;
+            font-weight: 600;
+        }
+
+        .popup-heading {
+            margin: 0 0 12px 0;
+            font-size: 14px;
+            font-weight: 700;
+            color: #374151;
+        }
+
+        /* Common input/button styles */
+        .compact-mode-btn {
+            padding: 8px;
+            font-size: 13px;
+        }
+
+        .full-width-input {
+            width: 100%;
+            padding: 10px 8px;
+            border: 2px solid #e0e7ff;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .full-width-select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid #e0e7ff;
+            border-radius: 8px;
+            font-size: 14px;
+            background: white;
+            cursor: pointer;
+        }
+
+        .full-width-select-sm {
+            width: 100%;
+            padding: 10px 8px;
+            border: 2px solid #e0e7ff;
+            border-radius: 8px;
+            font-size: 13px;
+            background: white;
+            cursor: pointer;
+        }
+
+        .full-width-slider {
+            width: 100%;
+        }
+
+        /* Aspect ratio button base */
+        .aspect-btn-base {
+            padding: 0;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+        }
+
+        /* Background pattern option */
+        .bg-pattern-base {
+            cursor: pointer;
+            border: 2px solid #e0e7ff;
+            border-radius: 6px;
+            background: white;
+            transition: all 0.2s;
+        }
+
+        .bg-pattern-text {
+            padding: 8px;
+            text-align: center;
+            font-size: 12px;
+        }
+
+        .bg-pattern-image {
+            overflow: hidden;
+            aspect-ratio: 2;
+            position: relative;
+        }
+
+        .bg-pattern-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0.8;
+        }
+
+        /* Palette strip */
+        .palette-strip {
+            width: 70px;
+            height: 20px;
+            border-radius: 4px;
+        }
+
+        /* Upload section */
+        .upload-flex {
+            flex: 1;
+            padding: 6px;
+            border: 2px solid #e0e7ff;
+            border-radius: 6px;
+            font-size: 12px;
+        }
+
+        .clear-btn {
+            padding: 8px 12px;
+            background: #ef4444;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        /* Dividers */
+        .hr-divider {
+            border: none;
+            border-top: 2px solid #e0e7ff;
+            margin: 16px 0;
+        }
+
+        /* Specific layout utilities */
+        .span-2 {
+            grid-column: span 2;
+        }
+
+        .overflow-scroll {
+            max-height: 340px;
+            overflow-y: auto;
+        }
+
+        .bg-white-full {
+            background: #ffffff;
+            width: 100%;
+            height: 40px;
+            cursor: pointer;
+            border: 2px solid #e0e7ff;
+            border-radius: 8px;
+        }
+
+        .empty-icon {
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+
+        /* Table utilities */
+        .th-width-32 {
+            width: 32%;
+        }
+
+        .th-width-18 {
+            width: 18%;
+        }
+
+        .th-width-28 {
+            width: 28%;
+        }
+
+        .th-width-10 {
+            width: 10%;
+        }
+
+        .th-width-12 {
+            width: 12%;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .cursor-pointer {
+            cursor: pointer;
+        }
+
+        .cursor-move {
+            cursor: move;
+        }
+
+        .cursor-text {
+            cursor: text;
+        }
+
+        .no-data-message {
+            text-align: center;
+            color: #9ca3af;
+            padding: 20px;
+            font-size: 13px;
+        }
+
+        .ml-auto {
+            margin-left: auto;
+        }
+
         /* Bar Chart Specific Styles */
         .bar-label {
             font-family: var(--chart-font-family, 'Noteworthy', sans-serif);
@@ -728,8 +1089,13 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>Animated Chart Generator</h1>
-            <p>Create beautiful sketch-style animated charts with customizable patterns and colors</p>
+            <a href="index.html" class="logo-link">
+                <img src="images/mefn.gif" alt="Logo" class="header-logo">
+            </a>
+            <div class="header-content">
+                <h1>Animated Chart Generator</h1>
+                <p>Create beautiful sketch-style animated charts with customizable patterns and colors</p>
+            </div>
         </div>
 
         <div class="main-layout">
@@ -739,72 +1105,72 @@
                 <div class="sidebar-panel">
                     <h3>Data</h3>
 
-                        <div class="label-input-group" style="margin-bottom: 12px;">
+                        <div class="label-input-group mb-12">
                             <label>Choose color palette for your chart</label>
                         <div class="custom-palette-dropdown" onclick="togglePaletteDropdown()">
                             <div class="palette-dropdown-selected">
-                                <div id="selectedPaletteStrip" style="width: 70px; height: 20px; border-radius: 4px; background: linear-gradient(90deg, #e63946 0%, #e63946 12.5%, #f77f00 12.5%, #f77f00 25%, #fcbf49 25%, #fcbf49 37.5%, #06a77d 37.5%, #06a77d 50%, #118ab2 50%, #118ab2 62.5%, #073b4c 62.5%, #073b4c 75%, #dd6e42 75%, #dd6e42 87.5%, #e8dab2 87.5%, #e8dab2 100%);"></div>
+                                <div id="selectedPaletteStrip" class="palette-strip" style="background: linear-gradient(90deg, #e63946 0%, #e63946 12.5%, #f77f00 12.5%, #f77f00 25%, #fcbf49 25%, #fcbf49 37.5%, #06a77d 37.5%, #06a77d 50%, #118ab2 50%, #118ab2 62.5%, #073b4c 62.5%, #073b4c 75%, #dd6e42 75%, #dd6e42 87.5%, #e8dab2 87.5%, #e8dab2 100%);"></div>
                                 <span id="selectedPaletteName">Retro Warm</span>
-                                <span style="margin-left: auto;">▼</span>
+                                <span class="ml-auto">▼</span>
                             </div>
                             <div class="palette-dropdown-options" id="paletteDropdownOptions" style="display: none;">
                                 <div class="palette-option" onclick="selectPaletteOption('retro', event)">
-                                    <div style="width: 70px; height: 20px; border-radius: 4px; background: linear-gradient(90deg, #e63946 0%, #e63946 12.5%, #f77f00 12.5%, #f77f00 25%, #fcbf49 25%, #fcbf49 37.5%, #06a77d 37.5%, #06a77d 50%, #118ab2 50%, #118ab2 62.5%, #073b4c 62.5%, #073b4c 75%, #dd6e42 75%, #dd6e42 87.5%, #e8dab2 87.5%, #e8dab2 100%);"></div>
+                                    <div class="palette-strip" style="background: linear-gradient(90deg, #e63946 0%, #e63946 12.5%, #f77f00 12.5%, #f77f00 25%, #fcbf49 25%, #fcbf49 37.5%, #06a77d 37.5%, #06a77d 50%, #118ab2 50%, #118ab2 62.5%, #073b4c 62.5%, #073b4c 75%, #dd6e42 75%, #dd6e42 87.5%, #e8dab2 87.5%, #e8dab2 100%);"></div>
                                     <span>Retro Warm</span>
                                 </div>
                                 <div class="palette-option" onclick="selectPaletteOption('pastel', event)">
-                                    <div style="width: 70px; height: 20px; border-radius: 4px; background: linear-gradient(90deg, #ffb5c2 0%, #ffb5c2 12.5%, #ffd4a3 12.5%, #ffd4a3 25%, #fff5ba 25%, #fff5ba 37.5%, #b4e4d4 37.5%, #b4e4d4 50%, #c5a9e8 50%, #c5a9e8 62.5%, #ffccf9 62.5%, #ffccf9 75%, #a8e6cf 75%, #a8e6cf 87.5%, #ffd3b6 87.5%, #ffd3b6 100%);"></div>
+                                    <div class="palette-strip" style="background: linear-gradient(90deg, #ffb5c2 0%, #ffb5c2 12.5%, #ffd4a3 12.5%, #ffd4a3 25%, #fff5ba 25%, #fff5ba 37.5%, #b4e4d4 37.5%, #b4e4d4 50%, #c5a9e8 50%, #c5a9e8 62.5%, #ffccf9 62.5%, #ffccf9 75%, #a8e6cf 75%, #a8e6cf 87.5%, #ffd3b6 87.5%, #ffd3b6 100%);"></div>
                                     <span>Pastel Soft</span>
                                 </div>
                                 <div class="palette-option" onclick="selectPaletteOption('vintage', event)">
-                                    <div style="width: 70px; height: 20px; border-radius: 4px; background: linear-gradient(90deg, #8b7e66 0%, #8b7e66 12.5%, #a4907c 12.5%, #a4907c 25%, #c9b8a3 25%, #c9b8a3 37.5%, #7d8570 37.5%, #7d8570 50%, #8e7c68 50%, #8e7c68 62.5%, #b4a088 62.5%, #b4a088 75%, #9b8b7e 75%, #9b8b7e 87.5%, #a89f91 87.5%, #a89f91 100%);"></div>
+                                    <div class="palette-strip" style="background: linear-gradient(90deg, #8b7e66 0%, #8b7e66 12.5%, #a4907c 12.5%, #a4907c 25%, #c9b8a3 25%, #c9b8a3 37.5%, #7d8570 37.5%, #7d8570 50%, #8e7c68 50%, #8e7c68 62.5%, #b4a088 62.5%, #b4a088 75%, #9b8b7e 75%, #9b8b7e 87.5%, #a89f91 87.5%, #a89f91 100%);"></div>
                                     <span>Vintage Earth</span>
                                 </div>
                                 <div class="palette-option" onclick="selectPaletteOption('poster', event)">
-                                    <div style="width: 70px; height: 20px; border-radius: 4px; background: linear-gradient(90deg, #264653 0%, #264653 12.5%, #2a9d8f 12.5%, #2a9d8f 25%, #e9c46a 25%, #e9c46a 37.5%, #f4a261 37.5%, #f4a261 50%, #e76f51 50%, #e76f51 62.5%, #6a994e 62.5%, #6a994e 75%, #bc4749 75%, #bc4749 87.5%, #9d4edd 87.5%, #9d4edd 100%);"></div>
+                                    <div class="palette-strip" style="background: linear-gradient(90deg, #264653 0%, #264653 12.5%, #2a9d8f 12.5%, #2a9d8f 25%, #e9c46a 25%, #e9c46a 37.5%, #f4a261 37.5%, #f4a261 50%, #e76f51 50%, #e76f51 62.5%, #6a994e 62.5%, #6a994e 75%, #bc4749 75%, #bc4749 87.5%, #9d4edd 87.5%, #9d4edd 100%);"></div>
                                     <span>Poster Bold</span>
                                 </div>
                                 <div class="palette-option" onclick="selectPaletteOption('sketch', event)">
-                                    <div style="width: 70px; height: 20px; border-radius: 4px; background: linear-gradient(90deg, #457b9d 0%, #457b9d 12.5%, #a8dadc 12.5%, #a8dadc 25%, #f1faee 25%, #f1faee 37.5%, #e63946 37.5%, #e63946 50%, #1d3557 50%, #1d3557 62.5%, #f77f00 62.5%, #f77f00 75%, #06a77d 75%, #06a77d 87.5%, #e9c46a 87.5%, #e9c46a 100%);"></div>
+                                    <div class="palette-strip" style="background: linear-gradient(90deg, #457b9d 0%, #457b9d 12.5%, #a8dadc 12.5%, #a8dadc 25%, #f1faee 25%, #f1faee 37.5%, #e63946 37.5%, #e63946 50%, #1d3557 50%, #1d3557 62.5%, #f77f00 62.5%, #f77f00 75%, #06a77d 75%, #06a77d 87.5%, #e9c46a 87.5%, #e9c46a 100%);"></div>
                                     <span>Sketch Blue</span>
                                 </div>
                                 <div class="palette-option" onclick="selectPaletteOption('autumn', event)">
-                                    <div style="width: 70px; height: 20px; border-radius: 4px; background: linear-gradient(90deg, #8b4513 0%, #8b4513 12.5%, #d2691e 12.5%, #d2691e 25%, #daa520 25%, #daa520 37.5%, #b8860b 37.5%, #b8860b 50%, #cd853f 50%, #cd853f 62.5%, #a0522d 62.5%, #a0522d 75%, #c19a6b 75%, #c19a6b 87.5%, #e3a857 87.5%, #e3a857 100%);"></div>
+                                    <div class="palette-strip" style="background: linear-gradient(90deg, #8b4513 0%, #8b4513 12.5%, #d2691e 12.5%, #d2691e 25%, #daa520 25%, #daa520 37.5%, #b8860b 37.5%, #b8860b 50%, #cd853f 50%, #cd853f 62.5%, #a0522d 62.5%, #a0522d 75%, #c19a6b 75%, #c19a6b 87.5%, #e3a857 87.5%, #e3a857 100%);"></div>
                                     <span>Autumn Leaves</span>
                                 </div>
                                 <div class="palette-option" onclick="selectPaletteOption('ocean', event)">
-                                    <div style="width: 70px; height: 20px; border-radius: 4px; background: linear-gradient(90deg, #006994 0%, #006994 12.5%, #247ba0 12.5%, #247ba0 25%, #1e96c8 25%, #1e96c8 37.5%, #2cb5e8 37.5%, #2cb5e8 50%, #7fcdff 50%, #7fcdff 62.5%, #4dd0e1 62.5%, #4dd0e1 75%, #00acc1 75%, #00acc1 87.5%, #0097a7 87.5%, #0097a7 100%);"></div>
+                                    <div class="palette-strip" style="background: linear-gradient(90deg, #006994 0%, #006994 12.5%, #247ba0 12.5%, #247ba0 25%, #1e96c8 25%, #1e96c8 37.5%, #2cb5e8 37.5%, #2cb5e8 50%, #7fcdff 50%, #7fcdff 62.5%, #4dd0e1 62.5%, #4dd0e1 75%, #00acc1 75%, #00acc1 87.5%, #0097a7 87.5%, #0097a7 100%);"></div>
                                     <span>Ocean Breeze</span>
                                 </div>
                                 <div class="palette-option" onclick="selectPaletteOption('forest', event)">
-                                    <div style="width: 70px; height: 20px; border-radius: 4px; background: linear-gradient(90deg, #2d5016 0%, #2d5016 12.5%, #3d6b28 12.5%, #3d6b28 25%, #4a7c3a 25%, #4a7c3a 37.5%, #5a8e4c 37.5%, #5a8e4c 50%, #6ca35f 50%, #6ca35f 62.5%, #7eb773 62.5%, #7eb773 75%, #90ca87 75%, #90ca87 87.5%, #a4d99b 87.5%, #a4d99b 100%);"></div>
+                                    <div class="palette-strip" style="background: linear-gradient(90deg, #2d5016 0%, #2d5016 12.5%, #3d6b28 12.5%, #3d6b28 25%, #4a7c3a 25%, #4a7c3a 37.5%, #5a8e4c 37.5%, #5a8e4c 50%, #6ca35f 50%, #6ca35f 62.5%, #7eb773 62.5%, #7eb773 75%, #90ca87 75%, #90ca87 87.5%, #a4d99b 87.5%, #a4d99b 100%);"></div>
                                     <span>Forest Green</span>
                                 </div>
                                 <div class="palette-option" onclick="selectPaletteOption('sunset', event)">
-                                    <div style="width: 70px; height: 20px; border-radius: 4px; background: linear-gradient(90deg, #ff6b35 0%, #ff6b35 12.5%, #f7931e 12.5%, #f7931e 25%, #fdc82f 25%, #fdc82f 37.5%, #fbb040 37.5%, #fbb040 50%, #f89c50 50%, #f89c50 62.5%, #f57e5f 62.5%, #f57e5f 75%, #f25f70 75%, #f25f70 87.5%, #ef4180 87.5%, #ef4180 100%);"></div>
+                                    <div class="palette-strip" style="background: linear-gradient(90deg, #ff6b35 0%, #ff6b35 12.5%, #f7931e 12.5%, #f7931e 25%, #fdc82f 25%, #fdc82f 37.5%, #fbb040 37.5%, #fbb040 50%, #f89c50 50%, #f89c50 62.5%, #f57e5f 62.5%, #f57e5f 75%, #f25f70 75%, #f25f70 87.5%, #ef4180 87.5%, #ef4180 100%);"></div>
                                     <span>Sunset Glow</span>
                                 </div>
                                 <div class="palette-option" onclick="selectPaletteOption('candy', event)">
-                                    <div style="width: 70px; height: 20px; border-radius: 4px; background: linear-gradient(90deg, #ff6b9d 0%, #ff6b9d 12.5%, #c44569 12.5%, #c44569 25%, #ffa07a 25%, #ffa07a 37.5%, #fa8072 37.5%, #fa8072 50%, #e0b0ff 50%, #e0b0ff 62.5%, #dda0dd 62.5%, #dda0dd 75%, #ffc0cb 75%, #ffc0cb 87.5%, #ffb6c1 87.5%, #ffb6c1 100%);"></div>
+                                    <div class="palette-strip" style="background: linear-gradient(90deg, #ff6b9d 0%, #ff6b9d 12.5%, #c44569 12.5%, #c44569 25%, #ffa07a 25%, #ffa07a 37.5%, #fa8072 37.5%, #fa8072 50%, #e0b0ff 50%, #e0b0ff 62.5%, #dda0dd 62.5%, #dda0dd 75%, #ffc0cb 75%, #ffc0cb 87.5%, #ffb6c1 87.5%, #ffb6c1 100%);"></div>
                                     <span>Candy Pop</span>
                                 </div>
                                 <div class="palette-option" onclick="selectPaletteOption('earthy', event)">
-                                    <div style="width: 70px; height: 20px; border-radius: 4px; background: linear-gradient(90deg, #936639 0%, #936639 12.5%, #a67c52 12.5%, #a67c52 25%, #b8926b 25%, #b8926b 37.5%, #caa884 37.5%, #caa884 50%, #7c6a5c 50%, #7c6a5c 62.5%, #8d7966 62.5%, #8d7966 75%, #9e8870 75%, #9e8870 87.5%, #af977a 87.5%, #af977a 100%);"></div>
+                                    <div class="palette-strip" style="background: linear-gradient(90deg, #936639 0%, #936639 12.5%, #a67c52 12.5%, #a67c52 25%, #b8926b 25%, #b8926b 37.5%, #caa884 37.5%, #caa884 50%, #7c6a5c 50%, #7c6a5c 62.5%, #8d7966 62.5%, #8d7966 75%, #9e8870 75%, #9e8870 87.5%, #af977a 87.5%, #af977a 100%);"></div>
                                     <span>Earthy Tones</span>
                                 </div>
                                 <div class="palette-option" onclick="selectPaletteOption('neon', event)">
-                                    <div style="width: 70px; height: 20px; border-radius: 4px; background: linear-gradient(90deg, #ff006e 0%, #ff006e 12.5%, #fb5607 12.5%, #fb5607 25%, #ffbe0b 25%, #ffbe0b 37.5%, #8338ec 37.5%, #8338ec 50%, #3a86ff 50%, #3a86ff 62.5%, #06ffa5 62.5%, #06ffa5 75%, #ff006e 75%, #ff006e 87.5%, #fb5607 87.5%, #fb5607 100%);"></div>
+                                    <div class="palette-strip" style="background: linear-gradient(90deg, #ff006e 0%, #ff006e 12.5%, #fb5607 12.5%, #fb5607 25%, #ffbe0b 25%, #ffbe0b 37.5%, #8338ec 37.5%, #8338ec 50%, #3a86ff 50%, #3a86ff 62.5%, #06ffa5 62.5%, #06ffa5 75%, #ff006e 75%, #ff006e 87.5%, #fb5607 87.5%, #fb5607 100%);"></div>
                                     <span>Neon Bright</span>
                                 </div>
                                 <div class="palette-option" onclick="selectPaletteOption('muted', event)">
-                                    <div style="width: 70px; height: 20px; border-radius: 4px; background: linear-gradient(90deg, #6c757d 0%, #6c757d 12.5%, #8d99ae 12.5%, #8d99ae 25%, #9ba4b5 25%, #9ba4b5 37.5%, #adb5bd 37.5%, #adb5bd 50%, #b1a7a6 50%, #b1a7a6 62.5%, #c6b9cd 62.5%, #c6b9cd 75%, #d6cbd3 75%, #d6cbd3 87.5%, #e5d4ce 87.5%, #e5d4ce 100%);"></div>
+                                    <div class="palette-strip" style="background: linear-gradient(90deg, #6c757d 0%, #6c757d 12.5%, #8d99ae 12.5%, #8d99ae 25%, #9ba4b5 25%, #9ba4b5 37.5%, #adb5bd 37.5%, #adb5bd 50%, #b1a7a6 50%, #b1a7a6 62.5%, #c6b9cd 62.5%, #c6b9cd 75%, #d6cbd3 75%, #d6cbd3 87.5%, #e5d4ce 87.5%, #e5d4ce 100%);"></div>
                                     <span>Muted Grey</span>
                                 </div>
                             </div>
                         </div>
                         </div>
 
-                        <div class="label-input-group" style="margin-bottom: 12px;">
+                        <div class="label-input-group mb-12">
                             <label>Add your data</label>
                         </div>
 
@@ -819,7 +1185,7 @@
                         <input type="hidden" id="colorInput" value="#e63946" />
                         <input type="hidden" id="patternInput" value="solid" />
 
-                        <div id="dataList" style="margin-top: 16px; max-height: 340px; overflow-y: auto;"></div>
+                        <div id="dataList" class="mt-16 overflow-scroll"></div>
                 </div>
 
                 <!-- Settings Panel -->
@@ -827,91 +1193,91 @@
                     <h3>Settings</h3>
 
                         <!-- Row 1: Chart Type and Canvas Aspect Ratio -->
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+                        <div class="grid-2col-gap12 mb-12">
                             <div>
-                                <label style="display: block; font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 8px;">Chart Type</label>
+                                <label class="section-label">Chart Type</label>
                                 <div class="chart-type-btns">
-                                    <button class="mode-btn selected" data-chart="bar" onclick="selectChartType('bar', this)" style="padding: 8px; font-size: 13px;">Bar</button>
-                                    <button class="mode-btn" data-chart="pie" onclick="selectChartType('pie', this)" style="padding: 8px; font-size: 13px;">Pie</button>
-                                    <button class="mode-btn" data-chart="line" onclick="selectChartType('line', this)" style="padding: 8px; font-size: 13px;">Line</button>
+                                    <button class="mode-btn selected compact-mode-btn" data-chart="bar" onclick="selectChartType('bar', this)">Bar</button>
+                                    <button class="mode-btn compact-mode-btn" data-chart="pie" onclick="selectChartType('pie', this)">Pie</button>
+                                    <button class="mode-btn compact-mode-btn" data-chart="line" onclick="selectChartType('line', this)">Line</button>
                                 </div>
                             </div>
                             <div>
-                                <label style="display: block; font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 8px;">Aspect Ratio</label>
-                                <div style="display: flex; gap: 16px; align-items: center;">
-                                    <button data-ratio="16:9" onclick="selectAspectRatio('16:9', this)" style="padding: 0; border: none; background: transparent; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 3px; opacity: 1;" class="aspect-ratio-btn selected">
+                                <label class="section-label">Aspect Ratio</label>
+                                <div class="flex-gap16-center">
+                                    <button data-ratio="16:9" onclick="selectAspectRatio('16:9', this)" class="aspect-ratio-btn selected aspect-btn-base flex-col-center-gap3" style="opacity: 1;">
                                         <svg width="32" height="20" viewBox="0 0 32 20" fill="none" xmlns="http://www.w3.org/2000/svg">
                                             <rect x="1" y="1" width="30" height="18" rx="1" stroke="currentColor" stroke-width="2" fill="none"/>
                                         </svg>
-                                        <span style="font-size: 10px; color: currentColor; font-weight: 600;">16:9</span>
+                                        <span class="label-fontsize-10">16:9</span>
                                     </button>
-                                    <button data-ratio="9:16" onclick="selectAspectRatio('9:16', this)" style="padding: 0; border: none; background: transparent; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 3px; opacity: 0.4;" class="aspect-ratio-btn">
+                                    <button data-ratio="9:16" onclick="selectAspectRatio('9:16', this)" class="aspect-ratio-btn aspect-btn-base flex-col-center-gap3" style="opacity: 0.4;">
                                         <svg width="20" height="32" viewBox="0 0 20 32" fill="none" xmlns="http://www.w3.org/2000/svg">
                                             <rect x="1" y="1" width="18" height="30" rx="1" stroke="currentColor" stroke-width="2" fill="none"/>
                                         </svg>
-                                        <span style="font-size: 10px; color: currentColor; font-weight: 600;">9:16</span>
+                                        <span class="label-fontsize-10">9:16</span>
                                     </button>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Row 2: Chart Width and Height (for Bar/Line) or Chart Size (for Pie) -->
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+                        <div class="grid-2col-gap12 mb-12">
                             <!-- Chart Size (for Pie chart only) -->
-                            <div class="slider-group" id="chartSizeSliderGroup" style="margin-bottom: 0; display: none; grid-column: span 2;">
+                            <div class="slider-group mb-0 span-2" id="chartSizeSliderGroup" style="display: none;">
                                 <label>
                                     <span>Chart Size</span>
                                     <span class="slider-value" id="chartSizeDisplay">90%</span>
                                 </label>
-                                <input type="range" id="chartSizeSlider" min="50" max="100" value="90" step="5" oninput="updateChartSizeDisplay(this.value)" style="width: 100%;">
+                                <input type="range" id="chartSizeSlider" min="50" max="100" value="90" step="5" oninput="updateChartSizeDisplay(this.value)" class="full-width-slider">
                             </div>
                             <!-- Chart Width (for Bar and Line charts) -->
-                            <div class="slider-group" id="chartWidthSliderGroup" style="margin-bottom: 0;">
+                            <div class="slider-group mb-0" id="chartWidthSliderGroup">
                                 <label>
                                     <span>Chart Width</span>
                                     <span class="slider-value" id="chartWidthDisplay">90%</span>
                                 </label>
-                                <input type="range" id="chartWidthSlider" min="50" max="100" value="90" step="5" oninput="updateChartWidthDisplay(this.value)" style="width: 100%;">
+                                <input type="range" id="chartWidthSlider" min="50" max="100" value="90" step="5" oninput="updateChartWidthDisplay(this.value)" class="full-width-slider">
                             </div>
                             <!-- Chart Height (for Bar and Line charts) -->
-                            <div class="slider-group" id="chartHeightSliderGroup" style="margin-bottom: 0;">
+                            <div class="slider-group mb-0" id="chartHeightSliderGroup">
                                 <label>
                                     <span>Chart Height</span>
                                     <span class="slider-value" id="chartHeightDisplay">90%</span>
                                 </label>
-                                <input type="range" id="chartHeightSlider" min="50" max="100" value="90" step="5" oninput="updateChartHeightDisplay(this.value)" style="width: 100%;">
+                                <input type="range" id="chartHeightSlider" min="50" max="100" value="90" step="5" oninput="updateChartHeightDisplay(this.value)" class="full-width-slider">
                             </div>
                         </div>
 
                         <!-- Row 3: Line Roughness and Duration -->
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
-                            <div class="slider-group" style="margin-bottom: 0;">
+                        <div class="grid-2col-gap12 mb-12">
+                            <div class="slider-group mb-0">
                                 <label>
                                     <span>Line Roughness</span>
                                     <span class="slider-value" id="roughnessDisplay">2.0</span>
                                 </label>
-                                <input type="range" id="roughnessSlider" min="0" max="5" value="2" step="0.5" oninput="updateRoughnessDisplay(this.value); updatePreview()" style="width: 100%;">
+                                <input type="range" id="roughnessSlider" min="0" max="5" value="2" step="0.5" oninput="updateRoughnessDisplay(this.value); updatePreview()" class="full-width-slider">
                             </div>
-                            <div class="slider-group" style="margin-bottom: 0;">
+                            <div class="slider-group mb-0">
                                 <label>
                                     <span>Duration</span>
                                     <span class="slider-value" id="durationDisplay">0.8s</span>
                                 </label>
-                                <input type="range" id="durationSlider" min="500" max="5000" value="800" step="100" oninput="updateDurationDisplay(this.value); updatePreview()" style="width: 100%;">
+                                <input type="range" id="durationSlider" min="500" max="5000" value="800" step="100" oninput="updateDurationDisplay(this.value); updatePreview()" class="full-width-slider">
                             </div>
                         </div>
 
                         <!-- Row 4: Chart Background and Text Font -->
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; align-items: end; margin-bottom: 12px;">
-                            <div class="label-input-group" style="margin-bottom: 0;">
+                        <div class="grid-2col-gap12 mb-12" style="align-items: end;">
+                            <div class="label-input-group mb-0">
                                 <label>Chart Background</label>
-                                <div class="bg-color-display" id="bgColorDisplay" onclick="openBgColorPicker()" style="background: #ffffff; width: 100%; height: 40px; cursor: pointer; border: 2px solid #e0e7ff; border-radius: 8px;"></div>
+                                <div class="bg-white-full" id="bgColorDisplay" onclick="openBgColorPicker()"></div>
                                 <input type="hidden" id="bgColor" value="#ffffff">
                                 <input type="hidden" id="bgPattern" value="">
                             </div>
-                            <div class="label-input-group" style="margin-bottom: 0;">
+                            <div class="label-input-group mb-0">
                                 <label for="fontFamily">Text Font</label>
-                                <select id="fontFamily" onchange="updatePreview()" style="width: 100%; padding: 10px 8px; border: 2px solid #e0e7ff; border-radius: 8px; font-size: 13px; background: white; cursor: pointer;">
+                                <select id="fontFamily" onchange="updatePreview()" class="full-width-select-sm">
                                     <option value="Comic Sans MS, cursive">Comic Sans MS</option>
                                     <option value="Bradley Hand, Comic Sans MS, cursive">Bradley Hand</option>
                                     <option value="Marker Felt, Comic Sans MS, cursive">Marker Felt</option>
@@ -927,44 +1293,44 @@
                         </div>
 
                         <!-- Title Row -->
-                        <div style="display: grid; grid-template-columns: 1fr 1fr 100px; gap: 8px; align-items: end; margin-bottom: 12px;">
-                            <div class="label-input-group" style="margin-bottom: 0; grid-column: span 2;">
+                        <div class="grid-2col-100-gap8 mb-12">
+                            <div class="label-input-group mb-0 span-2">
                                 <label for="chartTitle">Title</label>
                                 <input type="text" id="chartTitle" placeholder="Chart title" oninput="updatePreview()" onclick="event.stopPropagation()">
                             </div>
-                            <div class="label-input-group" style="margin-bottom: 0;">
+                            <div class="label-input-group mb-0">
                                 <label>Font Size</label>
-                                <input type="number" id="titleFontSize" min="10" max="80" value="50" step="2" oninput="updatePreview()" onclick="event.stopPropagation()" style="width: 100%; padding: 10px 8px; border: 2px solid #e0e7ff; border-radius: 8px; font-size: 14px;">
+                                <input type="number" id="titleFontSize" min="10" max="80" value="50" step="2" oninput="updatePreview()" onclick="event.stopPropagation()" class="full-width-input">
                             </div>
                         </div>
 
                         <!-- Pie Chart Data Label Font Size (shown only for pie chart) -->
-                        <div id="pieDataLabelFontSizeSetting" style="display: none; margin-bottom: 12px;">
-                            <div class="label-input-group" style="margin-bottom: 0;">
+                        <div id="pieDataLabelFontSizeSetting" class="mb-12" style="display: none;">
+                            <div class="label-input-group mb-0">
                                 <label>Data Label Font Size</label>
-                                <input type="number" id="pieDataLabelFontSize" min="10" max="50" value="35" step="2" oninput="updatePreview()" onclick="event.stopPropagation()" style="width: 100%; padding: 10px 8px; border: 2px solid #e0e7ff; border-radius: 8px; font-size: 14px;">
+                                <input type="number" id="pieDataLabelFontSize" min="10" max="50" value="35" step="2" oninput="updatePreview()" onclick="event.stopPropagation()" class="full-width-input">
                             </div>
                         </div>
 
                         <!-- Axis Settings (shown only for bar and line charts) -->
-                        <div id="axisSettings" style="display: grid; grid-template-columns: 1fr 1fr 100px; gap: 8px; align-items: end; margin-bottom: 12px;">
-                            <div class="label-input-group" style="margin-bottom: 0;">
+                        <div id="axisSettings" class="grid-2col-100-gap8 mb-12">
+                            <div class="label-input-group mb-0">
                                 <label for="xAxisLabel">X-Axis</label>
                                 <input type="text" id="xAxisLabel" placeholder="X-axis" oninput="updatePreview()" onclick="event.stopPropagation()">
                             </div>
-                            <div class="label-input-group" style="margin-bottom: 0;">
+                            <div class="label-input-group mb-0">
                                 <label for="yAxisLabel">Y-Axis</label>
                                 <input type="text" id="yAxisLabel" placeholder="Y-axis" oninput="updatePreview()" onclick="event.stopPropagation()">
                             </div>
-                            <div class="label-input-group" style="margin-bottom: 0;">
+                            <div class="label-input-group mb-0">
                                 <label>Font Size</label>
-                                <input type="number" id="axisFontSize" min="10" max="50" value="35" step="2" oninput="updatePreview()" onclick="event.stopPropagation()" style="width: 100%; padding: 10px 8px; border: 2px solid #e0e7ff; border-radius: 8px; font-size: 14px;">
+                                <input type="number" id="axisFontSize" min="10" max="50" value="35" step="2" oninput="updatePreview()" onclick="event.stopPropagation()" class="full-width-input">
                             </div>
                         </div>
 
-                        <div id="lineshapeSettings" style="display: none; margin-bottom: 12px;">
-                            <label style="display: block; font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 6px;">Datapoint Shape</label>
-                            <select id="datapointShape" onchange="updatePreview()" style="width: 100%; padding: 10px 12px; border: 2px solid #e0e7ff; border-radius: 8px; font-size: 14px; background: white; cursor: pointer;">
+                        <div id="lineshapeSettings" class="mb-12" style="display: none;">
+                            <label class="section-label" style="margin-bottom: 6px;">Datapoint Shape</label>
+                            <select id="datapointShape" onchange="updatePreview()" class="full-width-select">
                                 <option value="circle">Circle</option>
                                 <option value="square">Square</option>
                                 <option value="diamond">Diamond</option>
@@ -982,7 +1348,7 @@
                         <div class="chart-container" id="chartContainer">
                             <svg id="chartSvg" style="display: none;"></svg>
                             <div class="empty-state" id="emptyState">
-                                <div style="font-size: 20px; margin-bottom: 10px;">📊</div>
+                                <div class="empty-icon">📊</div>
                                 <div>Add data items to see preview</div>
                             </div>
                         </div>
@@ -990,7 +1356,7 @@
                 </div>
 
                 <!-- Animate Buttons -->
-                <div class="animate-btn-container" style="display: flex; gap: 12px; justify-content: center;">
+                <div class="animate-btn-container flex-gap12 flex-center">
                     <button class="animate-btn" onclick="animateChart()" id="animateBtn" disabled>
                         ▶ Animate Chart
                     </button>
@@ -1037,7 +1403,7 @@
 
     <!-- Background Color Picker Popup -->
     <div class="edit-popup" id="bgColorPickerPopup" style="min-width: 350px; max-width: 400px; max-height: 80vh; overflow-y: auto;">
-        <h4 style="margin: 0 0 12px 0; font-size: 14px; font-weight: 700; color: #374151;">Background Color</h4>
+        <h4 class="popup-heading">Background Color</h4>
         <div class="color-picker-container">
             <canvas id="bgColorCanvas" class="color-canvas" width="180" height="180"></canvas>
             <canvas id="bgHueSlider" class="color-hue-slider" width="20" height="180"></canvas>
@@ -1048,54 +1414,54 @@
             <div class="color-display-small" id="bgColorDisplaySmall"></div>
         </div>
 
-        <hr style="border: none; border-top: 2px solid #e0e7ff; margin: 16px 0;">
+        <hr class="hr-divider">
 
-        <h4 style="margin: 0 0 12px 0; font-size: 14px; font-weight: 700; color: #374151;">Pattern Overlay (Optional)</h4>
-        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 12px;">
-            <div class="bg-pattern-option" data-pattern="" onclick="selectBgPattern('', this)" style="cursor: pointer; border: 2px solid #e0e7ff; border-radius: 6px; padding: 8px; text-align: center; font-size: 12px; background: white; transition: all 0.2s;">
+        <h4 class="popup-heading">Pattern Overlay (Optional)</h4>
+        <div class="grid-4col-gap8 mb-12">
+            <div class="bg-pattern-option bg-pattern-base bg-pattern-text" data-pattern="" onclick="selectBgPattern('', this)">
                 None
             </div>
-            <div class="bg-pattern-option" data-pattern="Paper/Grid-01.png" onclick="selectBgPattern('Paper/Grid-01.png', this)" style="cursor: pointer; border: 2px solid #e0e7ff; border-radius: 6px; overflow: hidden; aspect-ratio: 2; background: white; transition: all 0.2s; position: relative;">
-                <img src="Paper/Grid-01.png" style="width: 100%; height: 100%; object-fit: cover; opacity: 0.8;">
+            <div class="bg-pattern-option bg-pattern-base bg-pattern-image" data-pattern="Paper/Grid-01.png" onclick="selectBgPattern('Paper/Grid-01.png', this)">
+                <img src="Paper/Grid-01.png" class="bg-pattern-img">
             </div>
-            <div class="bg-pattern-option" data-pattern="Paper/Grid-03.png" onclick="selectBgPattern('Paper/Grid-03.png', this)" style="cursor: pointer; border: 2px solid #e0e7ff; border-radius: 6px; overflow: hidden; aspect-ratio: 2; background: white; transition: all 0.2s; position: relative;">
-                <img src="Paper/Grid-03.png" style="width: 100%; height: 100%; object-fit: cover; opacity: 0.8;">
+            <div class="bg-pattern-option bg-pattern-base bg-pattern-image" data-pattern="Paper/Grid-03.png" onclick="selectBgPattern('Paper/Grid-03.png', this)">
+                <img src="Paper/Grid-03.png" class="bg-pattern-img">
             </div>
-            <div class="bg-pattern-option" data-pattern="Paper/Grid-04.png" onclick="selectBgPattern('Paper/Grid-04.png', this)" style="cursor: pointer; border: 2px solid #e0e7ff; border-radius: 6px; overflow: hidden; aspect-ratio: 2; background: white; transition: all 0.2s; position: relative;">
-                <img src="Paper/Grid-04.png" style="width: 100%; height: 100%; object-fit: cover; opacity: 0.8;">
+            <div class="bg-pattern-option bg-pattern-base bg-pattern-image" data-pattern="Paper/Grid-04.png" onclick="selectBgPattern('Paper/Grid-04.png', this)">
+                <img src="Paper/Grid-04.png" class="bg-pattern-img">
             </div>
-            <div class="bg-pattern-option" data-pattern="Paper/Grid-05.png" onclick="selectBgPattern('Paper/Grid-05.png', this)" style="cursor: pointer; border: 2px solid #e0e7ff; border-radius: 6px; overflow: hidden; aspect-ratio: 2; background: white; transition: all 0.2s; position: relative;">
-                <img src="Paper/Grid-05.png" style="width: 100%; height: 100%; object-fit: cover; opacity: 0.8;">
+            <div class="bg-pattern-option bg-pattern-base bg-pattern-image" data-pattern="Paper/Grid-05.png" onclick="selectBgPattern('Paper/Grid-05.png', this)">
+                <img src="Paper/Grid-05.png" class="bg-pattern-img">
             </div>
-            <div class="bg-pattern-option" data-pattern="Paper/Grid-06.png" onclick="selectBgPattern('Paper/Grid-06.png', this)" style="cursor: pointer; border: 2px solid #e0e7ff; border-radius: 6px; overflow: hidden; aspect-ratio: 2; background: white; transition: all 0.2s; position: relative;">
-                <img src="Paper/Grid-06.png" style="width: 100%; height: 100%; object-fit: cover; opacity: 0.8;">
+            <div class="bg-pattern-option bg-pattern-base bg-pattern-image" data-pattern="Paper/Grid-06.png" onclick="selectBgPattern('Paper/Grid-06.png', this)">
+                <img src="Paper/Grid-06.png" class="bg-pattern-img">
             </div>
-            <div class="bg-pattern-option" data-pattern="Paper/Grid-07.png" onclick="selectBgPattern('Paper/Grid-07.png', this)" style="cursor: pointer; border: 2px solid #e0e7ff; border-radius: 6px; overflow: hidden; aspect-ratio: 2; background: white; transition: all 0.2s; position: relative;">
-                <img src="Paper/Grid-07.png" style="width: 100%; height: 100%; object-fit: cover; opacity: 0.8;">
+            <div class="bg-pattern-option bg-pattern-base bg-pattern-image" data-pattern="Paper/Grid-07.png" onclick="selectBgPattern('Paper/Grid-07.png', this)">
+                <img src="Paper/Grid-07.png" class="bg-pattern-img">
             </div>
-            <div class="bg-pattern-option" data-pattern="Paper/Grid-08.png" onclick="selectBgPattern('Paper/Grid-08.png', this)" style="cursor: pointer; border: 2px solid #e0e7ff; border-radius: 6px; overflow: hidden; aspect-ratio: 2; background: white; transition: all 0.2s; position: relative;">
-                <img src="Paper/Grid-08.png" style="width: 100%; height: 100%; object-fit: cover; opacity: 0.8;">
+            <div class="bg-pattern-option bg-pattern-base bg-pattern-image" data-pattern="Paper/Grid-08.png" onclick="selectBgPattern('Paper/Grid-08.png', this)">
+                <img src="Paper/Grid-08.png" class="bg-pattern-img">
             </div>
-            <div class="bg-pattern-option" data-pattern="Paper/Grid-09.png" onclick="selectBgPattern('Paper/Grid-09.png', this)" style="cursor: pointer; border: 2px solid #e0e7ff; border-radius: 6px; overflow: hidden; aspect-ratio: 2; background: white; transition: all 0.2s; position: relative;">
-                <img src="Paper/Grid-09.png" style="width: 100%; height: 100%; object-fit: cover; opacity: 0.8;">
+            <div class="bg-pattern-option bg-pattern-base bg-pattern-image" data-pattern="Paper/Grid-09.png" onclick="selectBgPattern('Paper/Grid-09.png', this)">
+                <img src="Paper/Grid-09.png" class="bg-pattern-img">
             </div>
-            <div class="bg-pattern-option" data-pattern="Paper/Lines-01.png" onclick="selectBgPattern('Paper/Lines-01.png', this)" style="cursor: pointer; border: 2px solid #e0e7ff; border-radius: 6px; overflow: hidden; aspect-ratio: 2; background: white; transition: all 0.2s; position: relative;">
-                <img src="Paper/Lines-01.png" style="width: 100%; height: 100%; object-fit: cover; opacity: 0.8;">
+            <div class="bg-pattern-option bg-pattern-base bg-pattern-image" data-pattern="Paper/Lines-01.png" onclick="selectBgPattern('Paper/Lines-01.png', this)">
+                <img src="Paper/Lines-01.png" class="bg-pattern-img">
             </div>
-            <div class="bg-pattern-option" data-pattern="Paper/Lines-02.png" onclick="selectBgPattern('Paper/Lines-02.png', this)" style="cursor: pointer; border: 2px solid #e0e7ff; border-radius: 6px; overflow: hidden; aspect-ratio: 2; background: white; transition: all 0.2s; position: relative;">
-                <img src="Paper/Lines-02.png" style="width: 100%; height: 100%; object-fit: cover; opacity: 0.8;">
+            <div class="bg-pattern-option bg-pattern-base bg-pattern-image" data-pattern="Paper/Lines-02.png" onclick="selectBgPattern('Paper/Lines-02.png', this)">
+                <img src="Paper/Lines-02.png" class="bg-pattern-img">
             </div>
-            <div class="bg-pattern-option" data-pattern="Paper/Lines-03.png" onclick="selectBgPattern('Paper/Lines-03.png', this)" style="cursor: pointer; border: 2px solid #e0e7ff; border-radius: 6px; overflow: hidden; aspect-ratio: 2; background: white; transition: all 0.2s; position: relative;">
-                <img src="Paper/Lines-03.png" style="width: 100%; height: 100%; object-fit: cover; opacity: 0.8;">
+            <div class="bg-pattern-option bg-pattern-base bg-pattern-image" data-pattern="Paper/Lines-03.png" onclick="selectBgPattern('Paper/Lines-03.png', this)">
+                <img src="Paper/Lines-03.png" class="bg-pattern-img">
             </div>
         </div>
 
-        <hr style="border: none; border-top: 2px solid #e0e7ff; margin: 16px 0;">
+        <hr class="hr-divider">
 
-        <h4 style="margin: 0 0 8px 0; font-size: 14px; font-weight: 700; color: #374151;">Or Upload Custom Image</h4>
-        <div style="display: flex; gap: 8px; align-items: center;">
-            <input type="file" id="bgImage" accept="image/*" onchange="handleBackgroundImage()" style="flex: 1; padding: 6px; border: 2px solid #e0e7ff; border-radius: 6px; font-size: 12px;">
-            <button onclick="clearBackgroundImage()" id="clearBgImageBtn" style="display: none; padding: 8px 12px; background: #ef4444; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600; white-space: nowrap;">Clear</button>
+        <h4 class="popup-heading" style="margin-bottom: 8px;">Or Upload Custom Image</h4>
+        <div class="flex-gap8-center">
+            <input type="file" id="bgImage" accept="image/*" onchange="handleBackgroundImage()" class="upload-flex">
+            <button onclick="clearBackgroundImage()" id="clearBgImageBtn" class="clear-btn" style="display: none;">Clear</button>
         </div>
     </div>
 
@@ -1112,20 +1478,72 @@
         let chartHeightPercent = 90; // Used for bar and line charts
         let backgroundImage = null;
 
-        const colorPalettes = {
-            'retro': ['#e63946', '#f77f00', '#fcbf49', '#06a77d', '#118ab2', '#073b4c', '#dd6e42', '#e8dab2'],
-            'pastel': ['#ffb5c2', '#ffd4a3', '#fff5ba', '#b4e4d4', '#c5a9e8', '#ffccf9', '#a8e6cf', '#ffd3b6'],
-            'vintage': ['#8b7e66', '#a4907c', '#c9b8a3', '#7d8570', '#8e7c68', '#b4a088', '#9b8b7e', '#a89f91'],
-            'poster': ['#264653', '#2a9d8f', '#e9c46a', '#f4a261', '#e76f51', '#6a994e', '#bc4749', '#9d4edd'],
-            'sketch': ['#457b9d', '#a8dadc', '#f1faee', '#e63946', '#1d3557', '#f77f00', '#06a77d', '#e9c46a'],
-            'autumn': ['#8b4513', '#d2691e', '#daa520', '#b8860b', '#cd853f', '#a0522d', '#c19a6b', '#e3a857'],
-            'ocean': ['#006994', '#247ba0', '#1e96c8', '#2cb5e8', '#7fcdff', '#4dd0e1', '#00acc1', '#0097a7'],
-            'forest': ['#2d5016', '#3d6b28', '#4a7c3a', '#5a8e4c', '#6ca35f', '#7eb773', '#90ca87', '#a4d99b'],
-            'sunset': ['#ff6b35', '#f7931e', '#fdc82f', '#fbb040', '#f89c50', '#f57e5f', '#f25f70', '#ef4180'],
-            'candy': ['#ff6b9d', '#c44569', '#ffa07a', '#fa8072', '#e0b0ff', '#dda0dd', '#ffc0cb', '#ffb6c1'],
-            'earthy': ['#936639', '#a67c52', '#b8926b', '#caa884', '#7c6a5c', '#8d7966', '#9e8870', '#af977a'],
-            'neon': ['#ff006e', '#fb5607', '#ffbe0b', '#8338ec', '#3a86ff', '#06ffa5', '#ff006e', '#fb5607'],
-            'muted': ['#6c757d', '#8d99ae', '#9ba4b5', '#adb5bd', '#b1a7a6', '#c6b9cd', '#d6cbd3', '#e5d4ce']
+        const PALETTES = {
+            'retro': {
+                name: 'Retro Warm',
+                colors: ['#e63946', '#f77f00', '#fcbf49', '#06a77d', '#118ab2', '#073b4c', '#dd6e42', '#e8dab2'],
+                gradient: 'linear-gradient(90deg, #e63946 0%, #e63946 12.5%, #f77f00 12.5%, #f77f00 25%, #fcbf49 25%, #fcbf49 37.5%, #06a77d 37.5%, #06a77d 50%, #118ab2 50%, #118ab2 62.5%, #073b4c 62.5%, #073b4c 75%, #dd6e42 75%, #dd6e42 87.5%, #e8dab2 87.5%, #e8dab2 100%)'
+            },
+            'pastel': {
+                name: 'Pastel Soft',
+                colors: ['#ffb5c2', '#ffd4a3', '#fff5ba', '#b4e4d4', '#c5a9e8', '#ffccf9', '#a8e6cf', '#ffd3b6'],
+                gradient: 'linear-gradient(90deg, #ffb5c2 0%, #ffb5c2 12.5%, #ffd4a3 12.5%, #ffd4a3 25%, #fff5ba 25%, #fff5ba 37.5%, #b4e4d4 37.5%, #b4e4d4 50%, #c5a9e8 50%, #c5a9e8 62.5%, #ffccf9 62.5%, #ffccf9 75%, #a8e6cf 75%, #a8e6cf 87.5%, #ffd3b6 87.5%, #ffd3b6 100%)'
+            },
+            'vintage': {
+                name: 'Vintage Earth',
+                colors: ['#8b7e66', '#a4907c', '#c9b8a3', '#7d8570', '#8e7c68', '#b4a088', '#9b8b7e', '#a89f91'],
+                gradient: 'linear-gradient(90deg, #8b7e66 0%, #8b7e66 12.5%, #a4907c 12.5%, #a4907c 25%, #c9b8a3 25%, #c9b8a3 37.5%, #7d8570 37.5%, #7d8570 50%, #8e7c68 50%, #8e7c68 62.5%, #b4a088 62.5%, #b4a088 75%, #9b8b7e 75%, #9b8b7e 87.5%, #a89f91 87.5%, #a89f91 100%)'
+            },
+            'poster': {
+                name: 'Poster Bold',
+                colors: ['#264653', '#2a9d8f', '#e9c46a', '#f4a261', '#e76f51', '#6a994e', '#bc4749', '#9d4edd'],
+                gradient: 'linear-gradient(90deg, #264653 0%, #264653 12.5%, #2a9d8f 12.5%, #2a9d8f 25%, #e9c46a 25%, #e9c46a 37.5%, #f4a261 37.5%, #f4a261 50%, #e76f51 50%, #e76f51 62.5%, #6a994e 62.5%, #6a994e 75%, #bc4749 75%, #bc4749 87.5%, #9d4edd 87.5%, #9d4edd 100%)'
+            },
+            'sketch': {
+                name: 'Sketch Blue',
+                colors: ['#457b9d', '#a8dadc', '#f1faee', '#e63946', '#1d3557', '#f77f00', '#06a77d', '#e9c46a'],
+                gradient: 'linear-gradient(90deg, #457b9d 0%, #457b9d 12.5%, #a8dadc 12.5%, #a8dadc 25%, #f1faee 25%, #f1faee 37.5%, #e63946 37.5%, #e63946 50%, #1d3557 50%, #1d3557 62.5%, #f77f00 62.5%, #f77f00 75%, #06a77d 75%, #06a77d 87.5%, #e9c46a 87.5%, #e9c46a 100%)'
+            },
+            'autumn': {
+                name: 'Autumn Leaves',
+                colors: ['#8b4513', '#d2691e', '#daa520', '#b8860b', '#cd853f', '#a0522d', '#c19a6b', '#e3a857'],
+                gradient: 'linear-gradient(90deg, #8b4513 0%, #8b4513 12.5%, #d2691e 12.5%, #d2691e 25%, #daa520 25%, #daa520 37.5%, #b8860b 37.5%, #b8860b 50%, #cd853f 50%, #cd853f 62.5%, #a0522d 62.5%, #a0522d 75%, #c19a6b 75%, #c19a6b 87.5%, #e3a857 87.5%, #e3a857 100%)'
+            },
+            'ocean': {
+                name: 'Ocean Breeze',
+                colors: ['#006994', '#247ba0', '#1e96c8', '#2cb5e8', '#7fcdff', '#4dd0e1', '#00acc1', '#0097a7'],
+                gradient: 'linear-gradient(90deg, #006994 0%, #006994 12.5%, #247ba0 12.5%, #247ba0 25%, #1e96c8 25%, #1e96c8 37.5%, #2cb5e8 37.5%, #2cb5e8 50%, #7fcdff 50%, #7fcdff 62.5%, #4dd0e1 62.5%, #4dd0e1 75%, #00acc1 75%, #00acc1 87.5%, #0097a7 87.5%, #0097a7 100%)'
+            },
+            'forest': {
+                name: 'Forest Green',
+                colors: ['#2d5016', '#3d6b28', '#4a7c3a', '#5a8e4c', '#6ca35f', '#7eb773', '#90ca87', '#a4d99b'],
+                gradient: 'linear-gradient(90deg, #2d5016 0%, #2d5016 12.5%, #3d6b28 12.5%, #3d6b28 25%, #4a7c3a 25%, #4a7c3a 37.5%, #5a8e4c 37.5%, #5a8e4c 50%, #6ca35f 50%, #6ca35f 62.5%, #7eb773 62.5%, #7eb773 75%, #90ca87 75%, #90ca87 87.5%, #a4d99b 87.5%, #a4d99b 100%)'
+            },
+            'sunset': {
+                name: 'Sunset Glow',
+                colors: ['#ff6b35', '#f7931e', '#fdc82f', '#fbb040', '#f89c50', '#f57e5f', '#f25f70', '#ef4180'],
+                gradient: 'linear-gradient(90deg, #ff6b35 0%, #ff6b35 12.5%, #f7931e 12.5%, #f7931e 25%, #fdc82f 25%, #fdc82f 37.5%, #fbb040 37.5%, #fbb040 50%, #f89c50 50%, #f89c50 62.5%, #f57e5f 62.5%, #f57e5f 75%, #f25f70 75%, #f25f70 87.5%, #ef4180 87.5%, #ef4180 100%)'
+            },
+            'candy': {
+                name: 'Candy Pop',
+                colors: ['#ff6b9d', '#c44569', '#ffa07a', '#fa8072', '#e0b0ff', '#dda0dd', '#ffc0cb', '#ffb6c1'],
+                gradient: 'linear-gradient(90deg, #ff6b9d 0%, #ff6b9d 12.5%, #c44569 12.5%, #c44569 25%, #ffa07a 25%, #ffa07a 37.5%, #fa8072 37.5%, #fa8072 50%, #e0b0ff 50%, #e0b0ff 62.5%, #dda0dd 62.5%, #dda0dd 75%, #ffc0cb 75%, #ffc0cb 87.5%, #ffb6c1 87.5%, #ffb6c1 100%)'
+            },
+            'earthy': {
+                name: 'Earthy Tones',
+                colors: ['#936639', '#a67c52', '#b8926b', '#caa884', '#7c6a5c', '#8d7966', '#9e8870', '#af977a'],
+                gradient: 'linear-gradient(90deg, #936639 0%, #936639 12.5%, #a67c52 12.5%, #a67c52 25%, #b8926b 25%, #b8926b 37.5%, #caa884 37.5%, #caa884 50%, #7c6a5c 50%, #7c6a5c 62.5%, #8d7966 62.5%, #8d7966 75%, #9e8870 75%, #9e8870 87.5%, #af977a 87.5%, #af977a 100%)'
+            },
+            'neon': {
+                name: 'Neon Bright',
+                colors: ['#ff006e', '#fb5607', '#ffbe0b', '#8338ec', '#3a86ff', '#06ffa5', '#ff006e', '#fb5607'],
+                gradient: 'linear-gradient(90deg, #ff006e 0%, #ff006e 12.5%, #fb5607 12.5%, #fb5607 25%, #ffbe0b 25%, #ffbe0b 37.5%, #8338ec 37.5%, #8338ec 50%, #3a86ff 50%, #3a86ff 62.5%, #06ffa5 62.5%, #06ffa5 75%, #ff006e 75%, #ff006e 87.5%, #fb5607 87.5%, #fb5607 100%)'
+            },
+            'muted': {
+                name: 'Muted Grey',
+                colors: ['#6c757d', '#8d99ae', '#9ba4b5', '#adb5bd', '#b1a7a6', '#c6b9cd', '#d6cbd3', '#e5d4ce'],
+                gradient: 'linear-gradient(90deg, #6c757d 0%, #6c757d 12.5%, #8d99ae 12.5%, #8d99ae 25%, #9ba4b5 25%, #9ba4b5 37.5%, #adb5bd 37.5%, #adb5bd 50%, #b1a7a6 50%, #b1a7a6 62.5%, #c6b9cd 62.5%, #c6b9cd 75%, #d6cbd3 75%, #d6cbd3 87.5%, #e5d4ce 87.5%, #e5d4ce 100%)'
+            }
         };
 
         let selectedPalette = 'retro';
@@ -1137,38 +1555,6 @@
             updateCurrentPatternPreview();
         });
 
-        const paletteNames = {
-            'retro': 'Retro Warm',
-            'pastel': 'Pastel Soft',
-            'vintage': 'Vintage Earth',
-            'poster': 'Poster Bold',
-            'sketch': 'Sketch Blue',
-            'autumn': 'Autumn Leaves',
-            'ocean': 'Ocean Breeze',
-            'forest': 'Forest Green',
-            'sunset': 'Sunset Glow',
-            'candy': 'Candy Pop',
-            'earthy': 'Earthy Tones',
-            'neon': 'Neon Bright',
-            'muted': 'Muted Grey'
-        };
-
-        const paletteGradients = {
-            'retro': 'linear-gradient(90deg, #e63946 0%, #e63946 12.5%, #f77f00 12.5%, #f77f00 25%, #fcbf49 25%, #fcbf49 37.5%, #06a77d 37.5%, #06a77d 50%, #118ab2 50%, #118ab2 62.5%, #073b4c 62.5%, #073b4c 75%, #dd6e42 75%, #dd6e42 87.5%, #e8dab2 87.5%, #e8dab2 100%)',
-            'pastel': 'linear-gradient(90deg, #ffb5c2 0%, #ffb5c2 12.5%, #ffd4a3 12.5%, #ffd4a3 25%, #fff5ba 25%, #fff5ba 37.5%, #b4e4d4 37.5%, #b4e4d4 50%, #c5a9e8 50%, #c5a9e8 62.5%, #ffccf9 62.5%, #ffccf9 75%, #a8e6cf 75%, #a8e6cf 87.5%, #ffd3b6 87.5%, #ffd3b6 100%)',
-            'vintage': 'linear-gradient(90deg, #8b7e66 0%, #8b7e66 12.5%, #a4907c 12.5%, #a4907c 25%, #c9b8a3 25%, #c9b8a3 37.5%, #7d8570 37.5%, #7d8570 50%, #8e7c68 50%, #8e7c68 62.5%, #b4a088 62.5%, #b4a088 75%, #9b8b7e 75%, #9b8b7e 87.5%, #a89f91 87.5%, #a89f91 100%)',
-            'poster': 'linear-gradient(90deg, #264653 0%, #264653 12.5%, #2a9d8f 12.5%, #2a9d8f 25%, #e9c46a 25%, #e9c46a 37.5%, #f4a261 37.5%, #f4a261 50%, #e76f51 50%, #e76f51 62.5%, #6a994e 62.5%, #6a994e 75%, #bc4749 75%, #bc4749 87.5%, #9d4edd 87.5%, #9d4edd 100%)',
-            'sketch': 'linear-gradient(90deg, #457b9d 0%, #457b9d 12.5%, #a8dadc 12.5%, #a8dadc 25%, #f1faee 25%, #f1faee 37.5%, #e63946 37.5%, #e63946 50%, #1d3557 50%, #1d3557 62.5%, #f77f00 62.5%, #f77f00 75%, #06a77d 75%, #06a77d 87.5%, #e9c46a 87.5%, #e9c46a 100%)',
-            'autumn': 'linear-gradient(90deg, #8b4513 0%, #8b4513 12.5%, #d2691e 12.5%, #d2691e 25%, #daa520 25%, #daa520 37.5%, #b8860b 37.5%, #b8860b 50%, #cd853f 50%, #cd853f 62.5%, #a0522d 62.5%, #a0522d 75%, #c19a6b 75%, #c19a6b 87.5%, #e3a857 87.5%, #e3a857 100%)',
-            'ocean': 'linear-gradient(90deg, #006994 0%, #006994 12.5%, #247ba0 12.5%, #247ba0 25%, #1e96c8 25%, #1e96c8 37.5%, #2cb5e8 37.5%, #2cb5e8 50%, #7fcdff 50%, #7fcdff 62.5%, #4dd0e1 62.5%, #4dd0e1 75%, #00acc1 75%, #00acc1 87.5%, #0097a7 87.5%, #0097a7 100%)',
-            'forest': 'linear-gradient(90deg, #2d5016 0%, #2d5016 12.5%, #3d6b28 12.5%, #3d6b28 25%, #4a7c3a 25%, #4a7c3a 37.5%, #5a8e4c 37.5%, #5a8e4c 50%, #6ca35f 50%, #6ca35f 62.5%, #7eb773 62.5%, #7eb773 75%, #90ca87 75%, #90ca87 87.5%, #a4d99b 87.5%, #a4d99b 100%)',
-            'sunset': 'linear-gradient(90deg, #ff6b35 0%, #ff6b35 12.5%, #f7931e 12.5%, #f7931e 25%, #fdc82f 25%, #fdc82f 37.5%, #fbb040 37.5%, #fbb040 50%, #f89c50 50%, #f89c50 62.5%, #f57e5f 62.5%, #f57e5f 75%, #f25f70 75%, #f25f70 87.5%, #ef4180 87.5%, #ef4180 100%)',
-            'candy': 'linear-gradient(90deg, #ff6b9d 0%, #ff6b9d 12.5%, #c44569 12.5%, #c44569 25%, #ffa07a 25%, #ffa07a 37.5%, #fa8072 37.5%, #fa8072 50%, #e0b0ff 50%, #e0b0ff 62.5%, #dda0dd 62.5%, #dda0dd 75%, #ffc0cb 75%, #ffc0cb 87.5%, #ffb6c1 87.5%, #ffb6c1 100%)',
-            'earthy': 'linear-gradient(90deg, #936639 0%, #936639 12.5%, #a67c52 12.5%, #a67c52 25%, #b8926b 25%, #b8926b 37.5%, #caa884 37.5%, #caa884 50%, #7c6a5c 50%, #7c6a5c 62.5%, #8d7966 62.5%, #8d7966 75%, #9e8870 75%, #9e8870 87.5%, #af977a 87.5%, #af977a 100%)',
-            'neon': 'linear-gradient(90deg, #ff006e 0%, #ff006e 12.5%, #fb5607 12.5%, #fb5607 25%, #ffbe0b 25%, #ffbe0b 37.5%, #8338ec 37.5%, #8338ec 50%, #3a86ff 50%, #3a86ff 62.5%, #06ffa5 62.5%, #06ffa5 75%, #ff006e 75%, #ff006e 87.5%, #fb5607 87.5%, #fb5607 100%)',
-            'muted': 'linear-gradient(90deg, #6c757d 0%, #6c757d 12.5%, #8d99ae 12.5%, #8d99ae 25%, #9ba4b5 25%, #9ba4b5 37.5%, #adb5bd 37.5%, #adb5bd 50%, #b1a7a6 50%, #b1a7a6 62.5%, #c6b9cd 62.5%, #c6b9cd 75%, #d6cbd3 75%, #d6cbd3 87.5%, #e5d4ce 87.5%, #e5d4ce 100%)'
-        };
-
         function togglePaletteDropdown() {
             const options = document.getElementById('paletteDropdownOptions');
             options.style.display = options.style.display === 'none' ? 'block' : 'none';
@@ -1176,8 +1562,8 @@
 
         function selectPaletteOption(paletteName, event) {
             event.stopPropagation();
-            document.getElementById('selectedPaletteName').textContent = paletteNames[paletteName];
-            document.getElementById('selectedPaletteStrip').style.background = paletteGradients[paletteName];
+            document.getElementById('selectedPaletteName').textContent = PALETTES[paletteName].name;
+            document.getElementById('selectedPaletteStrip').style.background = PALETTES[paletteName].gradient;
             document.getElementById('paletteDropdownOptions').style.display = 'none';
             selectPalette(paletteName);
         }
@@ -1327,25 +1713,10 @@
             selectedPalette = paletteName;
             currentPaletteIndex = 0;
 
-            const paletteNames = {
-                'retro': 'Retro Warm',
-                'pastel': 'Pastel Soft',
-                'vintage': 'Vintage Earth',
-                'poster': 'Poster Bold',
-                'sketch': 'Sketch Blue',
-                'autumn': 'Autumn Leaves',
-                'ocean': 'Ocean Breeze',
-                'forest': 'Forest Green',
-                'sunset': 'Sunset Glow',
-                'candy': 'Candy Pop',
-                'earthy': 'Earthy Tones',
-                'neon': 'Neon Bright',
-                'muted': 'Muted Grey'
-            };
-            document.getElementById('selectedPaletteStrip').style.background = paletteGradients[paletteName];
-            document.getElementById('selectedPaletteName').textContent = paletteNames[paletteName];
+            document.getElementById('selectedPaletteStrip').style.background = PALETTES[paletteName].gradient;
+            document.getElementById('selectedPaletteName').textContent = PALETTES[paletteName].name;
 
-            const palette = colorPalettes[paletteName];
+            const palette = PALETTES[paletteName].colors;
             dataItems.forEach((item, index) => {
                 item.color = palette[index % palette.length];
             });
@@ -1357,7 +1728,7 @@
         }
 
         function updateColorInputFromPalette() {
-            const palette = colorPalettes[selectedPalette];
+            const palette = PALETTES[selectedPalette].colors;
             const nextColor = palette[currentPaletteIndex % palette.length];
             document.getElementById('colorInput').value = nextColor;
             updateCurrentPatternPreview();
@@ -1383,7 +1754,7 @@
             svgElement.appendChild(rect);
         }
 
-        function initializePopupPatternPreviews() {
+        function updatePopupPatternPreviews(color) {
             const patterns = [
                 { name: 'solid', hachureGap: 1 },
                 { name: 'hachure', hachureGap: 6 },
@@ -1396,9 +1767,10 @@
             patterns.forEach(patternObj => {
                 const svgElement = document.getElementById(`popup-preview-${patternObj.name}`);
                 if (!svgElement) return;
+                svgElement.innerHTML = ''; // Clear previous content
                 const roughSvg = rough.svg(svgElement);
                 const rect = roughSvg.rectangle(7, 7, 35, 35, {
-                    fill: '#667eea',
+                    fill: color,
                     fillStyle: patternObj.name,
                     roughness: 2,
                     strokeWidth: 2,
@@ -1409,6 +1781,11 @@
                 });
                 svgElement.appendChild(rect);
             });
+        }
+
+        function initializePopupPatternPreviews() {
+            // Initialize with default color
+            updatePopupPatternPreviews('#667eea');
         }
 
         function updateDurationDisplay(value) {
@@ -1580,6 +1957,9 @@
             const popup = document.getElementById('editPopup');
             popup.classList.add('active');
 
+            // Update pattern previews with current color
+            updatePopupPatternPreviews(item.color);
+
             setTimeout(() => {
                 const previewElement = document.getElementById(`data-preview-${index}`);
                 const rect = previewElement.getBoundingClientRect();
@@ -1598,7 +1978,7 @@
         function updateDataList() {
             const dataList = document.getElementById('dataList');
             if (dataItems.length === 0) {
-                dataList.innerHTML = '<div style="text-align: center; color: #9ca3af; padding: 20px; font-size: 13px;">No data items yet</div>';
+                dataList.innerHTML = '<div class="no-data-message">No data items yet</div>';
                 return;
             }
 
@@ -1606,11 +1986,11 @@
                 <table class="data-table">
                     <thead>
                         <tr>
-                            <th style="width: 32%;">Label</th>
-                            <th style="width: 18%;">Value</th>
-                            <th style="width: 28%;">Background</th>
-                            <th style="width: 10%;"></th>
-                            <th style="width: 12%;"></th>
+                            <th class="th-width-32">Label</th>
+                            <th class="th-width-18">Value</th>
+                            <th class="th-width-28">Background</th>
+                            <th class="th-width-10"></th>
+                            <th class="th-width-12"></th>
                         </tr>
                     </thead>
                     <tbody id="dataTableBody">
@@ -1624,28 +2004,28 @@
                         ondragend="handleDragEnd(event)"
                         ondragover="handleDragOver(event)"
                         ondrop="handleDrop(event, ${index})"
-                        style="cursor: move;">
+                        class="cursor-move">
                         <td>
                             <input type="text" value="${item.label}"
-                                onchange="updateDataLabel(${index}, this.value)" style="cursor: text;">
+                                onchange="updateDataLabel(${index}, this.value)" class="cursor-text">
                         </td>
                         <td>
                             <input type="number" value="${item.value}" min="0"
-                                onchange="updateDataValue(${index}, this.value)" style="cursor: text;">
+                                onchange="updateDataValue(${index}, this.value)" class="cursor-text">
                         </td>
-                        <td onclick="editDataColor(${index})" style="cursor: pointer; padding: 6px;">
+                        <td onclick="editDataColor(${index})" class="cursor-pointer" style="padding: 6px;">
                             <svg id="${previewId}"
                                 style="width: 100%; height: 36px; border: 1px solid #e0e7ff; border-radius: 4px; pointer-events: none;"
                                 title="Click to edit"></svg>
                         </td>
-                        <td style="text-align: center;">
+                        <td class="text-center">
                             <svg class="move-icon" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events: none;">
                                 <line x1="3" y1="6" x2="21" y2="6"></line>
                                 <line x1="3" y1="12" x2="21" y2="12"></line>
                                 <line x1="3" y1="18" x2="21" y2="18"></line>
                             </svg>
                         </td>
-                        <td style="text-align: center;">
+                        <td class="text-center">
                             <svg class="trash-icon" onclick="removeData(${index})" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2">
                                 <path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6h14z"/>
                                 <path d="M10 11v6M14 11v6"/>
@@ -1698,7 +2078,7 @@
             if (dataItems.length === 0) {
                 svg.style.display = 'none';
                 emptyState.style.display = 'block';
-                emptyState.innerHTML = '<div style="font-size: 20px; margin-bottom: 10px;">📊</div><div>Add data items to see preview</div>';
+                emptyState.innerHTML = '<div class="empty-icon">📊</div><div>Add data items to see preview</div>';
                 return;
             }
 
@@ -1726,12 +2106,6 @@
             svg.style.width = 'auto';
             svg.style.maxWidth = '100%';
 
-            console.log('=== SVG Setup ===');
-            console.log('viewBox:', svg.getAttribute('viewBox'));
-            console.log('clientWidth:', svg.clientWidth);
-            console.log('clientHeight:', svg.clientHeight);
-            console.log('style.width:', svg.style.width);
-
             // Reinitialize RoughJS after clearing SVG
             rc = rough.svg(svg);
 
@@ -1753,11 +2127,9 @@
                 const dims = viewBox.split(' ');
                 svgWidth = parseFloat(dims[2]);
                 svgHeight = parseFloat(dims[3]);
-                console.log('updateBarChart reading from viewBox - width:', svgWidth, 'height:', svgHeight);
             } else {
                 svgWidth = svg.clientWidth || 900;
                 svgHeight = svg.clientHeight || 550;
-                console.log('updateBarChart using clientWidth - width:', svgWidth, 'height:', svgHeight);
             }
             const baseAxisFontSize = parseInt(document.getElementById('axisFontSize').value) || 35;
             const baseTitleFontSize = parseInt(document.getElementById('titleFontSize').value) || 50;
@@ -2054,9 +2426,10 @@
             const pointCount = dataItems.length;
 
             // Calculate spacing to fit in available width
-            const availableWidth = svgWidth - leftPadding - rightPadding;
+            const pointOffset = 80; // Initial offset from y-axis for first point
+            const availableWidth = svgWidth - leftPadding - rightPadding - pointOffset;
             const pointSpacing = availableWidth / Math.max(1, pointCount - 1);
-            const xAxisEnd = svgWidth - rightPadding;
+            const xAxisEnd = leftPadding + pointOffset + ((pointCount - 1) * pointSpacing) + 20; // Extend x-axis to last point + margin
             const roughness = parseFloat(document.getElementById('roughnessSlider').value);
             const dataLabelFontSize = axisFontSize; // Use same font size as axis
             const yAxisExtension = dataLabelFontSize + 20; // Extra space for data labels above points
@@ -2125,7 +2498,7 @@
 
             // Draw line connecting points
             dataItems.forEach((item, index) => {
-                const x = leftPadding + 80 + (index * pointSpacing);
+                const x = leftPadding + pointOffset + (index * pointSpacing);
                 const y = svgHeight - bottomPadding - ((item.value / maxValue) * chartHeight);
                 points.push({ x, y, item, index });
             });
@@ -2247,6 +2620,9 @@
 
             modalSelectedPattern = currentPattern;
             popup.classList.add('active');
+
+            // Update pattern previews with current color
+            updatePopupPatternPreviews(currentColor);
 
             setTimeout(() => {
                 const rect = document.getElementById('colorPatternPreview').getBoundingClientRect();
@@ -2371,6 +2747,7 @@
                 document.getElementById('hexInput').value = hex;
                 document.getElementById('colorDisplaySmall').style.backgroundColor = hex;
                 document.getElementById('colorInput').value = hex;
+                updatePopupPatternPreviews(hex);
 
                 if (editingDataIndex >= 0) {
                     dataItems[editingDataIndex].color = hex;
@@ -2393,6 +2770,7 @@
                 document.getElementById('hexInput').value = hex;
                 document.getElementById('colorDisplaySmall').style.backgroundColor = hex;
                 document.getElementById('colorInput').value = hex;
+                updatePopupPatternPreviews(hex);
 
                 if (editingDataIndex >= 0) {
                     dataItems[editingDataIndex].color = hex;
@@ -2418,6 +2796,7 @@
                 document.getElementById('colorInput').value = hex;
                 drawColorPicker();
                 updateCurrentPatternPreview();
+                updatePopupPatternPreviews(hex);
             }
         }
 
@@ -3010,11 +3389,12 @@
             const pointCount = dataItems.length;
 
             // Calculate point spacing based on available space
-            const availableWidth = svgWidth - leftPadding - rightPadding;
+            const pointOffset = 80; // Initial offset from y-axis for first point
+            const availableWidth = svgWidth - leftPadding - rightPadding - pointOffset;
             const pointSpacing = pointCount > 1 ? availableWidth / (pointCount - 1) : availableWidth;
 
             const chartHeight = svgHeight - topPadding - bottomPadding;
-            const xAxisEnd = svgWidth - rightPadding;
+            const xAxisEnd = leftPadding + pointOffset + ((pointCount - 1) * pointSpacing) + 20; // Extend x-axis to last point + margin
             const roughness = parseFloat(document.getElementById('roughnessSlider').value);
             const duration = parseInt(document.getElementById('durationSlider').value);
             const sketchInterval = 80; // Fixed speed
@@ -3070,7 +3450,7 @@
             }
 
             const points = dataItems.map((item, index) => {
-                const x = leftPadding + 80 + (index * pointSpacing);
+                const x = leftPadding + pointOffset + (index * pointSpacing);
                 const y = svgHeight - bottomPadding - ((item.value / maxValue) * chartHeight);
 
                 const labelText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
@@ -3269,23 +3649,18 @@
 
             // Ensure fonts are loaded before capturing
             if (document.fonts) {
-                console.log('Waiting for fonts to load...');
                 await document.fonts.ready;
                 await new Promise(resolve => setTimeout(resolve, 500));
-                console.log('Fonts loaded');
             }
 
             // System fonts are used, no need to load custom fonts
-            console.log('Using system font for GIF export');
 
             // Preload background pattern if present
             const bgPattern = document.getElementById('bgPattern').value;
             if (bgPattern) {
-                console.log('Preloading background pattern:', bgPattern);
                 await new Promise((resolve, reject) => {
                     const img = new Image();
                     img.onload = () => {
-                        console.log('Background pattern loaded successfully');
                         resolve();
                     };
                     img.onerror = () => {
@@ -3311,8 +3686,6 @@
                 throw new Error('Chart container not found');
             }
 
-            console.log('Capturing animation as GIF:', { totalFrames, animDuration, fps });
-
             const userBgColor = document.getElementById('bgColor').value || '#ffffff';
 
             const images = [];
@@ -3328,8 +3701,6 @@
             const canvasWidth = canvasDims.width;
             const canvasHeight = canvasDims.height;
 
-            console.log('Canvas dimensions:', { canvasWidth, canvasHeight, aspectRatio: currentAspectRatio });
-
             // Restart animation from beginning for clean capture
             animateChart();
 
@@ -3341,8 +3712,6 @@
             const displayWidth = Math.round(containerRect.width);
             const displayHeight = Math.round(containerRect.height);
 
-            console.log('Container actual display size:', { displayWidth, displayHeight });
-
             // Capture frames during animation
             for (let i = 0; i < totalFrames; i++) {
                 // Capture first, then wait (so we capture frame 0)
@@ -3350,7 +3719,6 @@
                     // Get the SVG element to verify viewBox
                     const svg = document.getElementById('chartSvg');
                     const viewBox = svg.getAttribute('viewBox');
-                    console.log('SVG viewBox:', viewBox);
 
                     const canvas = await html2canvas(chartContainer, {
                         backgroundColor: userBgColor,
@@ -3392,9 +3760,6 @@
                     });
 
                     if (canvas && canvas.width > 0 && canvas.height > 0) {
-                        // Verify dimensions match expected
-                        console.log(`Frame ${i + 1}/${totalFrames}: ${canvas.width}x${canvas.height} (expected: ${canvasWidth}x${canvasHeight})`);
-
                         // If dimensions don't match exactly, resize the canvas
                         if (canvas.width !== canvasWidth || canvas.height !== canvasHeight) {
                             const resizedCanvas = document.createElement('canvas');
@@ -3425,8 +3790,6 @@
                 throw new Error('No frames captured');
             }
 
-            console.log('Creating GIF from', images.length, 'frames...', { canvasWidth, canvasHeight });
-
             return new Promise((resolve, reject) => {
                 const gifOptions = {
                     images: images,
@@ -3438,7 +3801,6 @@
                 };
 
                 gifshot.createGIF(gifOptions, (obj) => {
-                    console.log('GIF creation callback', obj);
                     if (!obj.error) {
                         const a = document.createElement('a');
                         a.href = obj.image;
