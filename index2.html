@@ -1376,8 +1376,8 @@
                         <div class="chart-container" id="chartContainer">
                             <svg id="chartSvg" style="display: none;"></svg>
                             <div class="empty-state" id="emptyState">
-                                <div class="empty-icon">📊</div>
-                                <div>Add data items to see preview</div>
+                                <div class="empty-icon"><img src="images/data.png" alt="Chart icon" style="width: 27px; height: auto; opacity: 0.6;"></div>
+                                <div>Add data to see preview</div>
                             </div>
                         </div>
                     </div>
@@ -2335,7 +2335,7 @@
             if (dataItems.length === 0) {
                 svg.style.display = 'none';
                 emptyState.style.display = 'block';
-                emptyState.innerHTML = '<div class="empty-icon">📊</div><div>Add data items to see preview</div>';
+                emptyState.innerHTML = '<div class="empty-icon"><img src="images/data.png" alt="Chart icon" style="width: 27px; height: auto; opacity: 0.6;"></div><div>Add data items to see preview</div>';
                 return;
             }
 
