@@ -2495,6 +2495,16 @@
                 const barX = leftPadding + barSpacing + (barWidth + barSpacing) * index;
                 const barY = svgHeight - bottomPadding - barHeight;
 
+                // Draw white background first
+                const whiteBackground = rc.rectangle(barX, barY, barWidth, barHeight, {
+                    fill: '#ffffff',
+                    fillStyle: 'solid',
+                    roughness: roughness,
+                    strokeWidth: 0,
+                    stroke: 'transparent'
+                });
+                svg.appendChild(whiteBackground);
+
                 // Draw the bar
                 const hachureGap = item.pattern === 'dots' ? 24 : (item.pattern === 'solid' ? 1 : 12);
                 const rect = rc.rectangle(barX, barY, barWidth, barHeight, {
@@ -2605,6 +2615,16 @@
                 const startAngle = currentAngle;
                 const endAngle = currentAngle + sliceAngle;
                 currentAngle = endAngle;
+
+                // Draw white background arc first
+                const whiteArc = rc.arc(centerX, centerY, radius * 2, radius * 2, startAngle, endAngle, true, {
+                    fill: '#ffffff',
+                    fillStyle: 'solid',
+                    roughness: roughness,
+                    strokeWidth: 0,
+                    stroke: 'transparent'
+                });
+                svg.appendChild(whiteArc);
 
                 // Draw pie slice
                 const hachureGap = item.pattern === 'dots' ? 24 : (item.pattern === 'solid' ? 1 : 12);
@@ -2782,8 +2802,19 @@
             points.forEach(({ x, y, item, index }) => {
                 // Draw the shape
                 const shapeSize = 15;
-                let shape;
+                let whiteShape, shape;
+
+                // Draw white background first
                 if (datapointShape === 'circle') {
+                    whiteShape = rc.circle(x, y, shapeSize * 2, {
+                        fill: '#ffffff',
+                        fillStyle: 'solid',
+                        roughness: roughness,
+                        strokeWidth: 0,
+                        stroke: 'transparent'
+                    });
+                    svg.appendChild(whiteShape);
+
                     shape = rc.circle(x, y, shapeSize * 2, {
                         fill: item.color,
                         fillStyle: 'solid',
@@ -2792,6 +2823,15 @@
                         stroke: '#333'
                     });
                 } else if (datapointShape === 'square') {
+                    whiteShape = rc.rectangle(x - shapeSize, y - shapeSize, shapeSize * 2, shapeSize * 2, {
+                        fill: '#ffffff',
+                        fillStyle: 'solid',
+                        roughness: roughness,
+                        strokeWidth: 0,
+                        stroke: 'transparent'
+                    });
+                    svg.appendChild(whiteShape);
+
                     shape = rc.rectangle(x - shapeSize, y - shapeSize, shapeSize * 2, shapeSize * 2, {
                         fill: item.color,
                         fillStyle: 'solid',
@@ -2806,6 +2846,15 @@
                         [x, y + shapeSize],
                         [x - shapeSize, y]
                     ];
+                    whiteShape = rc.polygon(points, {
+                        fill: '#ffffff',
+                        fillStyle: 'solid',
+                        roughness: roughness,
+                        strokeWidth: 0,
+                        stroke: 'transparent'
+                    });
+                    svg.appendChild(whiteShape);
+
                     shape = rc.polygon(points, {
                         fill: item.color,
                         fillStyle: 'solid',
@@ -2819,6 +2868,15 @@
                         [x + shapeSize, y + shapeSize],
                         [x - shapeSize, y + shapeSize]
                     ];
+                    whiteShape = rc.polygon(points, {
+                        fill: '#ffffff',
+                        fillStyle: 'solid',
+                        roughness: roughness,
+                        strokeWidth: 0,
+                        stroke: 'transparent'
+                    });
+                    svg.appendChild(whiteShape);
+
                     shape = rc.polygon(points, {
                         fill: item.color,
                         fillStyle: 'solid',
@@ -3182,6 +3240,16 @@
                 const shapeSize = 20; // Slightly larger for scatter plots
                 const hachureGap = item.pattern === 'dots' ? 24 : (item.pattern === 'solid' ? 1 : 12);
 
+                // Draw white background circle first
+                const whiteCircle = rc.circle(x, y, shapeSize * 2, {
+                    fill: '#ffffff',
+                    fillStyle: 'solid',
+                    roughness: roughness,
+                    strokeWidth: 0,
+                    stroke: 'transparent'
+                });
+                svg.appendChild(whiteCircle);
+
                 let shape = rc.circle(x, y, shapeSize * 2, {
                     fill: item.color,
                     fillStyle: item.pattern,
@@ -3315,6 +3383,16 @@
                 const barY = topPadding + barSpacing * (index + 1) + barHeight * index;
                 const barWidth = (item.value / maxValue) * chartWidth;
                 const barX = leftPadding;
+
+                // Draw white background first
+                const whiteBackground = rc.rectangle(barX, barY, barWidth, barHeight, {
+                    fill: '#ffffff',
+                    fillStyle: 'solid',
+                    roughness: roughness,
+                    strokeWidth: 0,
+                    stroke: 'transparent'
+                });
+                svg.appendChild(whiteBackground);
 
                 const hachureGap = item.pattern === 'dots' ? 24 : (item.pattern === 'solid' ? 1 : 12);
                 const rect = rc.rectangle(barX, barY, barWidth, barHeight, {
@@ -4070,6 +4148,16 @@
 
                     barGroup.innerHTML = '';
 
+                    // Draw white background first
+                    const whiteBackground = rc.rectangle(barX, currentY, barWidth, currentHeight, {
+                        fill: '#ffffff',
+                        fillStyle: 'solid',
+                        roughness: roughness,
+                        strokeWidth: 0,
+                        stroke: 'transparent'
+                    });
+                    barGroup.appendChild(whiteBackground);
+
                     const hachureGap = item.pattern === 'dots' ? 24 : (item.pattern === 'solid' ? 1 : 12);
                     const bar = rc.rectangle(barX, currentY, barWidth, currentHeight, {
                         fill: item.color,
@@ -4206,6 +4294,16 @@
                         const pathData = `M ${centerX} ${centerY} L ${x1} ${y1} A ${radius} ${radius} 0 ${largeArcFlag} 1 ${x2} ${y2} Z`;
                         const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
                         path.setAttribute('d', pathData);
+
+                        // Draw white background first
+                        const whitePath = rc.path(pathData, {
+                            fill: '#ffffff',
+                            fillStyle: 'solid',
+                            roughness: roughness,
+                            strokeWidth: 0,
+                            stroke: 'transparent'
+                        });
+                        sliceGroup.appendChild(whitePath);
 
                         const hachureGap = item.pattern === 'dots' ? 24 : (item.pattern === 'solid' ? 1 : 12);
                         const roughPath = rc.path(pathData, {
@@ -4407,9 +4505,19 @@
 
                 for (let i = 0; i < visiblePoints; i++) {
                     const hachureGap = points[i].item.pattern === 'dots' ? 24 : (points[i].item.pattern === 'solid' ? 1 : 12);
-                    let shape;
+                    let whiteShape, shape;
 
                     if (datapointShape === 'circle') {
+                        // Draw white background first
+                        whiteShape = rc.circle(points[i].x, points[i].y, 16, {
+                            fill: '#ffffff',
+                            fillStyle: 'solid',
+                            roughness: roughness,
+                            strokeWidth: 0,
+                            stroke: 'transparent'
+                        });
+                        pointGroups[i].appendChild(whiteShape);
+
                         shape = rc.circle(points[i].x, points[i].y, 16, {
                             fill: points[i].item.color,
                             fillStyle: points[i].item.pattern,
@@ -4421,6 +4529,16 @@
                             hachureGap: hachureGap
                         });
                     } else if (datapointShape === 'square') {
+                        // Draw white background first
+                        whiteShape = rc.rectangle(points[i].x - 8, points[i].y - 8, 16, 16, {
+                            fill: '#ffffff',
+                            fillStyle: 'solid',
+                            roughness: roughness,
+                            strokeWidth: 0,
+                            stroke: 'transparent'
+                        });
+                        pointGroups[i].appendChild(whiteShape);
+
                         shape = rc.rectangle(points[i].x - 8, points[i].y - 8, 16, 16, {
                             fill: points[i].item.color,
                             fillStyle: points[i].item.pattern,
@@ -4433,6 +4551,17 @@
                         });
                     } else if (datapointShape === 'diamond') {
                         const path = `M ${points[i].x} ${points[i].y - 10} L ${points[i].x + 10} ${points[i].y} L ${points[i].x} ${points[i].y + 10} L ${points[i].x - 10} ${points[i].y} Z`;
+
+                        // Draw white background first
+                        whiteShape = rc.path(path, {
+                            fill: '#ffffff',
+                            fillStyle: 'solid',
+                            roughness: roughness,
+                            strokeWidth: 0,
+                            stroke: 'transparent'
+                        });
+                        pointGroups[i].appendChild(whiteShape);
+
                         shape = rc.path(path, {
                             fill: points[i].item.color,
                             fillStyle: points[i].item.pattern,
@@ -4445,6 +4574,17 @@
                         });
                     } else if (datapointShape === 'triangle') {
                         const path = `M ${points[i].x} ${points[i].y - 10} L ${points[i].x + 10} ${points[i].y + 8} L ${points[i].x - 10} ${points[i].y + 8} Z`;
+
+                        // Draw white background first
+                        whiteShape = rc.path(path, {
+                            fill: '#ffffff',
+                            fillStyle: 'solid',
+                            roughness: roughness,
+                            strokeWidth: 0,
+                            stroke: 'transparent'
+                        });
+                        pointGroups[i].appendChild(whiteShape);
+
                         shape = rc.path(path, {
                             fill: points[i].item.color,
                             fillStyle: points[i].item.pattern,
@@ -4836,6 +4976,16 @@
                     const shapeSize = 20;
                     const hachureGap = item.pattern === 'dots' ? 24 : (item.pattern === 'solid' ? 1 : 12);
 
+                    // Draw white background circle first
+                    const whiteCircle = rc.circle(x, y, shapeSize * 2, {
+                        fill: '#ffffff',
+                        fillStyle: 'solid',
+                        roughness: roughness,
+                        strokeWidth: 0,
+                        stroke: 'transparent'
+                    });
+                    group.appendChild(whiteCircle);
+
                     const shape = rc.circle(x, y, shapeSize * 2, {
                         fill: item.color,
                         fillStyle: item.pattern,
@@ -4980,6 +5130,16 @@
                 bars.forEach(({ barGroup, barX, barY, barWidth, barHeight, item }) => {
                     const currentWidth = barWidth * progress;
                     barGroup.innerHTML = '';
+
+                    // Draw white background first
+                    const whiteBackground = rc.rectangle(barX, barY, currentWidth, barHeight, {
+                        fill: '#ffffff',
+                        fillStyle: 'solid',
+                        roughness: roughness,
+                        strokeWidth: 0,
+                        stroke: 'transparent'
+                    });
+                    barGroup.appendChild(whiteBackground);
 
                     const hachureGap = item.pattern === 'dots' ? 24 : (item.pattern === 'solid' ? 1 : 12);
                     const rect = rc.rectangle(barX, barY, currentWidth, barHeight, {
