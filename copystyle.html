@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Xào</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    @font-face {
+      font-family: 'HmtRegular';
+      src: url('HmtRegular-WRrv.ttf') format('truetype');
+      font-weight: normal;
+      font-style: normal;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #ecebe4;
+      background-image: url('data:image/svg+xml;utf8,<svg width="28" height="28" xmlns="http://www.w3.org/2000/svg"><circle cx="14" cy="14" r="1" fill="%23d2d1c7"/></svg>');
+      background-size: 28px 28px;
+      min-height: 100vh;
+      padding: 40px 20px;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    /* Doodle decorations */
+    body::before,
+    body::after {
+      content: '';
+      position: fixed;
+      border-radius: 50%;
+      opacity: 0.15;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    body::before {
+      background: #6ba3ff;
+      width: 50vh;
+      height: 50vh;
+      top: 20%;
+      left: -10vh;
+      animation: float 6s ease-in-out infinite;
+    }
+
+    body::after {
+      background: #4ecdc4;
+      width: 150px;
+      height: 150px;
+      bottom: 15%;
+      right: 8%;
+      animation: float 8s ease-in-out infinite reverse;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      50% { transform: translateY(-20px) rotate(5deg); }
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Header */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 60px;
+      position: relative;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .profile-image {
+      width: 120px;
+      height: auto;
+    }
+
+    h1 {
+      font-family: 'HmtRegular', 'Inter', sans-serif;
+      font-size: 4.5rem;
+      color: #2d3436;
+      text-shadow: 3px 3px 0px rgba(107, 163, 255, 0.3);
+      display: inline-block;
+      margin: 0;
+    }
+
+    .subtitle {
+      font-size: 1.2rem;
+      color: #636e72;
+      font-weight: 400;
+      margin-top: 10px;
+    }
+
+    /* Navigation */
+    .nav-menu {
+      display: flex;
+      flex-direction: row;
+      gap: 0;
+      align-items: center;
+      justify-content: flex-end;
+    }
+
+    .nav-menu a {
+      font-family: 'HmtRegular', 'Inter', sans-serif;
+      font-size: 2rem;
+      color: #2d3436;
+      text-decoration: none;
+      transition: all 0.3s ease;
+      position: relative;
+      padding: 0 30px;
+    }
+
+    .nav-menu a:not(:last-child)::before {
+      content: '/';
+      position: absolute;
+      right: -2px;
+      color: #2d3436;
+      font-family: 'HmtRegular', 'Inter', sans-serif;
+      font-size: 2rem;
+    }
+
+    .nav-menu a:hover {
+      color: #6ba3ff;
+      transform: translateY(-2px);
+    }
+
+    .nav-menu a::after {
+      content: '';
+      position: absolute;
+      bottom: -5px;
+      left: 0;
+      width: 0;
+      height: 3px;
+      background: #6ba3ff;
+      transition: width 0.3s ease;
+    }
+
+    .nav-menu a:hover::after {
+      width: 100%;
+    }
+
+    .nav-menu a.active {
+      color: #6ba3ff;
+      font-weight: 700;
+    }
+
+    /* Squiggle decoration */
+    .squiggle {
+      width: 200px;
+      height: 20px;
+      margin: 20px auto;
+      background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="20"><path d="M 0 10 Q 25 0, 50 10 T 100 10 T 150 10 T 200 10" stroke="%236ba3ff" stroke-width="3" fill="none" stroke-linecap="round"/></svg>') no-repeat center;
+    }
+
+    /* Portfolio Grid */
+    .portfolio-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 40px;
+      padding: 20px 0;
+    }
+
+    /* Product Cards */
+    .product-card {
+      background: white;
+      border-radius: 20px;
+      padding: 30px;
+      position: relative;
+      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      cursor: pointer;
+      text-decoration: none;
+      color: inherit;
+      display: block;
+      box-shadow:
+        3px 3px 0px rgba(0, 0, 0, 0.05),
+        6px 6px 0px rgba(107, 163, 255, 0.08);
+      border: 1px solid rgba(45, 52, 54, 0.15);
+      min-height: 280px;
+    }
+
+
+    .product-card:hover {
+      transform: translateY(-10px) rotate(2deg);
+      box-shadow:
+        5px 5px 0px rgba(0, 0, 0, 0.08),
+        10px 10px 0px rgba(107, 163, 255, 0.12);
+    }
+
+    .product-card:nth-child(even) {
+      transform: rotate(1deg);
+    }
+
+    .product-card:nth-child(odd) {
+      transform: rotate(-1deg);
+    }
+
+    .product-card:nth-child(even):hover {
+      transform: translateY(-10px) rotate(3deg);
+    }
+
+    .product-card:nth-child(odd):hover {
+      transform: translateY(-10px) rotate(-3deg);
+    }
+
+    /* Card Number */
+    .card-number {
+      font-family: 'HmtRegular', 'Inter', sans-serif;
+      font-size: 3rem;
+      font-weight: 700;
+      position: absolute;
+      top: -15px;
+      left: 20px;
+      color: #6ba3ff;
+      text-shadow: 2px 2px 0px white;
+      z-index: 1;
+    }
+
+    .product-title {
+      font-family: 'HmtRegular', 'Inter', sans-serif;
+      font-size: 2rem;
+      font-weight: 700;
+      color: #2d3436;
+      margin-bottom: 15px;
+      margin-top: 20px;
+      line-height: 1.2;
+    }
+
+    .product-description {
+      font-size: 1rem;
+      color: #636e72;
+      line-height: 1.6;
+      margin-bottom: 20px;
+    }
+
+    .product-tag {
+      display: inline-block;
+      padding: 6px 16px;
+      background: linear-gradient(135deg, #d4e7ff 0%, #a8d0ff 100%);
+      border: none;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #2d3436;
+      margin-top: auto;
+      transform: rotate(-2deg);
+    }
+
+    /* Product Icon/Emoji */
+    .product-icon {
+      width: 140px;
+      height: 140px;
+      margin: 0 auto 20px auto;
+      display: block;
+      object-fit: contain;
+      filter: drop-shadow(3px 3px 0px rgba(0, 0, 0, 0.1));
+    }
+
+    /* Color variations for cards */
+    .product-card:nth-child(1) { background: #ffffff; }
+    .product-card:nth-child(2) { background: #fffefb; }
+    .product-card:nth-child(3) { background: #ffffff; }
+    .product-card:nth-child(4) { background: #fffefb; }
+    .product-card:nth-child(5) { background: #ffffff; }
+    .product-card:nth-child(6) { background: #fffefb; }
+    .product-card:nth-child(7) { background: #ffffff; }
+    .product-card:nth-child(8) { background: #fffefb; }
+
+    /* Locked cards */
+    .product-card.locked {
+      opacity: 0.6;
+      filter: grayscale(40%);
+      cursor: not-allowed;
+      position: relative;
+    }
+
+    .product-card.locked:nth-child(even):hover {
+      transform: translateY(-10px) rotate(3deg) !important;
+    }
+
+    .product-card.locked:nth-child(odd):hover {
+      transform: translateY(-10px) rotate(-3deg) !important;
+    }
+
+    .product-card.locked .product-title,
+    .product-card.locked .product-description {
+      opacity: 0.5;
+    }
+
+    .product-card.locked .product-icon {
+      filter: grayscale(100%) brightness(1.2) drop-shadow(3px 3px 0px rgba(0, 0, 0, 0.1));
+    }
+
+    .lock-badge {
+      position: absolute;
+      bottom: 20%;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-family: 'Inter', sans-serif;
+      font-size: 1rem;
+      font-weight: 600;
+      color: #2d3436;
+      white-space: nowrap;
+    }
+
+    .lock-icon {
+      font-size: 1.2rem;
+    }
+
+    /* Doodle arrows */
+    .doodle-arrow {
+      position: absolute;
+      width: 80px;
+      height: 60px;
+      opacity: 0.3;
+      pointer-events: none;
+    }
+
+    .arrow-1 {
+      top: 15%;
+      right: 10%;
+      transform: rotate(-15deg);
+    }
+
+    .arrow-2 {
+      bottom: 20%;
+      left: 8%;
+      transform: rotate(165deg);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      h1 {
+        font-size: 3rem;
+      }
+
+      .product-card {
+        transform: rotate(0deg) !important;
+        min-height: auto;
+      }
+
+      .product-card:hover {
+        transform: translateY(-5px) rotate(0deg) !important;
+      }
+
+      .portfolio-grid {
+        grid-template-columns: 1fr;
+        gap: 30px;
+      }
+    }
+
+    /* Fun hover effects for icons */
+    .product-card:hover .product-icon {
+      animation: wiggle 0.5s ease-in-out;
+    }
+
+    @keyframes wiggle {
+      0%, 100% { transform: rotate(0deg); }
+      25% { transform: rotate(-10deg); }
+      75% { transform: rotate(10deg); }
+    }
+  </style>
+</head>
+<body>
+  <script>
+    // Reload GIF every 30 seconds to replay it
+    setInterval(function() {
+      const gifElement = document.querySelector('.profile-image');
+      const timestamp = new Date().getTime();
+      gifElement.src = 'images/mefn.gif?t=' + timestamp;
+    }, 30000); // 30 seconds
+  </script>
+  <!-- Doodle decorations -->
+  <svg class="doodle-arrow arrow-1" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <path d="M 10 50 Q 30 30, 50 50 T 90 50" stroke="#6ba3ff" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <path d="M 90 50 L 80 45 M 90 50 L 85 60" stroke="#6ba3ff" stroke-width="3" fill="none" stroke-linecap="round"/>
+  </svg>
+
+  <svg class="doodle-arrow arrow-2" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <path d="M 10 50 Q 30 30, 50 50 T 90 50" stroke="#4ecdc4" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <path d="M 90 50 L 80 45 M 90 50 L 85 60" stroke="#4ecdc4" stroke-width="3" fill="none" stroke-linecap="round"/>
+  </svg>
+
+  <div class="container">
+    <header>
+      <div class="header-left">
+        <img src="images/mefn.gif" alt="Trân illustration" class="profile-image">
+        <h1>Xào Ý Tưởng</h1>
+      </div>
+      <nav class="nav-menu">
+        <a href="index.html" class="active">Dự án</a>
+        <a href="#about">Về Xào</a>
+        <a href="#blog">Blog</a>
+        <a href="contact.html">Liên hệ</a>
+      </nav>
+    </header>
+
+    <div class="portfolio-grid">
+      <!-- Product 1: Business Course -->
+      <a href="index1.html" class="product-card">
+        <span class="card-number">01</span>
+        <img src="images/icon1.png" alt="Product icon" class="product-icon">
+        <h2 class="product-title">Bộ công cụ khởi nghiệp trong 30 ngày</h2>
+        <p class="product-description">Lên ý tưởng và chiến lược kinh doanh hoàn chỉnh trong 30 ngày, dành cho người mới bắt đầu khởi nghiệp.</p>
+      </a>
+
+      <!-- Product 2 -->
+      <a href="index2.html" class="product-card">
+        <span class="card-number">02</span>
+        <img src="images/icon2.png" alt="Product icon" class="product-icon">
+        <h2 class="product-title">Chiến lược kinh doanh 301</h2>
+        <p class="product-description">Học phân tích chiến lược kinh doanh qua các bài viết chuyên sâu về 10 ngành hot trong những năm vừa qua.</p>
+      </a>
+
+      <!-- Product 3 -->
+      <a href="index3.html" class="product-card">
+        <span class="card-number">03</span>
+        <img src="images/icon3.png" alt="Product icon" class="product-icon">
+        <h2 class="product-title">Kho dữ liệu 6000+ ý tưởng khởi nghiệp</h2>
+        <p class="product-description">Tìm cảm hứng khởi nghiệp và học hỏi từ 6k+ công ty khởi nghiệp tại Mỹ và các quốc gia khác.</p>
+      </a>
+
+      <!-- Product 4 -->
+      <a href="index4.html" class="product-card">
+        <span class="card-number">04</span>
+        <img src="images/icon4.png" alt="Product icon" class="product-icon">
+        <h2 class="product-title">Sách: Bẻ cong</h2>
+        <p class="product-description">Những câu chuyện nhỏ và những bí kiếp lớn tui học được trên con đường trở thành top 0.1% người thành đạt.</p>
+      </a>
+
+      <!-- Product 5 -->
+      <a href="index5.html" class="product-card">
+        <span class="card-number">05</span>
+        <img src="images/icon5.png" alt="Product icon" class="product-icon">
+        <h2 class="product-title">Sách: PM interview secret (tiếng Anh)</h2>
+        <p class="product-description">Bí quyết chinh phục phỏng vấn Product Manager tại các công ty công nghệ hàng đầu.</p>
+      </a>
+
+      <!-- Product 6 -->
+      <div class="product-card locked">
+        <span class="card-number">06</span>
+        <img src="images/icon6.png" alt="Product icon" class="product-icon">
+        <h2 class="product-title">Kỹ năng ngôn ngữ cơ thể (body language)</h2>
+        <!-- <p class="product-description">Track your goals with a fun, visual interface. Celebrate small wins and stay motivated every day.</p> -->
+        <!-- <span class="product-tag">Xem chi tiết</span> -->
+        <div class="lock-badge">
+          <span class="lock-icon">🔒</span>
+          <span>Sắp ra mắt</span>
+        </div>
+      </div>
+
+      <!-- Product 7 -->
+      <div class="product-card locked">
+        <span class="card-number">07</span>
+        <img src="images/icon7.png" alt="Product icon" class="product-icon">
+        <h2 class="product-title">Kỹ năng kể chuyện (storytelling)</h2>
+        <!-- <p class="product-description">Capture and organize your random thoughts and ideas. Never forget that brilliant midnight inspiration again.</p> -->
+        <!-- <span class="product-tag">Xem chi tiết</span> -->
+        <div class="lock-badge">
+          <span class="lock-icon">🔒</span>
+          <span>Sắp ra mắt</span>
+        </div>
+      </div>
+
+      <!-- Product 8 -->
+      <div class="product-card locked">
+        <span class="card-number">08</span>
+        <img src="images/icon8.png" alt="Product icon" class="product-icon">
+        <h2 class="product-title">Cách sử dụng tâm lý học trong kinh doanh</h2>
+        <!-- <p class="product-description">Generate beautiful, accessible color palettes for your next project. Export in multiple formats.</p> -->
+        <!-- <span class="product-tag">Xem chi tiết</span> -->
+        <div class="lock-badge">
+          <span class="lock-icon">🔒</span>
+          <span>Sắp ra mắt</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

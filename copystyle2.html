@@ -1,0 +1,1074 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>30 ngay khoi nghiep</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    @font-face {
+      font-family: 'HmtRegular';
+      src: url('HmtRegular-WRrv.ttf') format('truetype');
+      font-weight: normal;
+      font-style: normal;
+    }
+    @font-face {
+      font-family: 'BeVietnamPro';
+      src: url('Be_Vietnam_Pro/BeVietnamPro-Regular.ttf') format('truetype');
+      font-weight: 400;
+      font-style: normal;
+    }
+    @font-face {
+      font-family: 'BeVietnamPro';
+      src: url('Be_Vietnam_Pro/BeVietnamPro-Medium.ttf') format('truetype');
+      font-weight: 500;
+      font-style: normal;
+    }
+    @font-face {
+      font-family: 'BeVietnamPro';
+      src: url('Be_Vietnam_Pro/BeVietnamPro-SemiBold.ttf') format('truetype');
+      font-weight: 600;
+      font-style: normal;
+    }
+    @font-face {
+      font-family: 'BeVietnamPro';
+      src: url('Be_Vietnam_Pro/BeVietnamPro-Bold.ttf') format('truetype');
+      font-weight: 700;
+      font-style: normal;
+    }
+    body {
+      font-family: 'BeVietnamPro', sans-serif;
+      background-color: #ecebe4;
+      background-image: url('data:image/svg+xml;utf8,<svg width="28" height="28" xmlns="http://www.w3.org/2000/svg"><circle cx="14" cy="14" r="1" fill="%23d2d1c7"/></svg>');
+      background-size: 28px 28px;
+      margin: 0;
+      padding: 0;
+      position: relative;
+      overflow-x: hidden;
+    }
+    /* Animated background circles */
+    body::before,
+    body::after {
+      content: '';
+      position: fixed;
+      border-radius: 50%;
+      opacity: 0.15;
+      pointer-events: none;
+      z-index: 0;
+    }
+    body::before {
+      background: #4db8d8;
+      width: 50vh;
+      height: 50vh;
+      top: 20%;
+      left: -10vh;
+      animation: float 6s ease-in-out infinite;
+    }
+    body::after {
+      background: #ff8c42;
+      width: 150px;
+      height: 150px;
+      bottom: 15%;
+      right: 8%;
+      animation: float 8s ease-in-out infinite reverse;
+    }
+    @keyframes float {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      50% { transform: translateY(-20px) rotate(5deg); }
+    }
+    .logo {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      z-index: 100;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .logo:hover {
+      transform: scale(1.1);
+      box-shadow: 0 6px 16px rgba(0,0,0,0.25);
+    }
+    .logo img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .site-title {
+      position: fixed;
+      top: 85px;
+      left: 20px;
+      z-index: 100;
+      font-family: 'HmtRegular', 'BeVietnamPro', sans-serif;
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: #333;
+      text-align: center;
+      width: 60px;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 40px auto;
+      padding: 0 16px;
+      position: relative;
+      z-index: 1;
+    }
+    h1 {
+      text-align: left;
+      margin-bottom: 24px;
+      color: #222;
+      font-family: 'BeVietnamPro', sans-serif;
+      font-size: 2.5rem;
+      letter-spacing: 1px;
+      line-height: 1.3;
+    }
+    .title-regular {
+      font-family: 'HmtRegular', 'BeVietnamPro', sans-serif;
+      font-weight: 600;
+      color: #4db8d8;
+      font-size: 4rem;
+    }
+    .title-highlight {
+      font-family: 'HmtRegular', 'BeVietnamPro', sans-serif;
+      font-weight: 700;
+      color: #e67326;
+      font-size: 5rem;
+    }
+    .header-section h1 {
+      text-align: left;
+    }
+    .header-section .subtitle {
+      text-align: left;
+    }
+    .header-section .intro-text {
+      text-align: left;
+      margin: 0;
+    }
+    h2 {
+      text-align: center;
+      margin-top: 64px;
+      margin-bottom: 32px;
+      color: #e67326;
+      font-family: 'HmtRegular', 'BeVietnamPro', sans-serif;
+      font-size: 3.2rem;
+      font-weight: 500;
+      letter-spacing: 0.5px;
+    }
+    .subtitle {
+      text-align: center;
+      font-family: 'BeVietnamPro', sans-serif;
+      font-size: 1.3rem;
+      /* font-weight: 300; */
+      color: #555555;
+      margin: 6px 0 48px 0;
+      line-height: 1.5;
+    }
+    .intro-text {
+      text-align: center;
+      font-size: 1.3rem;
+      color: #555;
+      max-width: 800px;
+      margin: 0 auto 48px auto;
+      line-height: 1.6;
+    }
+    .header-section {
+      position: relative;
+      margin-bottom: 48px;
+      display: flex;
+      gap: 40px;
+      align-items: center;
+    }
+    .header-content {
+      flex: 1;
+      max-width: 45%;
+      display: flex;
+      flex-direction: column;
+    }
+    .product-image {
+      flex: 1;
+      width: 55%;
+      max-width: 55%;
+      height: auto;
+      object-fit: contain;
+      opacity: 0.95;
+    }
+    .tools-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 24px;
+      margin-bottom: 48px;
+    }
+    .tool-card {
+      background-color: #fffefb;
+      background-image: url('data:image/svg+xml;utf8,<svg width="32" height="32" xmlns="http://www.w3.org/2000/svg"><rect width="32" height="32" fill="none"/><line x1="0" y1="0" x2="0" y2="32" stroke="%23ececec" stroke-width="1"/><line x1="0" y1="0" x2="32" y2="0" stroke="%23ececec" stroke-width="1"/></svg>');
+      background-size: 32px 32px;
+      border-radius: 14px 32px 14px 14px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.10);
+      padding: 24px 20px;
+      transition: transform 0.18s cubic-bezier(.22,1,.36,1), box-shadow 0.18s cubic-bezier(.22,1,.36,1), background 0.15s;
+      display: flex;
+      flex-direction: column;
+      min-height: 280px;
+      position: relative;
+    }
+    .tool-card:hover {
+      transform: scale(1.045) translateY(-4px);
+      box-shadow: 0 12px 32px rgba(0,0,0,0.18);
+      background-color: #d4e8f0;
+    }
+    .tool-number {
+      font-family: 'HmtRegular', 'BeVietnamPro', sans-serif;
+      font-size: 3rem;
+      font-weight: 700;
+      position: absolute;
+      top: -15px;
+      left: 20px;
+      color: #ff8c42;
+      text-shadow: 2px 2px 0px white;
+      z-index: 1;
+    }
+    .tool-title {
+      font-size: 1.2rem;
+      font-weight: 300;
+      margin-top: 20px;
+      margin-bottom: 0;
+      margin-right: 6px;
+      font-family: 'BeVietnamPro', sans-serif;
+      color: #e67326;
+      display: inline;
+    }
+    .tool-desc {
+      font-size: 1rem;
+      color: #555;
+      line-height: 1.5;
+      flex: 1;
+      margin-bottom: 16px;
+      display: inline;
+    }
+    .tool-image {
+      width: 100%;
+      max-width: 140px;
+      height: 140px;
+      display: block;
+      margin: auto auto 0 auto;
+      object-fit: contain;
+    }
+    .benefits-list {
+      max-width: 900px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .benefit-item {
+      background-color: #fffefb;
+      background-image: url('data:image/svg+xml;utf8,<svg width="32" height="32" xmlns="http://www.w3.org/2000/svg"><rect width="32" height="32" fill="none"/><line x1="0" y1="0" x2="0" y2="32" stroke="%23ececec" stroke-width="1"/><line x1="0" y1="0" x2="32" y2="0" stroke="%23ececec" stroke-width="1"/></svg>');
+      background-size: 32px 32px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      padding: 24px 28px;
+      transition: box-shadow 0.2s, transform 0.2s;
+      display: flex;
+      align-items: flex-start;
+      gap: 20px;
+    }
+    .benefit-item:hover {
+      box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+      transform: translateY(-2px);
+    }
+    .benefit-number {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #ffe066;
+      background-color: #222;
+      border-radius: 50%;
+      width: 48px;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-family: 'HmtRegular', 'BeVietnamPro', sans-serif;
+    }
+    .benefit-content {
+      flex: 1;
+    }
+    .benefit-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+      font-family: 'HmtRegular', 'BeVietnamPro', sans-serif;
+      color: #222;
+    }
+    .benefit-desc {
+      font-size: 1.1rem;
+      color: #555;
+      line-height: 1.5;
+    }
+    .user-types-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 32px;
+      margin-bottom: 64px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .user-type-card {
+      padding: 32px 24px;
+      text-align: center;
+      transition: transform 0.18s cubic-bezier(.22,1,.36,1);
+    }
+    .user-type-card:hover {
+      transform: translateY(-6px);
+    }
+    .user-type-image {
+      width: 156px;
+      height: 156px;
+      margin: 0 auto 20px auto;
+      display: block;
+      object-fit: contain;
+    }
+    .user-type-title {
+      font-size: 1.3rem;
+      font-weight: 300;
+      margin-bottom: 12px;
+      font-family: 'BeVietnamPro', sans-serif;
+      color: #555555;
+    }
+    .user-type-desc {
+      font-size: 1rem;
+      color: #555;
+      line-height: 1.6;
+    }
+    .purchase-section {
+      margin-top: 80px;
+      margin-bottom: 64px;
+    }
+    .purchase-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 32px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    .purchase-card {
+      background-color: #fffefb;
+      background-image: url('data:image/svg+xml;utf8,<svg width="32" height="32" xmlns="http://www.w3.org/2000/svg"><rect width="32" height="32" fill="none"/><line x1="0" y1="0" x2="0" y2="32" stroke="%23ececec" stroke-width="1"/><line x1="0" y1="0" x2="32" y2="0" stroke="%23ececec" stroke-width="1"/></svg>');
+      background-size: 32px 32px;
+      border-radius: 16px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+      padding: 40px 32px;
+      text-align: center;
+      transition: transform 0.2s, box-shadow 0.2s;
+      position: relative;
+    }
+    .purchase-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.16);
+    }
+    .purchase-card:not(.sold-out):hover::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      border-radius: 16px;
+      padding: 3px;
+      background: linear-gradient(90deg, #4db8d8, #2da0c0, #4db8d8, #2da0c0);
+      background-size: 300% 100%;
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      mask-composite: exclude;
+      animation: borderRun 2s linear infinite;
+      pointer-events: none;
+    }
+    @keyframes borderRun {
+      0% {
+        background-position: 0% 0%;
+      }
+      100% {
+        background-position: 300% 0%;
+      }
+    }
+    .purchase-card.sold-out {
+      opacity: 0.6;
+    }
+    .purchase-card.sold-out:hover {
+      transform: none;
+    }
+    .sold-out-badge {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background-color: #ff4444;
+      color: white;
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      font-family: 'BeVietnamPro', sans-serif;
+    }
+    .purchase-title {
+      font-family: 'HmtRegular', 'BeVietnamPro', sans-serif;
+      font-size: 2.5rem;
+      font-weight: 600;
+      color: #222;
+      margin-bottom: 16px;
+    }
+    .purchase-type {
+      font-size: 1.1rem;
+      color: #777;
+      margin-bottom: 24px;
+      font-family: 'BeVietnamPro', sans-serif;
+    }
+    .purchase-price {
+      font-family: 'HmtRegular', 'BeVietnamPro', sans-serif;
+      font-size: 3rem;
+      font-weight: 700;
+      color: #e67326;
+      margin-bottom: 8px;
+    }
+    .purchase-currency {
+      font-size: 1.2rem;
+      color: #777;
+      margin-bottom: 32px;
+    }
+    .purchase-button {
+      background-color: #4db8d8;
+      color: white;
+      border: none;
+      padding: 16px 48px;
+      border-radius: 8px;
+      font-size: 1.2rem;
+      font-weight: 600;
+      font-family: 'BeVietnamPro', sans-serif;
+      cursor: pointer;
+      transition: background-color 0.2s, transform 0.1s;
+    }
+    .purchase-button:hover {
+      background-color: #2da0c0;
+      transform: scale(1.05);
+    }
+    .purchase-button:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+      transform: none;
+    }
+    /* Modal styles */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      animation: fadeIn 0.3s ease-in-out;
+    }
+    .modal.show {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-content {
+      background-color: #fffefb;
+      background-image: url('data:image/svg+xml;utf8,<svg width="32" height="32" xmlns="http://www.w3.org/2000/svg"><rect width="32" height="32" fill="none"/><line x1="0" y1="0" x2="0" y2="32" stroke="%23ececec" stroke-width="1"/><line x1="0" y1="0" x2="32" y2="0" stroke="%23ececec" stroke-width="1"/></svg>');
+      background-size: 32px 32px;
+      border-radius: 14px 32px 14px 14px;
+      box-shadow: 0 12px 32px rgba(0,0,0,0.25);
+      padding: 24px 40px 40px 40px;
+      max-width: 900px;
+      width: 90%;
+      position: relative;
+      animation: slideUp 0.3s ease-out;
+    }
+    .modal-steps-container {
+      display: flex;
+      gap: 24px;
+      padding: 0 20px;
+    }
+    .modal-step-wrapper {
+      flex: 1;
+    }
+    .modal-step-2-footer {
+      margin-top: 20px;
+    }
+    .modal-close {
+      position: absolute;
+      top: 16px;
+      right: 20px;
+      font-size: 2rem;
+      font-weight: 300;
+      color: #888;
+      cursor: pointer;
+      transition: color 0.2s;
+      background: none;
+      border: none;
+      line-height: 1;
+    }
+    .modal-close:hover {
+      color: #e67326;
+    }
+    .modal-title {
+      font-family: 'HmtRegular', 'BeVietnamPro', sans-serif;
+      font-size: 2.5rem;
+      color: #e67326;
+      margin-top: 0;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    .modal-text {
+      font-family: 'BeVietnamPro', sans-serif;
+      font-size: 1.2rem;
+      color: #555;
+      line-height: 1.6;
+      text-align: left;
+      margin-bottom: 24px;
+      padding: 0 20px;
+    }
+    .modal-step {
+      background-color: #f8f8f6;
+      border-left: 4px solid #4db8d8;
+      border-radius: 8px;
+      padding: 20px 24px;
+      margin-bottom: 20px;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .modal-step:hover {
+      transform: translateX(4px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+    .modal-step-number {
+      font-family: 'HmtRegular', 'BeVietnamPro', sans-serif;
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: #4db8d8;
+      margin-bottom: 12px;
+      display: block;
+    }
+    .modal-step-content {
+      font-size: 1.1rem;
+      color: #555;
+      line-height: 1.7;
+    }
+    .modal-step-detail {
+      margin-left: 16px;
+      margin-top: 8px;
+    }
+    .modal-link {
+      display: inline-block;
+      padding: 14px 32px;
+      background-color: #4db8d8;
+      color: white;
+      text-decoration: none;
+      border-radius: 8px;
+      font-family: 'Inter', sans-serif;
+      font-weight: 700;
+      font-size: 1.1rem;
+      transition: all 0.2s;
+      box-shadow: 0 4px 12px rgba(77, 184, 216, 0.3);
+    }
+    .modal-link:hover {
+      background-color: #3ca5c3;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(77, 184, 216, 0.4);
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    @keyframes slideUp {
+      from {
+        transform: translateY(50px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    .download-button {
+      display: block;
+      margin-top: 16px;
+      padding: 10px 20px;
+      background-color: #4db8d8;
+      color: white;
+      text-decoration: none;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      text-align: center;
+      transition: all 0.2s;
+      border: none;
+      cursor: pointer;
+      font-family: 'BeVietnamPro', sans-serif;
+    }
+    .download-button:hover {
+      background-color: #3ca5c3;
+      transform: translateY(-2px);
+    }
+    @media (max-width: 768px) {
+      h1 {
+        font-size: 3rem;
+      }
+      h2 {
+        font-size: 2.4rem;
+      }
+      .subtitle {
+        font-size: 1.7rem;
+      }
+      .header-section {
+        flex-direction: column;
+        align-items: center;
+      }
+      .header-content {
+        max-width: 100%;
+      }
+      .product-image {
+        width: 100%;
+        max-width: 300px;
+        order: -1;
+      }
+      .header-section h1,
+      .header-section .subtitle,
+      .header-section .intro-text {
+        text-align: center;
+      }
+      .purchase-grid {
+        grid-template-columns: 1fr;
+        gap: 24px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <a href="index.html" class="logo">
+    <img src="images/mefn.gif" alt="Logo">
+  </a>
+  <div class="site-title">Xào</div>
+  <div class="container">
+    <div class="header-section">
+      <div class="header-content">
+        <div>
+          <h1><span class="title-highlight"><span id="counter">30</span> ngày,</span> <span class="title-regular">khởi nghiệp</span></h1>
+          <img src="images1/divider.png" alt="Divider" style="width: 100%; display: block; margin: 20px 0;">
+        </div>
+
+        <div class="subtitle" style="margin-top: auto;">Dựa trên đào tạo khởi nghiệp tại top 3 chương trình MBA tại Mỹ và quá trình phát triển sản phẩm tại các công ty lớn như Google, Amazon.
+
+
+        </div>
+      </div>
+      <img src="box.png" alt="Entrepreneurs Box" class="product-image">
+    </div>
+
+    <!-- <img src="images1/calendar.png" alt="Calendar" style="width: 100%; display: block; margin: 48px 0;"> -->
+
+    <!-- Section 1: Who Benefits from the Box -->
+    <h2>Bạn có nằm trong số một trong 3 nhóm người sau?</h2>
+    <!-- <div class="subtitle">Bạn có nằm trong số một trong 3 nhóm người sau?</div> -->
+
+    <div class="user-types-grid">
+      <div class="user-type-card">
+        <img src="images1/user1.png" alt="User Type 1" class="user-type-image">
+        <div class="user-type-title">Muốn biến đam mê thành sản phẩm kiếm tiền được</div>
+        <!-- <div class="user-type-desc">
+          Bạn có ý tưởng kinh doanh nhưng không biết bắt đầu từ đâu. Hộp này sẽ hướng dẫn bạn từng bước một.
+        </div> -->
+      </div>
+
+      <div class="user-type-card">
+        <img src="images1/user2.png" alt="User Type 2" class="user-type-image">
+        <div class="user-type-title">Muốn khởi nghiệp nhưng không biết bắt đầu từ đâu</div>
+        <!-- <div class="user-type-desc">
+          Bạn muốn học kỹ năng khởi nghiệp và marketing để áp dụng vào công việc hoặc dự án cá nhân.
+        </div> -->
+      </div>
+
+      <div class="user-type-card">
+        <img src="images1/user3.png" alt="User Type 3" class="user-type-image">
+        <div class="user-type-title">Muốn học kinh doanh nhưng tài liệu quá khô khan</div>
+        <!-- <div class="user-type-desc">
+          Bạn đang điều hành doanh nghiệp và muốn cải thiện chiến lược marketing và phát triển sản phẩm.
+        </div> -->
+      </div>
+    </div>
+
+    <!-- Section 2: 8 Components/Tools in the Box -->
+    <h2>Nếu câu trả lời là "có" thì hộp công cụ này dành cho bạn. </h2>
+    <!-- <img src="images1/box2.gif" alt="Pan" style="width: 100px; display: block; margin:auto;"> -->
+    <div class="subtitle">Hộp có chứa đầy đủ hướng dẫn chi tiết và công cụ giúp bạn sáng tạo ý tưởng, <br>lập kế hoạch kinh doanh & marketing cơ bản trong 30 ngày</div>
+    <div class="tools-grid">
+      <div class="tool-card">
+        <div class="tool-number">01</div>
+        <div class="tool-title">Lịch chi tiết công việc trong 30 ngày</div>
+        <br>
+        <div class="tool-desc">
+          giúp bạn theo chu trình khởi nghiệp hiệu quả
+        </div>
+        <img src="images1/1.png" alt="Business Model Canvas" class="tool-image">
+      </div>
+
+      <div class="tool-card">
+        <div class="tool-number">02</div>
+        <div class="tool-title">Cẩm nang hướng dẫn</div>
+        <br>
+        <div class="tool-desc">
+          cho bạn chi tiết cách dùng các công cụ hoạt động mỗi ngày
+        </div>
+        <img src="images1/5.png" alt="Brand Identity Guide" class="tool-image">
+      </div>
+
+      <div class="tool-card">
+        <div class="tool-number">03</div>
+        <div class="tool-title">Thẻ flashcard phỏng vấn khách hàng</div>
+        <br>
+        <div class="tool-desc">
+          giúp bạn thử nghiệm ý tưởng với người dùng tiềm năng
+        </div>
+        <img src="images1/3.png" alt="Financial Planning Kit" class="tool-image">
+      </div>
+
+      <div class="tool-card">
+        <div class="tool-number">04</div>
+        <div class="tool-title">Sách minh hoạ 60 chiến thuật marketing cơ bản</div>
+        <br>
+        <div class="tool-desc">
+          giúp bạn lên kế hoạch marketing một cách khoa học
+        </div>
+        <img src="images1/4.png" alt="Product Development Framework" class="tool-image">
+      </div>
+
+      <div class="tool-card">
+        <div class="tool-number">05</div>
+        <div class="tool-title">120 que chiến thuật đột phá ý tưởng</div>
+        <br>
+        <div class="tool-desc">
+          giúp bạn bứt phá khỏi cách tạo ý tưởng thông thường
+        </div>
+        <img src="images1/2.png" alt="Market Research Toolkit" class="tool-image">
+      </div>
+
+      <div class="tool-card">
+        <div class="tool-number">06</div>
+        <div class="tool-title">Ví dụ 200 startup tại Mỹ</div>
+        <br>
+        <div class="tool-desc">
+          giúp bạn lấy cảm hứng đột phá ý tưởng
+        </div>
+        <img src="images1/6.png" alt="Legal Essentials Checklist" class="tool-image">
+      </div>
+
+      <div class="tool-card">
+        <div class="tool-number">07</div>
+        <div class="tool-title">144 xu hình ngẫu nhiên</div>
+        <br>
+        <div class="tool-desc">
+          giúp bạn rèn luyện tư duy liên tưởng
+        </div>
+        <img src="images1/7.png" alt="Marketing Strategy Playbook" class="tool-image">
+      </div>
+
+
+      <div class="tool-card">
+        <div class="tool-number">08</div>
+        <div class="tool-title">Khoá học quảng cáo Facebook</div>
+        <br>
+        <div class="tool-desc">
+          giúp bạn kiếm 30k người theo dõi đầu tiên cho dự án của bạn
+        </div>
+        <img src="images1/8.png" alt="Pitch Deck Template" class="tool-image">
+      </div>
+    </div>
+
+    <!-- Section 2: 7 Things the Box Can Help You With -->
+
+    <!-- Purchase Options Section -->
+    <div class="purchase-section" id="purchaseSection">
+      <h2>Mua ngay, khởi nghiệp ngay</h2>
+      <div class="purchase-grid">
+        <!-- Physical Box -->
+        <div class="purchase-card sold-out">
+          <!-- <div class="sold-out-badge">Hết hàng</div> -->
+          <div class="purchase-title">Hộp công cụ hoàn chỉnh</div>
+          <div class="purchase-type">Với bản in đẹp của tất cả các công cụ trên</div>
+          <div class="purchase-price">1.350.000 VNĐ</div>
+          <!-- <div class="purchase-currency">VND</div> -->
+          <button class="purchase-button" disabled>Hết hàng</button>
+        </div>
+
+        <!-- Digital Version -->
+        <div class="purchase-card">
+          <div class="purchase-title">Phiên Bản Số</div>
+          <div class="purchase-type">Truy cập và tải file ngay lập tức</div>
+          <div class="purchase-price">399.000 VNĐ</div>
+          <!-- <div class="purchase-currency">VND</div> -->
+          <button class="purchase-button" id="buyButton">Mua ngay</button>
+          <a href="#" id="unlockLink" style="display: block; margin-top: 16px; font-size: 0.9rem; color: #4db8d8; text-decoration: none; transition: color 0.2s;" onmouseover="this.style.color='#3ca5c3'" onmouseout="this.style.color='#4db8d8'">Đã mua sản phẩm? Click để tải file</a>
+        </div>
+      </div>
+    </div>
+
+  <!-- Purchase Modal -->
+  <div id="purchaseModal" class="modal">
+    <div class="modal-content">
+      <button class="modal-close" onclick="closeModal()">&times;</button>
+      <h2 class="modal-title">Đặt mua qua hai bước sau</h2>
+
+      <div class="modal-steps-container">
+        <div class="modal-step-wrapper">
+          <div class="modal-step">
+            <span class="modal-step-number">Bước 1</span>
+            <div class="modal-step-content">
+              Chuyển khoản tới tài khoản:
+              <div class="modal-step-detail">
+                <strong>Tên:</strong> Lê Hoà Bình<br>
+                <strong>Ngân hàng:</strong> Vietcombank<br>
+                <strong>Chi nhánh:</strong> Nha Trang, Khánh Hoà<br>
+                <strong>Số tài khoản:</strong> 0061000809781
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-step-wrapper">
+          <div class="modal-step">
+            <span class="modal-step-number">Bước 2</span>
+            <div class="modal-step-content">
+              Chụp lại hình chứng nhận gửi tiền và gửi vào tin nhắn trên Facebook của Xào Ý Tưởng: facebook/xaoytuong
+            </div>
+            <div class="modal-step-2-footer">
+              <a href="https://www.facebook.com/xaoytuong" target="_blank" class="modal-link">Nhắn tin Xào trên Facebook</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Unlock Modal -->
+  <div id="unlockModal" class="modal">
+    <div class="modal-content" style="max-width: 600px;">
+      <button class="modal-close" onclick="closeUnlockModal()">&times;</button>
+      <h2 class="modal-title">Tải file sản phẩm</h2>
+
+      <div id="codeVerificationSection" style="padding: 20px;">
+        <div style="display: flex; gap: 12px; margin-top: 24px; justify-content: center; align-items: center;">
+          <input type="text" id="unlockCodeModal" placeholder="Nhập mã nhận được khi mua"
+                 style="padding: 12px 20px; font-size: 1.1rem; border: 2px solid #ccc; border-radius: 8px; flex: 1; max-width: 300px; font-family: 'BeVietnamPro', sans-serif;">
+          <button onclick="verifyCodeModal()"
+                  style="padding: 12px 28px; font-size: 1.1rem; background-color: #4db8d8; color: white; border: none; border-radius: 8px; cursor: pointer; font-family: 'BeVietnamPro', sans-serif; font-weight: 700; transition: all 0.2s;">
+            Xác nhận
+          </button>
+        </div>
+
+        <div id="codeErrorModal" style="display: none; color: #ff4444; margin-top: 16px; text-align: center; font-size: 1rem;">
+          Mã không hợp lệ. Vui lòng thử lại.
+        </div>
+
+        <p style="text-align: center; margin-top: 32px; color: #777; font-size: 0.95rem;">
+          Chưa nhận được mã? <a href="https://www.facebook.com/xaoytuong" target="_blank" style="color: #4db8d8; text-decoration: none; font-weight: 600;">Liên hệ Xào trên Facebook</a>
+        </p>
+      </div>
+
+      <div id="downloadSuccessSection" style="display: none; padding: 20px; text-align: center;">
+        <div style="font-size: 3rem; color: #4db8d8; margin-bottom: 20px;">✓</div>
+        <p class="modal-text" style="text-align: center; padding: 0; margin-bottom: 24px;">Mã hợp lệ! Đang tải...</p>
+        <div style="display: inline-block; width: 50px; height: 50px; border: 5px solid #ecebe4; border-top: 5px solid #4db8d8; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Modal functions
+    function openModal() {
+      const modal = document.getElementById('purchaseModal');
+      modal.classList.add('show');
+    }
+
+    function closeModal() {
+      const modal = document.getElementById('purchaseModal');
+      modal.classList.remove('show');
+    }
+
+    function openUnlockModal() {
+      const modal = document.getElementById('unlockModal');
+      modal.classList.add('show');
+    }
+
+    function closeUnlockModal() {
+      const modal = document.getElementById('unlockModal');
+      modal.classList.remove('show');
+      // Reset modal state
+      document.getElementById('codeVerificationSection').style.display = 'block';
+      document.getElementById('downloadSuccessSection').style.display = 'none';
+      document.getElementById('unlockCodeModal').value = '';
+      document.getElementById('codeErrorModal').style.display = 'none';
+    }
+
+    function verifyCodeModal() {
+      const code = document.getElementById('unlockCodeModal').value.trim();
+      const codeError = document.getElementById('codeErrorModal');
+      const verificationSection = document.getElementById('codeVerificationSection');
+      const successSection = document.getElementById('downloadSuccessSection');
+
+      if (code.endsWith('5618')) {
+        // Valid code - show success and loading
+        verificationSection.style.display = 'none';
+        successSection.style.display = 'block';
+        codeError.style.display = 'none';
+
+        // Save unlock state to localStorage
+        localStorage.setItem('productsUnlocked', 'true');
+
+        // Reload page after 2 seconds
+        setTimeout(function() {
+          location.reload();
+        }, 2000);
+      } else {
+        // Invalid code
+        codeError.style.display = 'block';
+        document.getElementById('unlockCodeModal').value = '';
+        document.getElementById('unlockCodeModal').focus();
+      }
+    }
+
+    // Close modal when clicking outside of it
+    window.onclick = function(event) {
+      const purchaseModal = document.getElementById('purchaseModal');
+      const unlockModal = document.getElementById('unlockModal');
+      if (event.target === purchaseModal) {
+        closeModal();
+      }
+      if (event.target === unlockModal) {
+        closeUnlockModal();
+      }
+    }
+
+    // Add click event to buy button and unlock link
+    document.addEventListener('DOMContentLoaded', function() {
+      const buyButton = document.getElementById('buyButton');
+      const unlockLink = document.getElementById('unlockLink');
+      const unlockCodeInput = document.getElementById('unlockCodeModal');
+
+      if (buyButton) {
+        buyButton.addEventListener('click', openModal);
+      }
+
+      if (unlockLink) {
+        unlockLink.addEventListener('click', function(e) {
+          e.preventDefault();
+          openUnlockModal();
+        });
+      }
+
+      // Allow pressing Enter key to submit
+      if (unlockCodeInput) {
+        unlockCodeInput.addEventListener('keypress', function(e) {
+          if (e.key === 'Enter') {
+            verifyCodeModal();
+          }
+        });
+      }
+
+      // Check if products are unlocked
+      const isUnlocked = localStorage.getItem('productsUnlocked') === 'true';
+      if (isUnlocked) {
+        addDownloadButtons();
+        hidePurchaseSection();
+      }
+    });
+
+    function hidePurchaseSection() {
+      const purchaseSection = document.getElementById('purchaseSection');
+      if (purchaseSection) {
+        purchaseSection.style.display = 'none';
+      }
+    }
+
+    function addDownloadButtons() {
+      // Define download links for each tool
+      const downloadLinks = [
+        { name: 'Lịch 30 ngày', url: 'images1/calendar.pdf' },
+        { name: 'Cẩm nang hướng dẫn', url: 'images1/instructionbook.pdf' },
+        { name: 'Thẻ flashcard', url: 'images1/userinterview.pdf' },
+        { name: 'Sách 60 chiến thuật', url: 'images1/marketingbook.pdf' },
+        { name: '120 que chiến thuật', url: 'sticks.html' },
+        { name: 'Ví dụ 200 startup', url: 'images1/200companies.pdf' },
+        { name: '144 xu hình', url: 'coins.html' },
+        { name: 'Khoá học Facebook', url: 'facebook-course.html' }
+      ];
+
+      // Get all tool cards
+      const toolCards = document.querySelectorAll('.tool-card');
+
+      toolCards.forEach((card, index) => {
+        if (index < downloadLinks.length) {
+          // Create download button
+          const downloadBtn = document.createElement('a');
+          // Add timestamp to prevent caching
+          const cacheBuster = '?v=' + new Date().getTime();
+          downloadBtn.href = downloadLinks[index].url + (downloadLinks[index].url !== '#' ? cacheBuster : '');
+          downloadBtn.className = 'download-button';
+          downloadBtn.textContent = 'Tải xuống';
+          downloadBtn.target = '_blank';
+
+          // Insert button after the image (at the end of card)
+          card.appendChild(downloadBtn);
+        }
+      });
+    }
+
+    // Animate counter from 1 to 30 with ease-in-out, repeat every 1 minute
+    const counter = document.getElementById('counter');
+    const start = 1;
+    const target = 30;
+    const duration = 2000; // 2 seconds
+    let startTime;
+
+    // Ease-in-out function
+    function easeInOutCubic(t) {
+      return t < 0.5
+        ? 4 * t * t * t
+        : 1 - Math.pow(-2 * t + 2, 3) / 2;
+    }
+
+    function animate() {
+      const elapsed = Date.now() - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const easedProgress = easeInOutCubic(progress);
+      const current = start + (target - start) * easedProgress;
+
+      counter.textContent = Math.floor(current);
+
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      } else {
+        counter.textContent = target;
+      }
+    }
+
+    function startAnimation() {
+      startTime = Date.now();
+      animate();
+    }
+
+    // Start initial animation
+    startAnimation();
+
+    // Repeat every 1 minute (60000 milliseconds)
+    setInterval(startAnimation, 60000);
+  </script>
+</body>
+</html>
