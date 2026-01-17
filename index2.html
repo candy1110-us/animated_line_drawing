@@ -265,7 +265,7 @@
 
         /* Aspect Ratio Buttons */
         .aspect-ratio-btn {
-            color: #6366f1;
+            color: #6ba3ff;
             transition: opacity 0.2s;
         }
 
@@ -577,7 +577,7 @@
         }
 
         .slider-value {
-            color: #6366f1;
+            color: #6ba3ff;
             font-weight: 700;
         }
 
@@ -596,7 +596,7 @@
             width: 16px;
             height: 16px;
             border-radius: 50%;
-            background: #818cf8;
+            background: #6ba3ff;
             cursor: pointer;
         }
 
@@ -604,7 +604,7 @@
             width: 16px;
             height: 16px;
             border-radius: 50%;
-            background: #818cf8;
+            background: #6ba3ff;
             cursor: pointer;
             border: none;
         }
@@ -614,19 +614,19 @@
             padding: 10px 24px;
             border: none;
             border-radius: 8px;
-            background: linear-gradient(135deg, #818cf8 0%, #6366f1 100%);
+            background: linear-gradient(135deg, #6ba3ff 0%, #5a92ee 100%);
             color: white;
             font-weight: 600;
             font-size: 14px;
             cursor: pointer;
             transition: all 0.2s;
-            box-shadow: 0 2px 8px rgba(129, 140, 248, 0.3);
+            box-shadow: 0 2px 8px rgba(107, 163, 255, 0.3);
             display: inline-block;
         }
 
         .animate-btn:hover:not(:disabled) {
             transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(129, 140, 248, 0.4);
+            box-shadow: 0 4px 12px rgba(107, 163, 255, 0.4);
         }
 
         .animate-btn:disabled {
@@ -644,7 +644,7 @@
             display: none;
             position: fixed;
             background: white;
-            border: 3px solid #818cf8;
+            border: 3px solid #6ba3ff;
             border-radius: 12px;
             padding: 16px;
             box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
@@ -760,7 +760,7 @@
             left: -3px;
             right: -3px;
             bottom: -3px;
-            border: 2px solid #818cf8;
+            border: 2px solid #6ba3ff;
             border-radius: 6px;
             pointer-events: none;
         }
@@ -1761,7 +1761,7 @@
 
             // Add selected class to clicked element
             if (element) {
-                element.style.borderColor = '#6366f1';
+                element.style.borderColor = '#6ba3ff';
                 element.style.transform = 'scale(1.05)';
             }
 
@@ -3805,7 +3805,7 @@
             document.querySelectorAll('.bg-pattern-option').forEach(opt => {
                 const optPattern = opt.getAttribute('data-pattern');
                 if (optPattern === currentPattern) {
-                    opt.style.borderColor = '#6366f1';
+                    opt.style.borderColor = '#6ba3ff';
                     opt.style.transform = 'scale(1.05)';
                 } else {
                     opt.style.borderColor = '#e0e7ff';
