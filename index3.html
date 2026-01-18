@@ -1,0 +1,1650 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text Animation - Flying Words</title>
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gifshot@0.4.5/dist/gifshot.min.js"></script>
+    <style>
+        @font-face {
+            font-family: 'HMT Regular';
+            src: url('fonts/HmtRegular-WRrv.ttf') format('truetype');
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background-color: #ecebe4;
+            background-image: url('data:image/svg+xml;utf8,<svg width="28" height="28" xmlns="http://www.w3.org/2000/svg"><circle cx="14" cy="14" r="1" fill="%23d2d1c7"/></svg>');
+            background-size: 28px 28px;
+            min-height: 100vh;
+            padding: 40px 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Doodle decorations */
+        body::before,
+        body::after {
+            content: '';
+            position: fixed;
+            border-radius: 50%;
+            opacity: 0.15;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        body::before {
+            background: #6ba3ff;
+            width: 50vh;
+            height: 50vh;
+            top: 20%;
+            left: -10vh;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        body::after {
+            background: #f59e0b;
+            width: 150px;
+            height: 150px;
+            bottom: 15%;
+            right: 8%;
+            animation: float 8s ease-in-out infinite reverse;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(5deg); }
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header {
+            background: transparent;
+            padding: 20px 30px;
+            margin-bottom: 30px;
+            text-align: center;
+            position: relative;
+        }
+
+        .logo-link {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            overflow: hidden;
+            background: white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 100;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .logo-link:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.25);
+        }
+
+        .header-logo {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .header-content {
+            text-align: center;
+        }
+
+        .header h1 {
+            font-family: 'HMT Regular', 'Inter', sans-serif;
+            font-size: 3.5rem;
+            color: #2d3436;
+            margin-bottom: 12px;
+            text-shadow: 3px 3px 0px rgba(107, 163, 255, 0.3);
+        }
+
+        .header p {
+            color: #636e72;
+            font-size: 1.1rem;
+        }
+
+        .main-layout {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 20px;
+            height: calc(100vh - 180px);
+            align-items: start;
+        }
+
+        .left-column {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            max-height: 100%;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding-right: 8px;
+            min-width: 420px;
+        }
+
+        .left-column::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .left-column::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+
+        .left-column::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+
+        .left-column::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        .right-column {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            position: sticky;
+            top: 20px;
+        }
+
+        .sidebar-panel {
+            background: white;
+            border-radius: 20px;
+            padding: 24px;
+            box-shadow:
+                3px 3px 0px rgba(0, 0, 0, 0.05),
+                6px 6px 0px rgba(107, 163, 255, 0.08);
+            border: 1px solid rgba(45, 52, 54, 0.15);
+            overflow-x: hidden;
+            min-width: 0;
+            flex-shrink: 0;
+        }
+
+        .sidebar-panel h3 {
+            font-size: 16px;
+            color: #2d3436;
+            margin-bottom: 16px;
+            font-weight: 600;
+        }
+
+        .control-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .control-row .control-group {
+            margin-bottom: 0;
+        }
+
+        .control-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .control-group {
+            margin-bottom: 20px;
+        }
+
+        .control-group label {
+            display: block;
+            color: #2d3436;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .control-group input[type="text"],
+        .control-group input[type="number"],
+        .control-group select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid rgba(45, 52, 54, 0.15);
+            border-radius: 12px;
+            font-size: 14px;
+            transition: all 0.2s;
+            background: white;
+        }
+
+        .control-group input[type="text"]:focus,
+        .control-group input[type="number"]:focus,
+        .control-group select:focus {
+            outline: none;
+            border-color: #6ba3ff;
+            box-shadow: 0 0 0 3px rgba(107, 163, 255, 0.1);
+        }
+
+        .control-group input[type="color"] {
+            display: none;
+        }
+
+        .color-picker-trigger {
+            width: 100%;
+            height: 44px;
+            border: 2px solid rgba(45, 52, 54, 0.15);
+            border-radius: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            padding: 8px;
+            gap: 8px;
+            background: white;
+            transition: all 0.2s;
+        }
+
+        .color-picker-trigger:hover {
+            border-color: #6ba3ff;
+        }
+
+        .color-preview-swatch {
+            width: 30px;
+            height: 30px;
+            border-radius: 6px;
+            border: 1px solid rgba(45, 52, 54, 0.2);
+        }
+
+        .color-label {
+            flex: 1;
+            font-size: 14px;
+            color: #2d3436;
+        }
+
+        .popup-menu {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            margin-top: 8px;
+            background: #2d3436;
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+            min-width: 280px;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .popup-menu.active {
+            display: block;
+        }
+
+        /* For background and highlight color - use fixed positioning for dynamic placement */
+        #bgColorPopup,
+        #highlightColorPopup {
+            position: fixed;
+            top: auto;
+            bottom: auto;
+            left: auto;
+            margin: 0;
+        }
+
+        .color-square {
+            width: 100%;
+            height: 150px;
+            position: relative;
+            border-radius: 8px;
+            background: hsl(0, 100%, 50%);
+            margin-bottom: 12px;
+            cursor: crosshair;
+        }
+
+        .color-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(to right, #fff, transparent),
+                        linear-gradient(to top, #000, transparent);
+            border-radius: 8px;
+        }
+
+        .color-cursor {
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            border: 2px solid white;
+            border-radius: 50%;
+            pointer-events: none;
+            box-shadow: 0 0 4px rgba(0, 0, 0, 0.5);
+            transform: translate(-50%, -50%);
+        }
+
+        .hue-slider {
+            width: 100%;
+            height: 16px;
+            border-radius: 8px;
+            position: relative;
+            background: linear-gradient(to right,
+                #ff0000 0%, #ffff00 17%, #00ff00 33%,
+                #00ffff 50%, #0000ff 67%, #ff00ff 83%, #ff0000 100%);
+            cursor: pointer;
+        }
+
+        .hue-cursor {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border: 2px solid white;
+            border-radius: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            box-shadow: 0 0 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .hex-input {
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 6px;
+            padding: 6px 8px;
+            color: #2d3436;
+            font-size: 14px;
+            width: 100px;
+            font-weight: 500;
+        }
+
+        .popup-label {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 12px;
+            margin-bottom: 8px;
+        }
+
+        .popup-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .opacity-slider {
+            flex: 1;
+            height: 8px;
+            border-radius: 4px;
+            background: linear-gradient(to right,
+                rgba(255, 255, 255, 0.1),
+                rgba(255, 255, 255, 1));
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .opacity-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: white;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .opacity-slider::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: white;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            border: none;
+        }
+
+        .opacity-value {
+            color: white;
+            font-size: 14px;
+            min-width: 40px;
+            font-weight: 600;
+        }
+
+        .control-group input[type="file"] {
+            display: none;
+        }
+
+        .upload-area {
+            width: 100%;
+            min-height: 100px;
+            border: 2px dashed rgba(45, 52, 54, 0.15);
+            border-radius: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            padding: 20px;
+            background: #f8f9fa;
+        }
+
+        .upload-area:hover {
+            border-color: #6ba3ff;
+            background: #f8f9ff;
+        }
+
+        .upload-placeholder {
+            text-align: center;
+            color: #6ba3ff;
+        }
+
+        .image-preview {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .image-preview.active {
+            display: flex;
+        }
+
+        .upload-placeholder.hidden {
+            display: none;
+        }
+
+        .preview-img {
+            max-width: 100px;
+            max-height: 100px;
+            border-radius: 8px;
+        }
+
+        .change-image {
+            color: #6ba3ff;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .image-name {
+            color: #636e72;
+            font-size: 12px;
+        }
+
+        .control-group input[type="range"] {
+            width: 100%;
+            height: 8px;
+            border-radius: 4px;
+            background: #e2e8f0;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .control-group input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #6ba3ff;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .control-group input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #6ba3ff;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            border: none;
+        }
+
+        .range-value {
+            display: inline-block;
+            margin-left: 10px;
+            color: #6ba3ff;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .preview-container {
+            background: transparent;
+            border-radius: 20px;
+            padding: 0;
+            box-shadow: none;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: visible;
+            position: relative;
+        }
+
+        .animation-wrapper {
+            width: 100%;
+            max-width: 900px;
+            aspect-ratio: 16 / 9;
+            background: #00ff00;
+            position: relative;
+            overflow: hidden;
+            border-radius: 20px;
+            box-shadow:
+                3px 3px 0px rgba(0, 0, 0, 0.05),
+                6px 6px 0px rgba(107, 163, 255, 0.08);
+            border: 1px solid rgba(45, 52, 54, 0.15);
+        }
+
+        .animation-wrapper.vertical {
+            height: calc(100vh - 220px);
+            width: calc((100vh - 220px) * 9 / 16);
+            max-width: none;
+            aspect-ratio: 9 / 16;
+        }
+
+        .animation-stage {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            align-content: center;
+            flex-wrap: wrap;
+            column-gap: 12px;
+            row-gap: calc(var(--line-spacing, 15) * 1px);
+            padding: 40px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .word {
+            display: inline-block;
+            position: relative;
+            padding: 4px 8px;
+            border-radius: 6px;
+            opacity: 1;
+        }
+
+        .word.animating {
+            opacity: 0;
+        }
+
+        .word.animate {
+            animation: flyInWithJiggle 0.8s ease-in forwards,
+                       jiggle 0.3s ease-in-out infinite;
+        }
+
+        @keyframes flyInWithJiggle {
+            0% {
+                opacity: 0;
+                transform: translateY(150vh);
+            }
+            60% {
+                opacity: 1;
+                transform: translateY(-30%);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes jiggle {
+            0%, 100% {
+                rotate: 0deg;
+            }
+            25% {
+                rotate: var(--jiggle-1, 2deg);
+            }
+            75% {
+                rotate: var(--jiggle-2, -2deg);
+            }
+        }
+
+        .play-button {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid rgba(45, 52, 54, 0.15);
+            border-radius: 12px;
+            background: #6ba3ff;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 3px 3px 0px rgba(0, 0, 0, 0.1);
+            font-size: 16px;
+            margin-top: 10px;
+        }
+
+        .play-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.15);
+        }
+
+        .play-button:active {
+            transform: translateY(0px);
+            box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Aspect Ratio Buttons */
+        .aspect-ratio-group {
+            display: flex;
+            gap: 16px;
+            justify-content: flex-start;
+            align-items: center;
+        }
+
+        .aspect-ratio-btn {
+            color: #6ba3ff;
+            transition: opacity 0.2s;
+        }
+
+        .aspect-ratio-btn:hover {
+            opacity: 0.7 !important;
+        }
+
+        .aspect-ratio-btn.selected {
+            opacity: 1 !important;
+        }
+    </style>
+</head>
+<body>
+    <a href="index.html" class="logo-link" title="Back to Home">
+        <img src="logo.png" alt="Logo" class="header-logo" onerror="this.style.display='none'">
+    </a>
+
+    <div class="container">
+        <div class="header">
+            <div class="header-content">
+                <h1>Text Entrance Effect</h1>
+                <!-- <p>My favorite text entrance effect</p> -->
+            </div>
+        </div>
+
+        <div class="main-layout">
+            <div class="left-column">
+                <div class="sidebar-panel">
+                    <!-- <h3>Settings</h3> -->
+
+                    <div class="control-group">
+                        <label for="animationText">Text to Animate</label>
+                        <textarea id="animationText" rows="3" placeholder="Enter your text here..." style="width: 100%; padding: 10px 12px; border: 2px solid rgba(45, 52, 54, 0.15); border-radius: 12px; font-size: 14px; resize: vertical; font-family: inherit;">Add text here to start animating</textarea>
+                    </div>
+
+                    <div class="control-row" style="grid-template-columns: 2fr 1fr;">
+                        <div class="control-group">
+                            <label for="fontFamily">Font</label>
+                            <select id="fontFamily">
+                                <option value="Inter">Inter</option>
+                                <option value="HMT Regular" selected>HMT Regular</option>
+                                <option value="Arial">Arial</option>
+                                <option value="Georgia">Georgia</option>
+                                <option value="Courier New">Courier New</option>
+                                <option value="Comic Sans MS">Comic Sans MS</option>
+                                <option value="Impact">Impact</option>
+                            </select>
+                        </div>
+
+                        <div class="control-group">
+                            <label for="fontSize">Size</label>
+                            <input type="text" id="fontSize" value="35" style="text-align: center;">
+                        </div>
+                    </div>
+
+                    <div class="control-row" style="grid-template-columns: 1fr 1fr 1fr;">
+                        <div class="control-group" style="position: relative;">
+                            <label>Text Color</label>
+                            <div class="color-picker-trigger" id="textColorTrigger" style="justify-content: center; padding: 4px;">
+                                <div class="color-preview-swatch" id="textColorSwatch" style="background: #000000; width: 100%; height: 36px; border-radius: 8px;"></div>
+                            </div>
+                            <input type="color" id="textColor" value="#000000">
+                            <!-- Text Color Popup -->
+                            <div id="textColorPopup" class="popup-menu">
+                                <div class="color-square" id="textColorSquare">
+                                    <div class="color-overlay"></div>
+                                    <div id="textColorCursor" class="color-cursor"></div>
+                                </div>
+                                <div style="margin-bottom: 12px;">
+                                    <div class="hue-slider" id="textHueSlider">
+                                        <div id="textHueCursor" class="hue-cursor"></div>
+                                    </div>
+                                </div>
+                                <div class="popup-row">
+                                    <span class="popup-label">Hex:</span>
+                                    <input type="text" id="textColorHexInput" value="#000000" class="hex-input">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="control-group" style="position: relative;">
+                            <label>Highlight</label>
+                            <div class="color-picker-trigger" id="highlightColorTrigger" style="justify-content: center; padding: 4px;">
+                                <div class="color-preview-swatch" id="highlightColorSwatch" style="background: #ffeb3b; width: 100%; height: 36px; border-radius: 8px;"></div>
+                            </div>
+                            <input type="color" id="highlightColor" value="#ffeb3b">
+                            <!-- Highlight Color Popup -->
+                            <div id="highlightColorPopup" class="popup-menu">
+                                <div class="color-square" id="highlightColorSquare">
+                                    <div class="color-overlay"></div>
+                                    <div id="highlightColorCursor" class="color-cursor"></div>
+                                </div>
+                                <div style="margin-bottom: 12px;">
+                                    <div class="hue-slider" id="highlightHueSlider">
+                                        <div id="highlightHueCursor" class="hue-cursor"></div>
+                                    </div>
+                                </div>
+                                <div class="popup-row">
+                                    <span class="popup-label">Hex:</span>
+                                    <input type="text" id="highlightColorHexInput" value="#ffeb3b" class="hex-input">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="control-group" style="position: relative;">
+                            <label>Background</label>
+                            <div class="color-picker-trigger" id="bgColorTrigger" style="justify-content: center; padding: 4px;">
+                                <div class="color-preview-swatch" id="bgColorSwatch" style="background: #00ff00; width: 100%; height: 36px; border-radius: 8px;"></div>
+                            </div>
+                            <input type="color" id="backgroundColor" value="#00ff00">
+                            <!-- Background Popup -->
+                            <div id="bgColorPopup" class="popup-menu">
+                                <div class="popup-label" style="margin-bottom: 8px;">Color</div>
+                                <div class="color-square" id="bgColorSquare">
+                                    <div class="color-overlay"></div>
+                                    <div id="bgColorCursor" class="color-cursor"></div>
+                                </div>
+                                <div style="margin-bottom: 12px;">
+                                    <div class="hue-slider" id="bgHueSlider">
+                                        <div id="bgHueCursor" class="hue-cursor"></div>
+                                    </div>
+                                </div>
+                                <div class="popup-row">
+                                    <span class="popup-label">Hex:</span>
+                                    <input type="text" id="bgColorHexInput" value="#00ff00" class="hex-input">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="control-row">
+                        <div class="control-group">
+                            <label for="jiggleIntensity">Jiggle: <span class="range-value" id="jiggleValue">2</span></label>
+                            <input type="range" id="jiggleIntensity" min="0" max="5" step="0.5" value="2">
+                        </div>
+
+                        <div class="control-group">
+                            <label for="lineSpacing">Line Spacing: <span class="range-value" id="lineSpacingValue">15px</span></label>
+                            <input type="range" id="lineSpacing" min="0" max="100" step="5" value="15">
+                        </div>
+                    </div>
+
+                    <div class="control-row">
+                        <div class="control-group">
+                            <label for="animationDuration">Animation Duration: <span class="range-value" id="durationValue">1s</span></label>
+                            <input type="range" id="animationDuration" min="0.2" max="5" step="0.1" value="1">
+                        </div>
+
+                        <div class="control-group">
+                            <label>Aspect Ratio</label>
+                            <div class="aspect-ratio-group">
+                                <button class="aspect-ratio-btn selected" data-ratio="16:9" onclick="selectAspectRatio('16:9', this)" style="display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px; background: transparent; border: none; cursor: pointer;">
+                                    <svg width="32" height="20" viewBox="0 0 32 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <rect x="1" y="1" width="30" height="18" rx="1" stroke="currentColor" stroke-width="2" fill="none"/>
+                                    </svg>
+                                    <span style="font-size: 10px;">16:9</span>
+                                </button>
+                                <button class="aspect-ratio-btn" data-ratio="9:16" onclick="selectAspectRatio('9:16', this)" style="display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px; background: transparent; border: none; cursor: pointer; opacity: 0.4;">
+                                    <svg width="20" height="32" viewBox="0 0 20 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <rect x="1" y="1" width="18" height="30" rx="1" stroke="currentColor" stroke-width="2" fill="none"/>
+                                    </svg>
+                                    <span style="font-size: 10px;">9:16</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; gap: 12px; justify-content: center; margin-top: 20px;">
+                        <button class="play-button" id="playAnimation" style="margin-top: 0; padding: 14px 32px; width: auto;">▶ Animate</button>
+                        <button class="play-button" id="downloadGifBtn" style="margin-top: 0; padding: 14px 32px; width: auto;">Download as GIF</button>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="right-column">
+                <div class="preview-container">
+                    <div class="animation-wrapper" id="animationWrapper">
+                        <div class="animation-stage" id="animationStage">
+                            <!-- Words will be inserted here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Get DOM elements
+        const animationTextInput = document.getElementById('animationText');
+        const fontFamilySelect = document.getElementById('fontFamily');
+        const fontSizeSlider = document.getElementById('fontSize');
+        const fontSizeValue = document.getElementById('fontSizeValue');
+        const textColorInput = document.getElementById('textColor');
+        const highlightColorInput = document.getElementById('highlightColor');
+        const backgroundColorInput = document.getElementById('backgroundColor');
+        // Background image upload elements removed
+        // const bgImageUpload = document.getElementById('bgImageUpload');
+        // const bgUploadArea = document.getElementById('bgUploadArea');
+        // const bgUploadPlaceholder = document.getElementById('bgUploadPlaceholder');
+        // const bgImagePreview = document.getElementById('bgImagePreview');
+        // const bgPreviewImg = document.getElementById('bgPreviewImg');
+        // const bgImageName = document.getElementById('bgImageName');
+        // const changeBgImage = document.getElementById('changeBgImage');
+        const jiggleIntensitySlider = document.getElementById('jiggleIntensity');
+        const jiggleValue = document.getElementById('jiggleValue');
+        const lineSpacingSlider = document.getElementById('lineSpacing');
+        const lineSpacingValue = document.getElementById('lineSpacingValue');
+        const animationDurationSlider = document.getElementById('animationDuration');
+        const durationValue = document.getElementById('durationValue');
+        const playButton = document.getElementById('playAnimation');
+        const animationStage = document.getElementById('animationStage');
+        const animationWrapper = document.getElementById('animationWrapper');
+
+        let currentAspectRatio = '16:9';
+        let backgroundImageUrl = null;
+
+        // Update font size display and validation
+        fontSize.addEventListener('input', (e) => {
+            // Allow typing but validate on blur
+            const value = e.target.value;
+            // Only allow numbers
+            e.target.value = value.replace(/[^0-9]/g, '');
+        });
+
+        fontSize.addEventListener('blur', (e) => {
+            let value = parseInt(e.target.value);
+            if (isNaN(value) || value < 20) value = 20;
+            if (value > 120) value = 120;
+            e.target.value = value;
+            if (animationStage.children.length > 0) {
+                createWordElements(animationTextInput.value);
+            }
+        });
+
+        fontSize.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.target.blur();
+            }
+        });
+
+        // Update jiggle intensity display
+        jiggleIntensitySlider.addEventListener('input', (e) => {
+            jiggleValue.textContent = e.target.value;
+        });
+
+        // Update line spacing display
+        lineSpacingSlider.addEventListener('input', (e) => {
+            lineSpacingValue.textContent = e.target.value + 'px';
+            animationStage.style.setProperty('--line-spacing', e.target.value);
+        });
+
+        // Update animation duration display
+        animationDurationSlider.addEventListener('input', (e) => {
+            const value = parseFloat(e.target.value);
+            durationValue.textContent = value.toFixed(1) + 's';
+        });
+
+        // Update text color
+        textColorInput.addEventListener('input', (e) => {
+            if (animationStage.children.length > 0) {
+                const words = animationStage.querySelectorAll('.word');
+                words.forEach(word => {
+                    word.style.color = e.target.value;
+                });
+            }
+        });
+
+        // Update background color
+        backgroundColorInput.addEventListener('input', (e) => {
+            animationWrapper.style.background = e.target.value;
+        });
+
+        // Background image upload functionality removed
+        /*
+        // Background image upload area click
+        bgUploadArea.addEventListener('click', (e) => {
+            e.stopPropagation();
+            bgImageUpload.click();
+        });
+
+        // Remove background image
+        const removeBgImageBtn = document.getElementById('removeBgImage');
+        removeBgImageBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            backgroundImageUrl = null;
+            bgImageUpload.value = '';
+            bgUploadPlaceholder.classList.remove('hidden');
+            bgImagePreview.classList.remove('active');
+            removeBgImageBtn.style.display = 'none';
+
+            // Reset to background color only
+            animationWrapper.style.background = backgroundColorInput.value;
+            animationWrapper.style.backgroundSize = '';
+            animationWrapper.style.backgroundPosition = '';
+        });
+
+        // Show/hide remove button based on image presence
+        bgImageUpload.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    backgroundImageUrl = event.target.result;
+                    bgPreviewImg.src = backgroundImageUrl;
+                    bgImageName.textContent = file.name;
+                    bgUploadPlaceholder.classList.add('hidden');
+                    bgImagePreview.classList.add('active');
+                    removeBgImageBtn.style.display = 'block';
+
+                    // Apply background image
+                    animationWrapper.style.background = `url(${backgroundImageUrl}) center/cover`;
+                    animationWrapper.style.backgroundSize = 'cover';
+                    animationWrapper.style.backgroundPosition = 'center';
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+        */
+
+        // Highlight opacity removed - now always 100%
+        // const highlightOpacitySlider = document.getElementById('highlightOpacity');
+        // const highlightOpacityValue = document.getElementById('highlightOpacityValue');
+
+        // Aspect ratio selection function
+        function selectAspectRatio(ratio, element) {
+            currentAspectRatio = ratio;
+            document.querySelectorAll('.aspect-ratio-btn').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+            element.classList.add('selected');
+
+            // Add or remove vertical class for 9:16
+            if (ratio === '9:16') {
+                animationWrapper.classList.add('vertical');
+            } else {
+                animationWrapper.classList.remove('vertical');
+            }
+        }
+
+        // Function to create word elements
+        function createWordElements(text) {
+            animationStage.innerHTML = '';
+            const lines = text.trim().split('\n');
+
+            lines.forEach((line, lineIndex) => {
+                const words = line.trim().split(/\s+/).filter(w => w.length > 0);
+
+                words.forEach((word, wordIndex) => {
+                    const wordSpan = document.createElement('span');
+                    wordSpan.className = 'word';
+                    wordSpan.textContent = word;
+                    wordSpan.style.fontFamily = fontFamilySelect.value;
+                    wordSpan.style.fontSize = fontSize.value + 'px';
+                    wordSpan.style.color = textColorInput.value;
+
+                    // Highlight opacity is always 100%
+                    const highlightColor = highlightColorInput.value;
+
+                    // Convert hex to rgba with full opacity
+                    const r = parseInt(highlightColor.slice(1, 3), 16);
+                    const g = parseInt(highlightColor.slice(3, 5), 16);
+                    const b = parseInt(highlightColor.slice(5, 7), 16);
+                    wordSpan.style.backgroundColor = `rgba(${r}, ${g}, ${b}, 1)`;
+
+                    // Set jiggle intensity as CSS variables
+                    const jiggle = parseInt(jiggleIntensitySlider.value);
+                    wordSpan.style.setProperty('--jiggle-1', `${jiggle}deg`);
+                    wordSpan.style.setProperty('--jiggle-2', `-${jiggle}deg`);
+                    wordSpan.style.setProperty('--jiggle-3', `${jiggle / 2}deg`);
+
+                    animationStage.appendChild(wordSpan);
+                });
+
+                // Add line break after each line except the last
+                if (lineIndex < lines.length - 1) {
+                    const lineBreak = document.createElement('div');
+                    lineBreak.style.width = '100%';
+                    lineBreak.style.height = '0';
+                    animationStage.appendChild(lineBreak);
+                }
+            });
+        }
+
+        // Function to play animation
+        function playAnimation() {
+            const words = animationStage.querySelectorAll('.word');
+            const totalDuration = parseFloat(animationDurationSlider.value) * 1000; // Convert to ms
+            const delayBetweenWords = words.length > 1 ? totalDuration / words.length : 0;
+
+            // First, hide all words and remove previous animations
+            words.forEach((word) => {
+                word.classList.remove('animate');
+                word.classList.add('animating');
+            });
+
+            // Trigger reflow
+            void animationStage.offsetWidth;
+
+            // Then animate them one by one
+            words.forEach((word, index) => {
+                setTimeout(() => {
+                    word.classList.add('animate');
+                }, index * delayBetweenWords);
+            });
+        }
+
+        // Event listeners
+        playButton.addEventListener('click', playAnimation);
+
+        // Update preview when settings change
+        animationTextInput.addEventListener('input', () => {
+            if (animationStage.children.length > 0) {
+                createWordElements(animationTextInput.value);
+            }
+        });
+
+        fontFamilySelect.addEventListener('change', () => {
+            if (animationStage.children.length > 0) {
+                createWordElements(animationTextInput.value);
+            }
+        });
+
+        textColorInput.addEventListener('change', () => {
+            if (animationStage.children.length > 0) {
+                createWordElements(animationTextInput.value);
+            }
+        });
+
+        highlightColorInput.addEventListener('change', () => {
+            if (animationStage.children.length > 0) {
+                createWordElements(animationTextInput.value);
+            }
+        });
+
+        jiggleIntensitySlider.addEventListener('input', () => {
+            if (animationStage.children.length > 0) {
+                createWordElements(animationTextInput.value);
+            }
+        });
+
+        // Initialize with default text
+        createWordElements(animationTextInput.value);
+
+        // Custom Color Picker Functionality
+        function setupColorPicker(config) {
+            const {
+                triggerEl,
+                popupEl,
+                squareEl,
+                cursorEl,
+                hueSliderEl,
+                hueCursorEl,
+                hexInputEl,
+                colorInputEl,
+                swatchEl,
+                labelEl
+            } = config;
+
+            let currentHue = 0;
+            let currentSaturation = 100;
+            let currentLightness = 50;
+
+            // Initialize from current value
+            function initFromHex(hex) {
+                const hsl = hexToHsl(hex);
+                currentHue = hsl.h;
+                currentSaturation = hsl.s;
+                currentLightness = hsl.l;
+                updateUI();
+            }
+
+            function hexToHsl(hex) {
+                const r = parseInt(hex.slice(1, 3), 16) / 255;
+                const g = parseInt(hex.slice(3, 5), 16) / 255;
+                const b = parseInt(hex.slice(5, 7), 16) / 255;
+
+                const max = Math.max(r, g, b);
+                const min = Math.min(r, g, b);
+                let h, s, l = (max + min) / 2;
+
+                if (max === min) {
+                    h = s = 0;
+                } else {
+                    const d = max - min;
+                    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+                    switch (max) {
+                        case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
+                        case g: h = ((b - r) / d + 2) / 6; break;
+                        case b: h = ((r - g) / d + 4) / 6; break;
+                    }
+                }
+
+                return {
+                    h: Math.round(h * 360),
+                    s: Math.round(s * 100),
+                    l: Math.round(l * 100)
+                };
+            }
+
+            function hslToHex(h, s, l) {
+                s /= 100;
+                l /= 100;
+
+                const c = (1 - Math.abs(2 * l - 1)) * s;
+                const x = c * (1 - Math.abs((h / 60) % 2 - 1));
+                const m = l - c / 2;
+                let r = 0, g = 0, b = 0;
+
+                if (h >= 0 && h < 60) {
+                    r = c; g = x; b = 0;
+                } else if (h >= 60 && h < 120) {
+                    r = x; g = c; b = 0;
+                } else if (h >= 120 && h < 180) {
+                    r = 0; g = c; b = x;
+                } else if (h >= 180 && h < 240) {
+                    r = 0; g = x; b = c;
+                } else if (h >= 240 && h < 300) {
+                    r = x; g = 0; b = c;
+                } else if (h >= 300 && h < 360) {
+                    r = c; g = 0; b = x;
+                }
+
+                r = Math.round((r + m) * 255);
+                g = Math.round((g + m) * 255);
+                b = Math.round((b + m) * 255);
+
+                return '#' + [r, g, b].map(x => {
+                    const hex = x.toString(16);
+                    return hex.length === 1 ? '0' + hex : hex;
+                }).join('');
+            }
+
+            function updateUI() {
+                const hex = hslToHex(currentHue, currentSaturation, currentLightness);
+                squareEl.style.background = `hsl(${currentHue}, 100%, 50%)`;
+                swatchEl.style.background = hex;
+                if (labelEl) labelEl.textContent = hex; // Label is optional now
+                hexInputEl.value = hex;
+                colorInputEl.value = hex;
+
+                // Update cursor positions
+                const saturationPercent = currentSaturation;
+                const lightnessPercent = 100 - currentLightness;
+                const x = (saturationPercent / 100) * squareEl.offsetWidth;
+                const y = (lightnessPercent / 100) * squareEl.offsetHeight;
+                cursorEl.style.left = x + 'px';
+                cursorEl.style.top = y + 'px';
+
+                hueCursorEl.style.left = (currentHue / 360) * 100 + '%';
+            }
+
+            // Toggle popup
+            triggerEl.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const isVisible = popupEl.classList.contains('active');
+                document.querySelectorAll('.popup-menu').forEach(p => p.classList.remove('active'));
+                if (!isVisible) {
+                    popupEl.classList.add('active');
+                    initFromHex(colorInputEl.value);
+
+                    // Special positioning for background and highlight popups (fixed position)
+                    if (popupEl.id === 'bgColorPopup' || popupEl.id === 'highlightColorPopup') {
+                        const triggerRect = triggerEl.getBoundingClientRect();
+
+                        // Always position below the button for background popup
+                        if (popupEl.id === 'bgColorPopup') {
+                            popupEl.style.top = (triggerRect.bottom + 8) + 'px';
+                            popupEl.style.bottom = 'auto';
+                            popupEl.style.left = triggerRect.left + 'px';
+                        } else {
+                            // For highlight popup, check if there's space
+                            const popupHeight = 350;
+                            const viewportHeight = window.innerHeight;
+
+                            if (triggerRect.bottom + popupHeight > viewportHeight) {
+                                popupEl.style.bottom = (viewportHeight - triggerRect.top + 8) + 'px';
+                                popupEl.style.top = 'auto';
+                            } else {
+                                popupEl.style.top = (triggerRect.bottom + 8) + 'px';
+                                popupEl.style.bottom = 'auto';
+                            }
+                            popupEl.style.left = triggerRect.left + 'px';
+                        }
+                    }
+                }
+            });
+
+            // Color square interaction
+            squareEl.addEventListener('mousedown', (e) => {
+                const updateColor = (event) => {
+                    const rect = squareEl.getBoundingClientRect();
+                    const x = Math.max(0, Math.min(event.clientX - rect.left, rect.width));
+                    const y = Math.max(0, Math.min(event.clientY - rect.top, rect.height));
+
+                    currentSaturation = (x / rect.width) * 100;
+                    currentLightness = 100 - (y / rect.height) * 100;
+                    updateUI();
+                    colorInputEl.dispatchEvent(new Event('input'));
+                };
+
+                updateColor(e);
+
+                const onMouseMove = (e) => updateColor(e);
+                const onMouseUp = () => {
+                    document.removeEventListener('mousemove', onMouseMove);
+                    document.removeEventListener('mouseup', onMouseUp);
+                };
+
+                document.addEventListener('mousemove', onMouseMove);
+                document.addEventListener('mouseup', onMouseUp);
+            });
+
+            // Hue slider interaction
+            hueSliderEl.addEventListener('mousedown', (e) => {
+                const updateHue = (event) => {
+                    const rect = hueSliderEl.getBoundingClientRect();
+                    const x = Math.max(0, Math.min(event.clientX - rect.left, rect.width));
+                    currentHue = (x / rect.width) * 360;
+                    updateUI();
+                    colorInputEl.dispatchEvent(new Event('input'));
+                };
+
+                updateHue(e);
+
+                const onMouseMove = (e) => updateHue(e);
+                const onMouseUp = () => {
+                    document.removeEventListener('mousemove', onMouseMove);
+                    document.removeEventListener('mouseup', onMouseUp);
+                };
+
+                document.addEventListener('mousemove', onMouseMove);
+                document.addEventListener('mouseup', onMouseUp);
+            });
+
+            // Hex input
+            hexInputEl.addEventListener('change', (e) => {
+                const hex = e.target.value;
+                if (/^#[0-9A-F]{6}$/i.test(hex)) {
+                    initFromHex(hex);
+                    colorInputEl.value = hex;
+                    colorInputEl.dispatchEvent(new Event('input'));
+                }
+            });
+
+            // Initialize
+            initFromHex(colorInputEl.value);
+        }
+
+        // Setup text color picker
+        setupColorPicker({
+            triggerEl: document.getElementById('textColorTrigger'),
+            popupEl: document.getElementById('textColorPopup'),
+            squareEl: document.getElementById('textColorSquare'),
+            cursorEl: document.getElementById('textColorCursor'),
+            hueSliderEl: document.getElementById('textHueSlider'),
+            hueCursorEl: document.getElementById('textHueCursor'),
+            hexInputEl: document.getElementById('textColorHexInput'),
+            colorInputEl: document.getElementById('textColor'),
+            swatchEl: document.getElementById('textColorSwatch'),
+            labelEl: null
+        });
+
+        // Setup highlight color picker
+        setupColorPicker({
+            triggerEl: document.getElementById('highlightColorTrigger'),
+            popupEl: document.getElementById('highlightColorPopup'),
+            squareEl: document.getElementById('highlightColorSquare'),
+            cursorEl: document.getElementById('highlightColorCursor'),
+            hueSliderEl: document.getElementById('highlightHueSlider'),
+            hueCursorEl: document.getElementById('highlightHueCursor'),
+            hexInputEl: document.getElementById('highlightColorHexInput'),
+            colorInputEl: document.getElementById('highlightColor'),
+            swatchEl: document.getElementById('highlightColorSwatch'),
+            labelEl: null
+        });
+
+        // Setup background color picker
+        setupColorPicker({
+            triggerEl: document.getElementById('bgColorTrigger'),
+            popupEl: document.getElementById('bgColorPopup'),
+            squareEl: document.getElementById('bgColorSquare'),
+            cursorEl: document.getElementById('bgColorCursor'),
+            hueSliderEl: document.getElementById('bgHueSlider'),
+            hueCursorEl: document.getElementById('bgHueCursor'),
+            hexInputEl: document.getElementById('bgColorHexInput'),
+            colorInputEl: document.getElementById('backgroundColor'),
+            swatchEl: document.getElementById('bgColorSwatch'),
+            labelEl: null
+        });
+
+        // Close popups when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.popup-menu') && !e.target.closest('.color-picker-trigger')) {
+                document.querySelectorAll('.popup-menu').forEach(p => p.classList.remove('active'));
+            }
+        });
+
+        // Add focus styling for textarea
+        const textarea = document.getElementById('animationText');
+        textarea.addEventListener('focus', function() {
+            this.style.borderColor = '#6ba3ff';
+            this.style.boxShadow = '0 0 0 3px rgba(107, 163, 255, 0.1)';
+        });
+        textarea.addEventListener('blur', function() {
+            this.style.borderColor = 'rgba(45, 52, 54, 0.15)';
+            this.style.boxShadow = 'none';
+        });
+
+        // Download GIF functionality
+        let isCreatingGif = false;
+        const downloadGifBtn = document.getElementById('downloadGifBtn');
+
+        if (downloadGifBtn) {
+            downloadGifBtn.addEventListener('click', async () => {
+                if (isCreatingGif) return;
+
+                downloadGifBtn.disabled = true;
+                downloadGifBtn.textContent = 'Creating GIF...';
+                isCreatingGif = true;
+
+                try {
+                    await captureAnimationAsGif();
+                    downloadGifBtn.textContent = 'GIF Downloaded!';
+                    setTimeout(() => {
+                        downloadGifBtn.textContent = 'Download as GIF';
+                        downloadGifBtn.disabled = false;
+                        isCreatingGif = false;
+                    }, 2000);
+                } catch (error) {
+                    console.error('Error creating GIF:', error);
+                    downloadGifBtn.textContent = 'Error: ' + (error.message || 'Failed');
+                    setTimeout(() => {
+                        downloadGifBtn.textContent = 'Download as GIF';
+                        downloadGifBtn.disabled = false;
+                        isCreatingGif = false;
+                    }, 3000);
+                }
+            });
+        }
+
+        async function captureAnimationAsGif() {
+            if (typeof gifshot === 'undefined') {
+                throw new Error('gifshot library not loaded');
+            }
+
+            const text = animationTextInput.value.trim();
+            if (!text) {
+                throw new Error('No text to animate');
+            }
+
+            // Ensure fonts are loaded before capturing
+            if (document.fonts) {
+                await document.fonts.ready;
+                await new Promise(resolve => setTimeout(resolve, 500));
+            }
+
+            const animDuration = parseFloat(animationDurationSlider.value) * 1000; // Convert to ms
+            const fps = 20; // Increased for smoother animation
+            const frameTime = 1000 / fps; // Time per frame in ms
+
+            // Always recreate word elements for GIF export to ensure clean state
+            createWordElements(text);
+
+            // Wait for layout to settle after creating words
+            await new Promise(resolve => setTimeout(resolve, 200));
+
+            // Get all words and their properties
+            const words = Array.from(animationStage.querySelectorAll('.word'));
+            const delayBetweenWords = words.length > 1 ? animDuration / words.length : 0;
+            const flyInDuration = 800; // flyInWithJiggle animation duration
+            const extraJiggleTime = 2000; // Extra 2 seconds to show jiggle at the end
+
+            // Calculate total duration including last word's animation and extra jiggle time
+            const totalAnimDuration = animDuration + flyInDuration + extraJiggleTime;
+            const totalFrames = Math.ceil(totalAnimDuration / frameTime);
+
+            // Get dimensions based on aspect ratio
+            let canvasWidth, canvasHeight;
+            if (currentAspectRatio === '16:9') {
+                canvasWidth = 1920;
+                canvasHeight = 1080;
+            } else {
+                canvasWidth = 1080;
+                canvasHeight = 1920;
+            }
+
+            // Get word data (positions, sizes, etc.) and add random jiggle offset for each word
+            // Filter out non-word elements (like line breaks)
+            const wordData = words
+                .filter(word => word.classList.contains('word') && word.textContent.trim().length > 0)
+                .map((word, index) => {
+                    const rect = word.getBoundingClientRect();
+                    const wrapperRect = animationWrapper.getBoundingClientRect();
+
+                    // Create a seeded random offset based on word index for consistent randomization
+                    const jiggleOffset = (index * 137.5) % 300; // Random offset in jiggle cycle (0-300ms)
+
+                    return {
+                        text: word.textContent,
+                        x: rect.left - wrapperRect.left,
+                        y: rect.top - wrapperRect.top,
+                        fontSize: parseFloat(fontSize.value),
+                        fontFamily: fontFamilySelect.value,
+                        color: textColorInput.value,
+                        highlightColor: highlightColorInput.value,
+                        highlightOpacity: 1,
+                        jiggleOffset: jiggleOffset
+                    };
+                });
+
+            const bgColor = backgroundColorInput.value;
+            const wrapperRect = animationWrapper.getBoundingClientRect();
+            const scaleX = canvasWidth / wrapperRect.width;
+            const scaleY = canvasHeight / wrapperRect.height;
+
+            // Easing functions to match CSS animations
+            function easeIn(t) {
+                // CSS ease-in cubic-bezier(0.42, 0, 1.0, 1.0)
+                return t * t * t;
+            }
+
+            function easeInOut(t) {
+                // CSS ease-in-out cubic-bezier(0.42, 0, 0.58, 1.0)
+                return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+            }
+
+            const images = [];
+
+            // Background image functionality removed - only use background color
+            let bgImage = null;
+
+            // Pre-render all frames to canvas
+            for (let frameIndex = 0; frameIndex < totalFrames; frameIndex++) {
+                const currentTime = frameIndex * frameTime;
+
+                // Update progress indicator
+                const progress = Math.round((frameIndex / totalFrames) * 100);
+                downloadGifBtn.textContent = `Creating GIF... ${progress}%`;
+
+                // Create canvas for this frame
+                const canvas = document.createElement('canvas');
+                canvas.width = canvasWidth;
+                canvas.height = canvasHeight;
+                const ctx = canvas.getContext('2d');
+
+                // Draw background (color or image)
+                if (bgImage) {
+                    ctx.drawImage(bgImage, 0, 0, canvasWidth, canvasHeight);
+                } else {
+                    ctx.fillStyle = bgColor;
+                    ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+                }
+
+                // Draw each word
+                wordData.forEach((data, wordIndex) => {
+                    const startTime = wordIndex * delayBetweenWords;
+                    const endTime = startTime + flyInDuration;
+
+                    let opacity = 0;
+                    let translateY = canvasHeight * 1.5; // Start 150% below
+                    let rotation = 0;
+
+                    // Calculate jiggle - CSS animation is 0.3s with ease-in-out
+                    const jiggle = parseFloat(jiggleIntensitySlider.value);
+                    const jiggleDuration = 300; // 0.3s in ms
+                    // Add the random offset for this word to make each word jiggle differently
+                    const jiggleProgress = ((currentTime + data.jiggleOffset) % jiggleDuration) / jiggleDuration; // 0 to 1
+
+                    // CSS keyframes: 0%->0deg, 25%->jiggle, 50%->0deg (implied), 75%->-jiggle, 100%->0deg
+                    // This creates a smooth sine-like wave
+                    let jiggleValue;
+                    if (jiggleProgress <= 0.25) {
+                        // 0% to 25%: 0 to jiggle
+                        const t = jiggleProgress / 0.25;
+                        jiggleValue = easeInOut(t) * jiggle;
+                    } else if (jiggleProgress <= 0.5) {
+                        // 25% to 50%: jiggle to 0
+                        const t = (jiggleProgress - 0.25) / 0.25;
+                        jiggleValue = (1 - easeInOut(t)) * jiggle;
+                    } else if (jiggleProgress <= 0.75) {
+                        // 50% to 75%: 0 to -jiggle
+                        const t = (jiggleProgress - 0.5) / 0.25;
+                        jiggleValue = -easeInOut(t) * jiggle;
+                    } else {
+                        // 75% to 100%: -jiggle to 0
+                        const t = (jiggleProgress - 0.75) / 0.25;
+                        jiggleValue = -(1 - easeInOut(t)) * jiggle;
+                    }
+
+                    if (currentTime < startTime) {
+                        // Not visible yet
+                        return;
+                    } else if (currentTime >= endTime) {
+                        // Fully visible with jiggle
+                        opacity = 1;
+                        translateY = 0;
+                        rotation = jiggleValue;
+                    } else {
+                        // Animating with overshoot
+                        const elapsed = currentTime - startTime;
+                        const progress = elapsed / flyInDuration;
+
+                        // Opacity follows ease-in
+                        const easedProgress = easeIn(progress);
+                        opacity = easedProgress;
+
+                        // Position: 0-60% fly up and overshoot, 60-100% settle down
+                        if (progress <= 0.6) {
+                            // First 60%: fly up from below (150vh) to above (-30%)
+                            const flyProgress = progress / 0.6;
+                            const easedFlyProgress = easeIn(flyProgress);
+                            const startOffset = canvasHeight * 1.5; // Start far below
+                            const overshootOffset = -(data.fontSize * scaleX * 0.3); // Overshoot above by 30% of text height
+                            translateY = startOffset - (startOffset - overshootOffset) * easedFlyProgress;
+                        } else {
+                            // Last 40%: settle from -30% down to 0
+                            const settleProgress = (progress - 0.6) / 0.4;
+                            const easedSettleProgress = easeInOut(settleProgress);
+                            const overshootOffset = -(data.fontSize * scaleX * 0.3); // Overshoot above by 30% of text height
+                            translateY = overshootOffset + (0 - overshootOffset) * easedSettleProgress;
+                        }
+
+                        rotation = jiggleValue;
+                    }
+
+                    if (opacity <= 0) return;
+
+                    // Calculate final position
+                    const x = data.x * scaleX;
+                    const y = (data.y * scaleY) + translateY;
+
+                    ctx.save();
+                    ctx.globalAlpha = opacity;
+
+                    // Measure text first to get proper dimensions
+                    ctx.font = `${data.fontSize * scaleX}px ${data.fontFamily}`;
+                    const textMetrics = ctx.measureText(data.text);
+                    const textWidth = textMetrics.width;
+                    const textHeight = data.fontSize * scaleX;
+                    const padding = 8 * scaleX;
+
+                    // Calculate center point for rotation (center of the highlight box)
+                    const centerX = x + textWidth / 2;
+                    const centerY = y + textHeight / 2;
+
+                    // Apply rotation around the center
+                    ctx.translate(centerX, centerY);
+                    ctx.rotate((rotation * Math.PI) / 180);
+                    ctx.translate(-centerX, -centerY);
+
+                    // Draw highlight background
+                    const r = parseInt(data.highlightColor.slice(1, 3), 16);
+                    const g = parseInt(data.highlightColor.slice(3, 5), 16);
+                    const b = parseInt(data.highlightColor.slice(5, 7), 16);
+
+                    ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${data.highlightOpacity})`;
+                    ctx.beginPath();
+                    ctx.roundRect(x - padding, y - padding, textWidth + padding * 2, textHeight + padding, 6 * scaleX);
+                    ctx.fill();
+
+                    // Draw text
+                    ctx.fillStyle = data.color;
+                    ctx.textBaseline = 'top';
+                    ctx.fillText(data.text, x, y);
+
+                    ctx.restore();
+                });
+
+                images.push(canvas.toDataURL('image/png'));
+            }
+
+            if (images.length === 0) {
+                throw new Error('No frames captured');
+            }
+
+            // Update button to show encoding phase
+            downloadGifBtn.textContent = 'Encoding GIF...';
+
+            return new Promise((resolve, reject) => {
+                gifshot.createGIF({
+                    images: images,
+                    gifWidth: canvasWidth,
+                    gifHeight: canvasHeight,
+                    interval: 1 / fps,
+                    frameDuration: 1,
+                    numFrames: images.length,
+                    repeat: 0
+                }, (obj) => {
+                    if (!obj.error) {
+                        const a = document.createElement('a');
+                        a.href = obj.image;
+                        a.download = 'text-animation.gif';
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        resolve();
+                    } else {
+                        console.error('GIF creation error:', obj.error);
+                        reject(new Error(obj.error));
+                    }
+                });
+            });
+        }
+    </script>
+</body>
+</html>
