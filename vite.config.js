@@ -17,6 +17,7 @@ export default defineConfig({
         main: resolve(__dirname, 'index.html'),
         drawing: resolve(__dirname, 'index1.html'),
         charts: resolve(__dirname, 'index2.html'),
+        text: resolve(__dirname, 'index3.html'),
       },
     },
     minify: 'terser',
