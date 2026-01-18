@@ -313,8 +313,8 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: linear-gradient(to right, #fff, transparent),
-                        linear-gradient(to top, #000, transparent);
+            background: linear-gradient(to right, hsl(0, 0%, 50%), transparent),
+                        linear-gradient(to bottom, #fff 0%, transparent 50%, #000 100%);
             border-radius: 8px;
         }
 
@@ -655,7 +655,7 @@
 </head>
 <body>
     <a href="index.html" class="logo-link" title="Back to Home">
-        <img src="logo.png" alt="Logo" class="header-logo" onerror="this.style.display='none'">
+        <img src="images/mefn.gif" alt="Logo" class="header-logo">
     </a>
 
     <div class="container">
@@ -1076,6 +1076,12 @@
             }
         });
 
+        highlightColorInput.addEventListener('input', () => {
+            if (animationStage.children.length > 0) {
+                createWordElements(animationTextInput.value);
+            }
+        });
+
         jiggleIntensitySlider.addEventListener('input', () => {
             if (animationStage.children.length > 0) {
                 createWordElements(animationTextInput.value);
@@ -1184,9 +1190,9 @@
 
                 // Update cursor positions
                 const saturationPercent = currentSaturation;
-                const lightnessPercent = 100 - currentLightness;
+                const lightnessPercent = currentLightness;
                 const x = (saturationPercent / 100) * squareEl.offsetWidth;
-                const y = (lightnessPercent / 100) * squareEl.offsetHeight;
+                const y = ((100 - lightnessPercent) / 100) * squareEl.offsetHeight;
                 cursorEl.style.left = x + 'px';
                 cursorEl.style.top = y + 'px';
 
