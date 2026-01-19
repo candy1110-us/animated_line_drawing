@@ -4066,11 +4066,11 @@
                                     const startX = (lastPoint.x * scaleX) + offsetX - offsetXPixels;
                                     const startY = (lastPoint.y * scaleY) + offsetY - offsetYPixels;
 
-                                    // Move down off screen
+                                    // Move down off screen - use full interpolation for visible movement
                                     const targetY = canvasHeight + 100;
 
                                     handX = startX;
-                                    handY = startY + (targetY - startY) * easedProgress * 0.15;
+                                    handY = startY + (targetY - startY) * easedProgress;
                                     handOpacity = 1 - handPhaseProgress; // Fade out
                                 }
 
