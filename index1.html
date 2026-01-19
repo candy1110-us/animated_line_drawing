@@ -3790,24 +3790,20 @@
         function animateUploadedImage(paths, animDuration) {
             // Show hand only if checkbox is checked and image is loaded
             const handEnabled = (handCheckbox && handCheckbox.checked) && handImageData;
-            
+
             // Delay path animation by entrance duration only if hand is enabled
             const entranceDuration = handEnabled ? 400 : 0;
-            
-            // Calculate duration per path - ensure minimum of 0.1s per path
-            const minPathDuration = 0.1; // seconds
-            const pathDuration = Math.max(minPathDuration, animDuration / paths.length);
-            
-            // Recalculate total time if we hit the minimum
-            const totalTime = pathDuration * paths.length;
-            
-            // Start hand animation with the ACTUAL total time, not the slider duration
+
+            // Calculate duration per path - respect user's chosen duration
+            const pathDuration = animDuration / paths.length;
+
+            // Start hand animation with the user's chosen duration
             if (handEnabled) {
                 handImage.style.opacity = '0'; // Start hidden, will fade in during entrance
                 handImage.style.display = 'block';
-                animateHandContinuously(paths, totalTime); // Use totalTime, not animDuration
+                animateHandContinuously(paths, animDuration);
             }
-            
+
             let currentTime = entranceDuration / 1000; // Start after entrance (or immediately if no hand)
 
             paths.forEach((path, index) => {
@@ -3815,12 +3811,12 @@
 
                 path.style.strokeDasharray = length;
                 path.style.strokeDashoffset = length;
-                
+
                 setTimeout(() => {
                     path.style.transition = `stroke-dashoffset ${pathDuration}s linear`;
                     path.style.strokeDashoffset = '0';
                 }, currentTime * 1000);
-                
+
                 currentTime += pathDuration;
             });
 
@@ -3828,7 +3824,7 @@
             if (handEnabled) {
                 setTimeout(() => {
                     handImage.style.opacity = '0';
-                }, totalTime * 1000 + entranceDuration + 500);
+                }, animDuration * 1000 + entranceDuration + 500);
             }
         }
 
