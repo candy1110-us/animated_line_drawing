@@ -4020,13 +4020,13 @@
 
             // Set canvas size based on SVG rendered size (full size for better quality)
             const scale = 1.0; // Full size for high quality
-            const handPadding = handEnabled ? 200 : 0; // Add padding for hand if enabled
-            const canvasWidth = Math.floor(svgRect.width * scale) + (handPadding * 2);
-            const canvasHeight = Math.floor(svgRect.height * scale) + (handPadding * 2);
+            // No padding - GIF should match exactly what's on the canvas
+            const canvasWidth = Math.floor(svgRect.width * scale);
+            const canvasHeight = Math.floor(svgRect.height * scale);
 
-            // SVG will be centered in canvas with padding for hand
-            const offsetX = handPadding;
-            const offsetY = handPadding;
+            // SVG starts at origin (no padding offset)
+            const offsetX = 0;
+            const offsetY = 0;
             const svgWidth = Math.floor(svgRect.width * scale);
             const svgHeight = Math.floor(svgRect.height * scale);
             const isDataURL = handImageData && handImageData.startsWith('data:');
