@@ -3855,8 +3855,18 @@
 
             const animDuration = parseFloat(duration.value);
             const fps = 12; // Frames per second
-            const totalFrames = Math.floor(animDuration * fps);
             const frameInterval = 1000 / fps;
+
+            // Check if hand should be included (need this early for timing calculations)
+            const handEnabledForGif = handCheckbox && handCheckbox.checked && handImageData;
+
+            // Hand animation timing (must match live animation in animateHand function)
+            const entranceDuration = handEnabledForGif ? 0.4 : 0; // 400ms entrance
+            const exitDuration = handEnabledForGif ? 0.5 : 0; // 500ms exit
+
+            // Total animation includes entrance + drawing + exit
+            const totalAnimDuration = entranceDuration + animDuration + exitDuration;
+            const totalFrames = Math.floor(totalAnimDuration * fps);
 
             // Get the preview content container
             const previewContent = document.querySelector('.preview-content');
@@ -3882,8 +3892,8 @@
             const svgViewBox = svgElement.viewBox.baseVal;
             const aspectRatio = svgViewBox.width / svgViewBox.height;
 
-            // Check if hand should be included
-            const handEnabled = handCheckbox && handCheckbox.checked && handImageData;
+            // Use the hand check from earlier
+            const handEnabled = handEnabledForGif;
 
             // Set canvas size based on SVG rendered size (full size for better quality)
             const scale = 1.0; // Full size for high quality
@@ -3903,8 +3913,46 @@
             // Pre-render all frames
             const images = [];
 
+            // Get the first path's starting point for hand entrance animation
+            const firstPath = paths[0];
+            const firstPoint = firstPath ? firstPath.getPointAtLength(0) : { x: 0, y: 0 };
+
+            // Get the last path's ending point for hand exit animation
+            const lastPath = paths[paths.length - 1];
+            const lastPathLength = lastPath ? lastPath.getTotalLength() : 0;
+            const lastPoint = lastPath ? lastPath.getPointAtLength(lastPathLength) : { x: 0, y: 0 };
+
+            // Pre-calculate SVG transform values
+            const svgWidthAttr = parseFloat(svgElement.getAttribute('width'));
+            const svgHeightAttr = parseFloat(svgElement.getAttribute('height'));
+            const scaleX = svgWidth / svgWidthAttr;
+            const scaleY = svgHeight / svgHeightAttr;
+
             for (let frameIndex = 0; frameIndex < totalFrames; frameIndex++) {
-                const progress = frameIndex / (totalFrames - 1); // 0 to 1
+                // Calculate time in seconds for this frame
+                const frameTime = frameIndex / fps;
+
+                // Determine which phase we're in and calculate progress accordingly
+                let animationPhase = 'entrance';
+                let drawingProgress = 0; // Progress of SVG drawing (0 to 1)
+                let handPhaseProgress = 0; // Progress within current hand animation phase
+
+                if (frameTime < entranceDuration) {
+                    // Entrance phase: hand moves in, no drawing yet
+                    animationPhase = 'entrance';
+                    drawingProgress = 0;
+                    handPhaseProgress = frameTime / entranceDuration;
+                } else if (frameTime < entranceDuration + animDuration) {
+                    // Drawing phase: hand follows path, SVG is being drawn
+                    animationPhase = 'drawing';
+                    drawingProgress = (frameTime - entranceDuration) / animDuration;
+                    handPhaseProgress = drawingProgress;
+                } else {
+                    // Exit phase: drawing complete, hand moves out
+                    animationPhase = 'exit';
+                    drawingProgress = 1;
+                    handPhaseProgress = (frameTime - entranceDuration - animDuration) / exitDuration;
+                }
 
                 // Create canvas for this frame
                 const canvas = document.createElement('canvas');
@@ -3929,10 +3977,10 @@
                     const pathEnd = (index + 1) / paths.length;
 
                     let pathProgress = 0;
-                    if (progress >= pathEnd) {
+                    if (drawingProgress >= pathEnd) {
                         pathProgress = 1; // Fully drawn
-                    } else if (progress > pathStart) {
-                        pathProgress = (progress - pathStart) / (pathEnd - pathStart);
+                    } else if (drawingProgress > pathStart) {
+                        pathProgress = (drawingProgress - pathStart) / (pathEnd - pathStart);
                     }
 
                     // Set stroke-dasharray and offset
@@ -3963,49 +4011,73 @@
                     img.src = url;
                 });
 
-                // Draw hand (only if it's a data URL to avoid CORS tainting)
+                // Draw hand based on current animation phase
                 const isDataURL = handImageData && handImageData.startsWith('data:');
-                if (includeHand && progress > 0 && isDataURL) {
+                if (includeHand && isDataURL) {
                     await new Promise((resolveHand) => {
                         const handImg = new Image();
                         handImg.onload = () => {
                             try {
-                                // Calculate hand position based on which path is being drawn
-                                const currentPathIndex = Math.min(Math.floor(progress * paths.length), paths.length - 1);
-                                const currentPath = paths[currentPathIndex];
-
-                                // Get position along the current path
-                                const pathProgress = ((progress * paths.length) - currentPathIndex);
-                                const pathLength = currentPath.getTotalLength();
-                                const pointOnPath = currentPath.getPointAtLength(pathProgress * pathLength);
-
-                                // Transform SVG coordinates to canvas coordinates
-                                // Match the live animation calculation exactly
-                                const svgWidthAttr = parseFloat(svgElement.getAttribute('width'));
-                                const svgHeightAttr = parseFloat(svgElement.getAttribute('height'));
-
-                                // Scale from SVG coordinate system to SVG rendered size (not full canvas)
-                                const scaleX = svgWidth / svgWidthAttr;
-                                const scaleY = svgHeight / svgHeightAttr;
-
-                                // Convert point from SVG coordinates to canvas coordinates (with padding offset)
-                                const canvasX = (pointOnPath.x * scaleX) + offsetX;
-                                const canvasY = (pointOnPath.y * scaleY) + offsetY;
-
                                 // Scale hand size for canvas
                                 const handWidthScaled = (handSizeValue || 50) * scale;
                                 const handHeightScaled = handWidthScaled * (handImg.height / handImg.width);
 
                                 // Apply hand offset (as percentage of hand size)
-                                // Use the global variables defined in the main script
                                 const offsetXPixels = (handOffsetXPercent / 100) * handWidthScaled;
                                 const offsetYPixels = (handOffsetYPercent / 100) * handWidthScaled;
 
-                                // Position hand with offset applied
-                                const handX = canvasX - offsetXPixels;
-                                const handY = canvasY - offsetYPixels;
+                                let handX, handY, handOpacity = 1;
 
+                                if (animationPhase === 'entrance') {
+                                    // Entrance: animate from bottom-right to first point
+                                    const easedProgress = 1 - Math.pow(1 - handPhaseProgress, 3); // ease-out
+
+                                    // Start position: bottom-right corner of canvas
+                                    const startX = canvasWidth + 50;
+                                    const startY = canvasHeight + 50;
+
+                                    // Target position: first point of drawing
+                                    const targetX = (firstPoint.x * scaleX) + offsetX - offsetXPixels;
+                                    const targetY = (firstPoint.y * scaleY) + offsetY - offsetYPixels;
+
+                                    handX = startX + (targetX - startX) * easedProgress;
+                                    handY = startY + (targetY - startY) * easedProgress;
+                                    handOpacity = easedProgress; // Fade in
+                                } else if (animationPhase === 'drawing') {
+                                    // Drawing: follow the path
+                                    const currentPathIndex = Math.min(Math.floor(drawingProgress * paths.length), paths.length - 1);
+                                    const currentPath = paths[currentPathIndex];
+
+                                    const pathProgress = ((drawingProgress * paths.length) - currentPathIndex);
+                                    const pathLength = currentPath.getTotalLength();
+                                    const pointOnPath = currentPath.getPointAtLength(pathProgress * pathLength);
+
+                                    const canvasX = (pointOnPath.x * scaleX) + offsetX;
+                                    const canvasY = (pointOnPath.y * scaleY) + offsetY;
+
+                                    handX = canvasX - offsetXPixels;
+                                    handY = canvasY - offsetYPixels;
+                                    handOpacity = 1;
+                                } else {
+                                    // Exit: animate down and fade out
+                                    const easedProgress = Math.pow(handPhaseProgress, 2); // ease-in
+
+                                    // Start from last point position
+                                    const startX = (lastPoint.x * scaleX) + offsetX - offsetXPixels;
+                                    const startY = (lastPoint.y * scaleY) + offsetY - offsetYPixels;
+
+                                    // Move down off screen
+                                    const targetY = canvasHeight + 100;
+
+                                    handX = startX;
+                                    handY = startY + (targetY - startY) * easedProgress * 0.15;
+                                    handOpacity = 1 - handPhaseProgress; // Fade out
+                                }
+
+                                // Apply opacity
+                                ctx.globalAlpha = handOpacity;
                                 ctx.drawImage(handImg, handX, handY, handWidthScaled, handHeightScaled);
+                                ctx.globalAlpha = 1; // Reset
                             } catch (error) {
                                 console.warn('Error positioning hand:', error);
                             }
@@ -4019,7 +4091,7 @@
                         };
                         handImg.src = handImageData;
                     });
-                } else if (includeHand && progress > 0 && !isDataURL) {
+                } else if (includeHand && !isDataURL) {
                     console.warn(`Skipping hand for frame ${frameIndex} - not a data URL (would taint canvas)`);
                 }
 
