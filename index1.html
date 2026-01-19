@@ -1498,6 +1498,24 @@
             const toHex = x => Math.round(x * 255).toString(16).padStart(2, '0');
             return `#${toHex(f(0))}${toHex(f(8))}${toHex(f(4))}`;
         }
+
+        // Helper function to convert HSV to Hex (for color picker square)
+        function hsvToHex(h, s, v) {
+            s /= 100;
+            v /= 100;
+            const c = v * s;
+            const x = c * (1 - Math.abs((h / 60) % 2 - 1));
+            const m = v - c;
+            let r, g, b;
+            if (h < 60) { r = c; g = x; b = 0; }
+            else if (h < 120) { r = x; g = c; b = 0; }
+            else if (h < 180) { r = 0; g = c; b = x; }
+            else if (h < 240) { r = 0; g = x; b = c; }
+            else if (h < 300) { r = x; g = 0; b = c; }
+            else { r = c; g = 0; b = x; }
+            const toHex = n => Math.round((n + m) * 255).toString(16).padStart(2, '0');
+            return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+        }
         
         // Mode switching
         const drawModeBtn = document.getElementById('drawModeBtn');
@@ -1804,18 +1822,17 @@
             const strokeColorHexInput = document.getElementById('strokeColorHexInput');
             
             let strokeHue = 120; // Start with green
-            let strokeSaturation = 100;
-            let strokeLightness = 50;
-            
+            let strokeSaturation = 100; // X-axis: 0 (left, white) to 100 (right, full color)
+            let strokeValue = 100; // Y-axis: 100 (top, bright) to 0 (bottom, black)
+
             function updateStrokeColor() {
-                const hsl = `hsl(${strokeHue}, ${strokeSaturation}%, ${strokeLightness}%)`;
-                const hex = hslToHex(strokeHue, strokeSaturation, strokeLightness);
+                const hex = hsvToHex(strokeHue, strokeSaturation, strokeValue);
                 strokeColor.value = hex;
                 strokeColorHexInput.value = hex;
                 strokeColor.dispatchEvent(new Event('input'));
-                
-                // Update square background with current hue
-                strokeColorSquare.style.background = `hsl(${strokeHue}, 100%, 50%)`;
+
+                // Update square background with current hue (full saturation, full value)
+                strokeColorSquare.style.background = `linear-gradient(to top, #000, transparent), linear-gradient(to right, #fff, hsl(${strokeHue}, 100%, 50%))`;
             }
             
             if (strokeColorSquare && strokeColorCursor) {
@@ -1824,10 +1841,10 @@
                         const rect = strokeColorSquare.getBoundingClientRect();
                         const x = Math.max(0, Math.min(event.clientX - rect.left, rect.width));
                         const y = Math.max(0, Math.min(event.clientY - rect.top, rect.height));
-                        
+
                         strokeSaturation = (x / rect.width) * 100;
-                        strokeLightness = 100 - (y / rect.height) * 100;
-                        
+                        strokeValue = 100 - (y / rect.height) * 100;
+
                         strokeColorCursor.style.left = x + 'px';
                         strokeColorCursor.style.top = y + 'px';
                         updateStrokeColor();
@@ -3338,30 +3355,29 @@
             const bgColorHexInput = document.getElementById('bgColorHexInput');
             
             let bgHue = 0; // Start with white (will be adjusted)
-            let bgSaturation = 0;
-            let bgLightness = 100;
-            
+            let bgSaturation = 0; // X-axis: 0 (left, white) to 100 (right, full color)
+            let bgValue = 100; // Y-axis: 100 (top, bright) to 0 (bottom, black)
+
             function updateBgColor() {
-                const hsl = `hsl(${bgHue}, ${bgSaturation}%, ${bgLightness}%)`;
-                const hex = hslToHex(bgHue, bgSaturation, bgLightness);
+                const hex = hsvToHex(bgHue, bgSaturation, bgValue);
                 bgColor.value = hex;
                 bgColorHexInput.value = hex;
                 bgColor.dispatchEvent(new Event('input'));
-                
-                // Update square background with current hue
-                bgColorSquare.style.background = `hsl(${bgHue}, 100%, 50%)`;
+
+                // Update square background with current hue (full saturation, full value)
+                bgColorSquare.style.background = `linear-gradient(to top, #000, transparent), linear-gradient(to right, #fff, hsl(${bgHue}, 100%, 50%))`;
             }
-            
+
             if (bgColorSquare && bgColorCursor) {
                 bgColorSquare.addEventListener('mousedown', (e) => {
                     function pickColor(event) {
                         const rect = bgColorSquare.getBoundingClientRect();
                         const x = Math.max(0, Math.min(event.clientX - rect.left, rect.width));
                         const y = Math.max(0, Math.min(event.clientY - rect.top, rect.height));
-                        
+
                         bgSaturation = (x / rect.width) * 100;
-                        bgLightness = 100 - (y / rect.height) * 100;
-                        
+                        bgValue = 100 - (y / rect.height) * 100;
+
                         bgColorCursor.style.left = x + 'px';
                         bgColorCursor.style.top = y + 'px';
                         updateBgColor();
