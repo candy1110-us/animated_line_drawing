@@ -558,8 +558,19 @@
             column-gap: 12px;
             row-gap: calc(var(--line-spacing, 15) * 1px);
             padding: 40px;
-            position: relative;
-            overflow: hidden;
+            position: absolute;
+            top: 0;
+            left: 0;
+            cursor: grab;
+            user-select: none;
+        }
+
+        .animation-stage:active {
+            cursor: grabbing;
+        }
+
+        .animation-stage.dragging {
+            cursor: grabbing;
         }
 
         .word {
@@ -767,6 +778,20 @@
                                     <span class="popup-label">Hex:</span>
                                     <input type="text" id="bgColorHexInput" value="#00ff00" class="hex-input">
                                 </div>
+                                <div style="margin-top: 12px; border-top: 1px solid #eee; padding-top: 12px;">
+                                    <div class="popup-label" style="margin-bottom: 8px;">Or upload image:</div>
+                                    <div class="upload-area" id="bgUploadArea" style="min-height: 60px; padding: 12px;">
+                                        <input type="file" id="bgImageUpload" accept="image/*" style="display: none;">
+                                        <div id="bgUploadPlaceholder" class="upload-placeholder">
+                                            <span style="font-size: 12px;">📷 Click to upload</span>
+                                        </div>
+                                        <div id="bgImagePreview" class="image-preview">
+                                            <img id="bgPreviewImg" class="preview-img" style="max-width: 80px; max-height: 60px;">
+                                            <span id="bgImageName" class="image-name"></span>
+                                            <span id="removeBgImage" class="change-image">✕ Remove</span>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -808,10 +833,11 @@
                         </div>
                     </div>
 
-                    <div style="display: flex; gap: 12px; justify-content: center; margin-top: 20px;">
+                    <div style="display: flex; gap: 12px; justify-content: center; margin-top: 20px; flex-wrap: wrap;">
                         <button class="play-button" id="playAnimation" style="margin-top: 0; padding: 14px 32px; width: auto;">▶ Animate</button>
                         <button class="play-button" id="downloadGifBtn" style="margin-top: 0; padding: 14px 32px; width: auto;">Download as GIF</button>
                     </div>
+                    <p style="text-align: center; font-size: 11px; color: #999; margin-top: 8px;">Drag the text to reposition it on the canvas</p>
 
                 </div>
             </div>
@@ -819,6 +845,7 @@
             <div class="right-column">
                 <div class="preview-container">
                     <div class="animation-wrapper" id="animationWrapper">
+                        <button id="resetPositionBtn" style="position: absolute; top: 10px; right: 10px; z-index: 100; padding: 6px 12px; background: rgba(255,255,255,0.9); border: 1px solid rgba(0,0,0,0.1); border-radius: 6px; font-size: 12px; color: #636e72; cursor: pointer; transition: background 0.2s;">↺ Center</button>
                         <div class="animation-stage" id="animationStage">
                             <!-- Words will be inserted here -->
                         </div>
@@ -837,14 +864,14 @@
         const textColorInput = document.getElementById('textColor');
         const highlightColorInput = document.getElementById('highlightColor');
         const backgroundColorInput = document.getElementById('backgroundColor');
-        // Background image upload elements removed
-        // const bgImageUpload = document.getElementById('bgImageUpload');
-        // const bgUploadArea = document.getElementById('bgUploadArea');
-        // const bgUploadPlaceholder = document.getElementById('bgUploadPlaceholder');
-        // const bgImagePreview = document.getElementById('bgImagePreview');
-        // const bgPreviewImg = document.getElementById('bgPreviewImg');
-        // const bgImageName = document.getElementById('bgImageName');
-        // const changeBgImage = document.getElementById('changeBgImage');
+        // Background image upload elements
+        const bgImageUpload = document.getElementById('bgImageUpload');
+        const bgUploadArea = document.getElementById('bgUploadArea');
+        const bgUploadPlaceholder = document.getElementById('bgUploadPlaceholder');
+        const bgImagePreview = document.getElementById('bgImagePreview');
+        const bgPreviewImg = document.getElementById('bgPreviewImg');
+        const bgImageName = document.getElementById('bgImageName');
+        const removeBgImageBtn = document.getElementById('removeBgImage');
         const jiggleIntensitySlider = document.getElementById('jiggleIntensity');
         const jiggleValue = document.getElementById('jiggleValue');
         const lineSpacingSlider = document.getElementById('lineSpacing');
@@ -857,6 +884,84 @@
 
         let currentAspectRatio = '16:9';
         let backgroundImageUrl = null;
+
+        // Text position offset (for dragging)
+        let textOffsetX = 0;
+        let textOffsetY = 0;
+
+        // Drag functionality for animation stage
+        let isDragging = false;
+        let dragStartX = 0;
+        let dragStartY = 0;
+        let initialOffsetX = 0;
+        let initialOffsetY = 0;
+
+        animationStage.addEventListener('mousedown', (e) => {
+            // Only start drag if clicking on the stage or words (not during animation)
+            isDragging = true;
+            animationStage.classList.add('dragging');
+            dragStartX = e.clientX;
+            dragStartY = e.clientY;
+            initialOffsetX = textOffsetX;
+            initialOffsetY = textOffsetY;
+            e.preventDefault();
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+
+            const deltaX = e.clientX - dragStartX;
+            const deltaY = e.clientY - dragStartY;
+
+            textOffsetX = initialOffsetX + deltaX;
+            textOffsetY = initialOffsetY + deltaY;
+
+            animationStage.style.transform = `translate(${textOffsetX}px, ${textOffsetY}px)`;
+        });
+
+        document.addEventListener('mouseup', () => {
+            if (isDragging) {
+                isDragging = false;
+                animationStage.classList.remove('dragging');
+            }
+        });
+
+        // Touch support for mobile
+        animationStage.addEventListener('touchstart', (e) => {
+            isDragging = true;
+            animationStage.classList.add('dragging');
+            dragStartX = e.touches[0].clientX;
+            dragStartY = e.touches[0].clientY;
+            initialOffsetX = textOffsetX;
+            initialOffsetY = textOffsetY;
+        }, { passive: true });
+
+        document.addEventListener('touchmove', (e) => {
+            if (!isDragging) return;
+
+            const deltaX = e.touches[0].clientX - dragStartX;
+            const deltaY = e.touches[0].clientY - dragStartY;
+
+            textOffsetX = initialOffsetX + deltaX;
+            textOffsetY = initialOffsetY + deltaY;
+
+            animationStage.style.transform = `translate(${textOffsetX}px, ${textOffsetY}px)`;
+        }, { passive: true });
+
+        document.addEventListener('touchend', () => {
+            if (isDragging) {
+                isDragging = false;
+                animationStage.classList.remove('dragging');
+            }
+        });
+
+        // Reset position button
+        const resetPositionBtn = document.getElementById('resetPositionBtn');
+        resetPositionBtn.addEventListener('click', () => {
+            textOffsetX = 0;
+            textOffsetY = 0;
+            animationStage.style.transform = '';
+        });
 
         // Update font size display and validation
         fontSize.addEventListener('input', (e) => {
@@ -909,13 +1014,13 @@
             }
         });
 
-        // Update background color
+        // Update background color (only if no background image)
         backgroundColorInput.addEventListener('input', (e) => {
-            animationWrapper.style.background = e.target.value;
+            if (!backgroundImageUrl) {
+                animationWrapper.style.background = e.target.value;
+            }
         });
 
-        // Background image upload functionality removed
-        /*
         // Background image upload area click
         bgUploadArea.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -923,14 +1028,12 @@
         });
 
         // Remove background image
-        const removeBgImageBtn = document.getElementById('removeBgImage');
         removeBgImageBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             backgroundImageUrl = null;
             bgImageUpload.value = '';
             bgUploadPlaceholder.classList.remove('hidden');
             bgImagePreview.classList.remove('active');
-            removeBgImageBtn.style.display = 'none';
 
             // Reset to background color only
             animationWrapper.style.background = backgroundColorInput.value;
@@ -938,7 +1041,7 @@
             animationWrapper.style.backgroundPosition = '';
         });
 
-        // Show/hide remove button based on image presence
+        // Handle background image upload
         bgImageUpload.addEventListener('change', (e) => {
             const file = e.target.files[0];
             if (file) {
@@ -949,7 +1052,6 @@
                     bgImageName.textContent = file.name;
                     bgUploadPlaceholder.classList.add('hidden');
                     bgImagePreview.classList.add('active');
-                    removeBgImageBtn.style.display = 'block';
 
                     // Apply background image
                     animationWrapper.style.background = `url(${backgroundImageUrl}) center/cover`;
@@ -959,7 +1061,6 @@
                 reader.readAsDataURL(file);
             }
         });
-        */
 
         // Highlight opacity removed - now always 100%
         // const highlightOpacitySlider = document.getElementById('highlightOpacity');
@@ -1418,37 +1519,48 @@
             const words = Array.from(animationStage.querySelectorAll('.word'));
             const delayBetweenWords = words.length > 1 ? animDuration / words.length : 0;
             const flyInDuration = 800; // flyInWithJiggle animation duration
-            const extraJiggleTime = 2000; // Extra 2 seconds to show jiggle at the end
+            const extraJiggleTime = 1000; // Extra 1 second to show jiggle at the end
 
             // Calculate total duration including last word's animation and extra jiggle time
             const totalAnimDuration = animDuration + flyInDuration + extraJiggleTime;
             const totalFrames = Math.ceil(totalAnimDuration / frameTime);
 
-            // Get dimensions based on aspect ratio
+            // Get dimensions based on aspect ratio (720p for smaller file size)
             let canvasWidth, canvasHeight;
             if (currentAspectRatio === '16:9') {
-                canvasWidth = 1920;
-                canvasHeight = 1080;
+                canvasWidth = 1280;
+                canvasHeight = 720;
             } else {
-                canvasWidth = 1080;
-                canvasHeight = 1920;
+                canvasWidth = 720;
+                canvasHeight = 1280;
             }
+
+            // Get wrapper dimensions for scaling
+            const wrapperRect = animationWrapper.getBoundingClientRect();
+            const scaleX = canvasWidth / wrapperRect.width;
+            const scaleY = canvasHeight / wrapperRect.height;
+
+            // Calculate the text offset scaled to canvas coordinates
+            const scaledOffsetX = textOffsetX * scaleX;
+            const scaledOffsetY = textOffsetY * scaleY;
 
             // Get word data (positions, sizes, etc.) and add random jiggle offset for each word
             // Filter out non-word elements (like line breaks)
+            // Note: We get positions without the drag offset, then apply scaled offset during rendering
+            animationStage.style.transform = ''; // Temporarily remove transform to get base positions
             const wordData = words
                 .filter(word => word.classList.contains('word') && word.textContent.trim().length > 0)
                 .map((word, index) => {
                     const rect = word.getBoundingClientRect();
-                    const wrapperRect = animationWrapper.getBoundingClientRect();
+                    const currentWrapperRect = animationWrapper.getBoundingClientRect();
 
                     // Create a seeded random offset based on word index for consistent randomization
                     const jiggleOffset = (index * 137.5) % 300; // Random offset in jiggle cycle (0-300ms)
 
                     return {
                         text: word.textContent,
-                        x: rect.left - wrapperRect.left,
-                        y: rect.top - wrapperRect.top,
+                        x: rect.left - currentWrapperRect.left,
+                        y: rect.top - currentWrapperRect.top,
                         fontSize: parseFloat(fontSize.value),
                         fontFamily: fontFamilySelect.value,
                         color: textColorInput.value,
@@ -1457,11 +1569,12 @@
                         jiggleOffset: jiggleOffset
                     };
                 });
+            // Restore the transform
+            if (textOffsetX !== 0 || textOffsetY !== 0) {
+                animationStage.style.transform = `translate(${textOffsetX}px, ${textOffsetY}px)`;
+            }
 
             const bgColor = backgroundColorInput.value;
-            const wrapperRect = animationWrapper.getBoundingClientRect();
-            const scaleX = canvasWidth / wrapperRect.width;
-            const scaleY = canvasHeight / wrapperRect.height;
 
             // Easing functions to match CSS animations
             function easeIn(t) {
@@ -1476,8 +1589,19 @@
 
             const images = [];
 
-            // Background image functionality removed - only use background color
+            // Load background image if present
             let bgImage = null;
+            if (backgroundImageUrl) {
+                bgImage = await new Promise((resolve) => {
+                    const img = new Image();
+                    img.onload = () => resolve(img);
+                    img.onerror = () => {
+                        console.warn('Failed to load background image, using color fallback');
+                        resolve(null);
+                    };
+                    img.src = backgroundImageUrl;
+                });
+            }
 
             // Pre-render all frames to canvas
             for (let frameIndex = 0; frameIndex < totalFrames; frameIndex++) {
@@ -1575,9 +1699,9 @@
 
                     if (opacity <= 0) return;
 
-                    // Calculate final position
-                    const x = data.x * scaleX;
-                    const y = (data.y * scaleY) + translateY;
+                    // Calculate final position (including user's drag offset)
+                    const x = (data.x * scaleX) + scaledOffsetX;
+                    const y = (data.y * scaleY) + translateY + scaledOffsetY;
 
                     ctx.save();
                     ctx.globalAlpha = opacity;

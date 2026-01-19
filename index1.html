@@ -893,6 +893,10 @@
             margin-bottom: 12px;
         }
 
+        .mt-12 {
+            margin-top: 12px;
+        }
+
         .mb-16 {
             margin-bottom: 16px;
         }
@@ -1404,6 +1408,25 @@
                                     <span class="label-text">Hex:</span>
                                     <input type="text" id="bgColorHexInput" value="#00ff00" class="hex-input">
                                     <input type="color" id="bgColor" value="#00ff00" class="color-input">
+                                </div>
+
+                                <!-- Background image upload -->
+                                <div class="mt-12" style="border-top: 1px solid #e5e7eb; padding-top: 12px;">
+                                    <div class="text-tiny-gray-mb">Or use background image:</div>
+                                    <div class="upload-area" id="bgImageUploadArea">
+                                        <input type="file" id="bgImageUpload" accept="image/*" class="hidden">
+                                        <div id="bgUploadPlaceholder" class="flex-col-center-gap-4">
+                                            <span class="text-small-indigo">🖼️ Click to upload</span>
+                                        </div>
+                                        <div id="bgImagePreview" class="flex-col-center-gap-8" style="display: none;">
+                                            <img id="bgPreviewImg" class="img-thumb" />
+                                            <span class="text-tiny-gray" id="bgImageName"></span>
+                                            <div class="flex-center-gap-8">
+                                                <span class="text-tiny-indigo" id="changeBgImage">Change</span>
+                                                <span class="text-tiny-indigo" id="removeBgImage" style="color: #dd6143;">Remove</span>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -2087,8 +2110,13 @@
             svg.setAttribute('width', canvas.width);
             svg.setAttribute('height', canvas.height);
             svg.setAttribute('viewBox', `0 0 ${canvas.width} ${canvas.height}`);
-            svg.style.background = bgColorValue;
-            
+            // Use background image if available, otherwise use color
+            if (bgImageData) {
+                svg.style.background = `url(${bgImageData}) center/cover`;
+            } else {
+                svg.style.background = bgColorValue;
+            }
+
             // Convert each stroke to a path
             allStrokes.forEach((stroke, index) => {
                 if (stroke.length < 2) return;
@@ -2850,8 +2878,13 @@
             svg.setAttribute('width', CANVAS_WIDTH);
             svg.setAttribute('height', CANVAS_HEIGHT);
             svg.setAttribute('viewBox', `0 0 ${CANVAS_WIDTH} ${CANVAS_HEIGHT}`);
-            svg.style.background = bgColorValue;
-            
+            // Use background image if available, otherwise use color
+            if (bgImageData) {
+                svg.style.background = `url(${bgImageData}) center/cover`;
+            } else {
+                svg.style.background = bgColorValue;
+            }
+
             let renderedCount = 0;
             paths.forEach((pathObj, index) => {
                 const path = pathObj.points;
@@ -2937,6 +2970,7 @@
         let handOffsetXPercent = 0;
         let handOffsetYPercent = 0;
         let userSetDuration = false; // Track if user manually changed duration
+        let bgImageData = null; // Background image data URL
 
         duration.addEventListener('input', (e) => {
             durationDisplay.textContent = parseFloat(e.target.value).toFixed(1) + 's';
@@ -3087,6 +3121,72 @@
 
                     // Auto-check the checkbox when image is uploaded
                     handCheckbox.checked = true;
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        // Background image upload controls
+        const bgImageUploadArea = document.getElementById('bgImageUploadArea');
+        const bgImageUpload = document.getElementById('bgImageUpload');
+        const bgUploadPlaceholder = document.getElementById('bgUploadPlaceholder');
+        const bgImagePreview = document.getElementById('bgImagePreview');
+        const bgPreviewImg = document.getElementById('bgPreviewImg');
+        const bgImageName = document.getElementById('bgImageName');
+        const changeBgImage = document.getElementById('changeBgImage');
+        const removeBgImage = document.getElementById('removeBgImage');
+
+        if (bgImageUploadArea && bgImageUpload) {
+            bgImageUploadArea.addEventListener('click', () => {
+                bgImageUpload.click();
+            });
+
+            if (changeBgImage) {
+                changeBgImage.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    bgImageUpload.click();
+                });
+            }
+
+            if (removeBgImage) {
+                removeBgImage.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    bgImageData = null;
+                    if (bgUploadPlaceholder) bgUploadPlaceholder.style.display = 'flex';
+                    if (bgImagePreview) bgImagePreview.style.display = 'none';
+                    // Update preview if SVG exists
+                    const svgContainer = document.getElementById('svgContainer');
+                    const svg = svgContainer.querySelector('svg');
+                    if (svg) {
+                        svg.style.background = bgColor.value;
+                    }
+                });
+            }
+        }
+
+        if (bgImageUpload) {
+            bgImageUpload.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    bgImageData = event.target.result;
+
+                    // Show preview in popup
+                    if (bgPreviewImg && bgImagePreview && bgUploadPlaceholder && bgImageName) {
+                        bgPreviewImg.src = bgImageData;
+                        bgImageName.textContent = file.name;
+                        bgUploadPlaceholder.style.display = 'none';
+                        bgImagePreview.style.display = 'flex';
+                    }
+
+                    // Update preview if SVG exists
+                    const svgContainer = document.getElementById('svgContainer');
+                    const svg = svgContainer.querySelector('svg');
+                    if (svg) {
+                        svg.style.background = `url(${bgImageData}) center/cover`;
+                    }
                 };
                 reader.readAsDataURL(file);
             });
@@ -3895,7 +3995,18 @@
             }
 
             const rect = previewContent.getBoundingClientRect();
-            const bgColor = document.getElementById('bgColor')?.value || '#00ff00';
+            const bgColorValue = document.getElementById('bgColor')?.value || '#00ff00';
+
+            // Pre-load background image if available
+            let bgImg = null;
+            if (bgImageData) {
+                bgImg = await new Promise((resolve, reject) => {
+                    const img = new Image();
+                    img.onload = () => resolve(img);
+                    img.onerror = () => resolve(null); // Fall back to color if image fails
+                    img.src = bgImageData;
+                });
+            }
 
             // Calculate SVG positioning and use SVG dimensions for canvas to preserve aspect ratio
             const svgRect = svgElement.getBoundingClientRect();
@@ -3973,8 +4084,31 @@
                 const ctx = canvas.getContext('2d');
 
                 // Draw background
-                ctx.fillStyle = bgColor;
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                if (bgImg) {
+                    // Draw background image covering the canvas
+                    const imgAspect = bgImg.width / bgImg.height;
+                    const canvasAspect = canvas.width / canvas.height;
+                    let drawWidth, drawHeight, drawX, drawY;
+
+                    if (imgAspect > canvasAspect) {
+                        // Image is wider, fit height and crop width
+                        drawHeight = canvas.height;
+                        drawWidth = drawHeight * imgAspect;
+                        drawX = (canvas.width - drawWidth) / 2;
+                        drawY = 0;
+                    } else {
+                        // Image is taller, fit width and crop height
+                        drawWidth = canvas.width;
+                        drawHeight = drawWidth / imgAspect;
+                        drawX = 0;
+                        drawY = (canvas.height - drawHeight) / 2;
+                    }
+
+                    ctx.drawImage(bgImg, drawX, drawY, drawWidth, drawHeight);
+                } else {
+                    ctx.fillStyle = bgColorValue;
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                }
 
                 // Clone SVG and modify paths to show partial drawing
                 const svgClone = svgElement.cloneNode(true);
