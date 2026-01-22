@@ -4170,6 +4170,7 @@
 
             const scaleX = svgWidth / svgWidthAttr;
             const scaleY = svgHeight / svgHeightAttr;
+            const scale = Math.min(scaleX, scaleY); // Use for hand sizing
 
             const isDataURL = handImageData && handImageData.startsWith('data:');
             // Try to include hand regardless - if it fails due to CORS, we'll catch the error
