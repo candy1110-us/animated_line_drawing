@@ -1618,6 +1618,10 @@
             const drawingCanvas = document.getElementById('drawingCanvas');
             const guideCanvas = document.getElementById('guideCanvas');
 
+            // Get old canvas dimensions for scaling strokes
+            const oldCanvasW = drawingCanvas ? drawingCanvas.width : 600;
+            const oldCanvasH = drawingCanvas ? drawingCanvas.height : 338;
+
             // Set canvas dimensions based on aspect ratio
             let canvasW, canvasH;
             if (ratio === '9:16') {
@@ -1632,30 +1636,50 @@
                 if (canvasContainer) canvasContainer.classList.remove('vertical');
             }
 
-            // Update canvas dimensions
+            // Calculate scale factors
+            const scaleX = canvasW / oldCanvasW;
+            const scaleY = canvasH / oldCanvasH;
+
+            // Scale existing strokes to new canvas size
+            if (typeof allStrokes !== 'undefined' && allStrokes.length > 0) {
+                allStrokes.forEach(stroke => {
+                    stroke.forEach(point => {
+                        point.x *= scaleX;
+                        point.y *= scaleY;
+                    });
+                });
+            }
+
+            // Update canvas dimensions and redraw
             if (drawingCanvas) {
                 drawingCanvas.width = canvasW;
                 drawingCanvas.height = canvasH;
                 const ctx = drawingCanvas.getContext('2d');
                 ctx.clearRect(0, 0, canvasW, canvasH);
+
+                // Redraw strokes if any exist
+                if (typeof allStrokes !== 'undefined' && allStrokes.length > 0) {
+                    ctx.strokeStyle = '#000000';
+                    ctx.lineWidth = 2;
+                    ctx.lineCap = 'round';
+                    ctx.lineJoin = 'round';
+                    allStrokes.forEach(stroke => {
+                        if (stroke.length > 0) {
+                            ctx.beginPath();
+                            ctx.moveTo(stroke[0].x, stroke[0].y);
+                            stroke.forEach(point => {
+                                ctx.lineTo(point.x, point.y);
+                            });
+                            ctx.stroke();
+                        }
+                    });
+                }
             }
             if (guideCanvas) {
                 guideCanvas.width = canvasW;
                 guideCanvas.height = canvasH;
                 const ctx = guideCanvas.getContext('2d');
                 ctx.clearRect(0, 0, canvasW, canvasH);
-            }
-
-            // Clear strokes when aspect ratio changes
-            if (typeof strokes !== 'undefined') {
-                strokes.length = 0;
-            }
-
-            // Reset SVG container
-            const svgContainer = document.getElementById('svgContainer');
-            if (svgContainer) {
-                svgContainer.innerHTML = '<div class="placeholder"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5"/></svg><p>Draw something or upload an image to get started!</p></div>';
-                svgContainer.classList.remove('has-content');
             }
         }
 
