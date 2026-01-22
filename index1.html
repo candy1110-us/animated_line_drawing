@@ -3851,16 +3851,35 @@
                 const previewRect = previewContent.getBoundingClientRect();
                 const svgRect = svgElement.getBoundingClientRect();
 
-                const svgWidth = svgElement.getAttribute('width');
-                const svgHeight = svgElement.getAttribute('height');
-                const actualWidth = svgRect.width;
-                const actualHeight = svgRect.height;
+                const svgWidth = parseFloat(svgElement.getAttribute('width'));
+                const svgHeight = parseFloat(svgElement.getAttribute('height'));
+                const containerWidth = svgRect.width;
+                const containerHeight = svgRect.height;
+
+                // Calculate actual rendered size with object-fit: contain
+                const svgAspect = svgWidth / svgHeight;
+                const containerAspect = containerWidth / containerHeight;
+
+                let actualWidth, actualHeight, contentOffsetX, contentOffsetY;
+                if (svgAspect > containerAspect) {
+                    // SVG is wider - fit to container width
+                    actualWidth = containerWidth;
+                    actualHeight = containerWidth / svgAspect;
+                    contentOffsetX = 0;
+                    contentOffsetY = (containerHeight - actualHeight) / 2;
+                } else {
+                    // SVG is taller - fit to container height
+                    actualHeight = containerHeight;
+                    actualWidth = containerHeight * svgAspect;
+                    contentOffsetX = (containerWidth - actualWidth) / 2;
+                    contentOffsetY = 0;
+                }
 
                 const scaleX = actualWidth / svgWidth;
                 const scaleY = actualHeight / svgHeight;
 
-                const svgOffsetX = svgRect.left - previewRect.left;
-                const svgOffsetY = svgRect.top - previewRect.top;
+                const svgOffsetX = svgRect.left - previewRect.left + contentOffsetX;
+                const svgOffsetY = svgRect.top - previewRect.top + contentOffsetY;
 
                 handImage.style.width = handSizeValue + 'px';
                 handImage.style.height = 'auto';
