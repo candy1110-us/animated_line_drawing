@@ -4644,9 +4644,9 @@
                                     const startX = canvasWidth + 50;
                                     const startY = canvasHeight + 50;
 
-                                    // Target position: first point of drawing
-                                    const targetX = (firstPoint.x * scaleX) + offsetX - offsetXPixels;
-                                    const targetY = (firstPoint.y * scaleY) + offsetY - offsetYPixels;
+                                    // Target position: first point of drawing (include drag offset)
+                                    const targetX = (firstPoint.x * scaleX) + offsetX + canvasDragX - offsetXPixels;
+                                    const targetY = (firstPoint.y * scaleY) + offsetY + canvasDragY - offsetYPixels;
 
                                     handX = startX + (targetX - startX) * easedProgress;
                                     handY = startY + (targetY - startY) * easedProgress;
@@ -4660,8 +4660,8 @@
                                     const pathLength = currentPath.getTotalLength();
                                     const pointOnPath = currentPath.getPointAtLength(pathProgress * pathLength);
 
-                                    const canvasX = (pointOnPath.x * scaleX) + offsetX;
-                                    const canvasY = (pointOnPath.y * scaleY) + offsetY;
+                                    const canvasX = (pointOnPath.x * scaleX) + offsetX + canvasDragX;
+                                    const canvasY = (pointOnPath.y * scaleY) + offsetY + canvasDragY;
 
                                     handX = canvasX - offsetXPixels;
                                     handY = canvasY - offsetYPixels;
@@ -4670,9 +4670,9 @@
                                     // Exit: animate down and fade out
                                     const easedProgress = Math.pow(handPhaseProgress, 2); // ease-in
 
-                                    // Start from last point position
-                                    const startX = (lastPoint.x * scaleX) + offsetX - offsetXPixels;
-                                    const startY = (lastPoint.y * scaleY) + offsetY - offsetYPixels;
+                                    // Start from last point position (include drag offset)
+                                    const startX = (lastPoint.x * scaleX) + offsetX + canvasDragX - offsetXPixels;
+                                    const startY = (lastPoint.y * scaleY) + offsetY + canvasDragY - offsetYPixels;
 
                                     // Move down off screen - use full interpolation for visible movement
                                     const targetY = canvasHeight + 100;
