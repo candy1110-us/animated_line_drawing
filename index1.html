@@ -212,7 +212,7 @@
             border-radius: 12px;
             overflow: hidden;
             width: 100%;
-            max-width: 600px;
+            max-width: 640px;
             aspect-ratio: 16 / 9;
             margin: 0 auto;
             box-shadow: 3px 3px 0px rgba(107, 163, 255, 0.1);
@@ -573,8 +573,8 @@
             background: #f9fafb;
             border-radius: 12px;
             width: 100%;
-            max-width: 600px;
-            aspect-ratio: 3 / 2; /* Match drawing canvas 600x400 */
+            max-width: 640px;
+            aspect-ratio: 16 / 9; /* Match GIF output aspect ratio */
             margin: 0 auto;
             display: flex;
             overflow: hidden;
@@ -586,10 +586,17 @@
             display: none;
             align-items: center;
             justify-content: center;
+            cursor: grab;
+            user-select: none;
         }
-        
+
         .svg-container.has-content {
             display: flex;
+        }
+
+        .svg-container:active,
+        .svg-container.dragging {
+            cursor: grabbing;
         }
 
         .svg-container svg {
@@ -1282,8 +1289,8 @@
                     </div>
 
                     <div class="canvas-container pos-relative">
-                        <canvas id="guideCanvas" width="600" height="400" class="canvas-guide"></canvas>
-                        <canvas id="drawingCanvas" width="600" height="400" class="canvas-drawing"></canvas>
+                        <canvas id="guideCanvas" width="640" height="360" class="canvas-guide"></canvas>
+                        <canvas id="drawingCanvas" width="640" height="360" class="canvas-drawing"></canvas>
                     </div>
                     <!-- Undo/Clear buttons moved below canvas -->
                     <div class="flex-start-mt-16-gap-8">
@@ -1549,6 +1556,7 @@
                     </div>
                 </div>
                 <div class="preview-content" class="pos-relative">
+                    <button id="resetPositionBtn" style="position: absolute; top: 10px; right: 10px; z-index: 100; padding: 6px 12px; background: rgba(255,255,255,0.9); border: 1px solid rgba(0,0,0,0.1); border-radius: 6px; font-size: 12px; color: #636e72; cursor: pointer; transition: background 0.2s; display: none;">↺ Center</button>
                     <img class="hand-image" id="handImage" alt="Hand pointer">
                     <div class="svg-container" id="svgContainer">
                         <div class="placeholder">
@@ -1619,19 +1627,19 @@
             const guideCanvas = document.getElementById('guideCanvas');
 
             // Get old canvas dimensions for scaling strokes
-            const oldCanvasW = drawingCanvas ? drawingCanvas.width : 600;
-            const oldCanvasH = drawingCanvas ? drawingCanvas.height : 338;
+            const oldCanvasW = drawingCanvas ? drawingCanvas.width : 640;
+            const oldCanvasH = drawingCanvas ? drawingCanvas.height : 360;
 
-            // Set canvas dimensions based on aspect ratio
+            // Set canvas dimensions based on aspect ratio (exact 16:9 ratio)
             let canvasW, canvasH;
             if (ratio === '9:16') {
-                canvasW = 400;
-                canvasH = 711; // 400 * 16/9
+                canvasW = 405;  // 720 * 9/16 = 405
+                canvasH = 720;
                 previewContent.classList.add('vertical');
                 if (canvasContainer) canvasContainer.classList.add('vertical');
             } else {
-                canvasW = 600;
-                canvasH = 338; // 600 * 9/16
+                canvasW = 640;  // Exact 16:9 ratio
+                canvasH = 360;
                 previewContent.classList.remove('vertical');
                 if (canvasContainer) canvasContainer.classList.remove('vertical');
             }
@@ -1683,6 +1691,138 @@
             }
         }
 
+        // Separate position offsets for each mode (draw, upload, text)
+        let drawModeOffset = { x: 0, y: 0 };
+        let uploadModeOffset = { x: 0, y: 0 };
+        let textModeOffset = { x: 0, y: 0 };
+        let currentMode = 'draw'; // Track current mode
+
+        // Get current mode's offset
+        function getCurrentOffset() {
+            if (currentMode === 'draw') return drawModeOffset;
+            if (currentMode === 'upload') return uploadModeOffset;
+            if (currentMode === 'text') return textModeOffset;
+            return drawModeOffset;
+        }
+
+        // Drag functionality for SVG container
+        let isDraggingContent = false;
+        let dragStartX = 0;
+        let dragStartY = 0;
+        let initialDragOffsetX = 0;
+        let initialDragOffsetY = 0;
+        const svgContainerEl = document.getElementById('svgContainer');
+        const resetPositionBtn = document.getElementById('resetPositionBtn');
+
+        svgContainerEl.addEventListener('mousedown', (e) => {
+            if (!svgContainerEl.classList.contains('has-content')) return;
+            isDraggingContent = true;
+            svgContainerEl.classList.add('dragging');
+            dragStartX = e.clientX;
+            dragStartY = e.clientY;
+            const offset = getCurrentOffset();
+            initialDragOffsetX = offset.x;
+            initialDragOffsetY = offset.y;
+            e.preventDefault();
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isDraggingContent) return;
+
+            const deltaX = e.clientX - dragStartX;
+            const deltaY = e.clientY - dragStartY;
+
+            const offset = getCurrentOffset();
+            offset.x = initialDragOffsetX + deltaX;
+            offset.y = initialDragOffsetY + deltaY;
+
+            // Only move the SVG inside, not the container background
+            const svgElement = svgContainerEl.querySelector('svg');
+            if (svgElement) {
+                svgElement.style.transform = `translate(${offset.x}px, ${offset.y}px)`;
+            }
+
+            // Show reset button when offset is non-zero
+            if (offset.x !== 0 || offset.y !== 0) {
+                resetPositionBtn.style.display = 'block';
+            }
+        });
+
+        document.addEventListener('mouseup', () => {
+            if (isDraggingContent) {
+                isDraggingContent = false;
+                svgContainerEl.classList.remove('dragging');
+            }
+        });
+
+        // Touch support for mobile
+        svgContainerEl.addEventListener('touchstart', (e) => {
+            if (!svgContainerEl.classList.contains('has-content')) return;
+            isDraggingContent = true;
+            svgContainerEl.classList.add('dragging');
+            dragStartX = e.touches[0].clientX;
+            dragStartY = e.touches[0].clientY;
+            const offset = getCurrentOffset();
+            initialDragOffsetX = offset.x;
+            initialDragOffsetY = offset.y;
+        }, { passive: true });
+
+        document.addEventListener('touchmove', (e) => {
+            if (!isDraggingContent) return;
+
+            const deltaX = e.touches[0].clientX - dragStartX;
+            const deltaY = e.touches[0].clientY - dragStartY;
+
+            const offset = getCurrentOffset();
+            offset.x = initialDragOffsetX + deltaX;
+            offset.y = initialDragOffsetY + deltaY;
+
+            const svgElement = svgContainerEl.querySelector('svg');
+            if (svgElement) {
+                svgElement.style.transform = `translate(${offset.x}px, ${offset.y}px)`;
+            }
+
+            if (offset.x !== 0 || offset.y !== 0) {
+                resetPositionBtn.style.display = 'block';
+            }
+        }, { passive: true });
+
+        document.addEventListener('touchend', () => {
+            if (isDraggingContent) {
+                isDraggingContent = false;
+                svgContainerEl.classList.remove('dragging');
+            }
+        });
+
+        // Reset position button
+        resetPositionBtn.addEventListener('click', () => {
+            const offset = getCurrentOffset();
+            offset.x = 0;
+            offset.y = 0;
+            const svgElement = svgContainerEl.querySelector('svg');
+            if (svgElement) {
+                svgElement.style.transform = '';
+            }
+            resetPositionBtn.style.display = 'none';
+        });
+
+        // Apply current mode's offset to SVG (call when switching modes or loading content)
+        function applyCurrentModeOffset() {
+            const offset = getCurrentOffset();
+            const svgElement = svgContainerEl.querySelector('svg');
+            if (svgElement) {
+                if (offset.x !== 0 || offset.y !== 0) {
+                    svgElement.style.transform = `translate(${offset.x}px, ${offset.y}px)`;
+                    resetPositionBtn.style.display = 'block';
+                } else {
+                    svgElement.style.transform = '';
+                    resetPositionBtn.style.display = 'none';
+                }
+            } else {
+                resetPositionBtn.style.display = 'none';
+            }
+        }
+
         // Mode switching
         const drawModeBtn = document.getElementById('drawModeBtn');
         const uploadModeBtn = document.getElementById('uploadModeBtn');
@@ -1691,6 +1831,7 @@
         const svgContainer = document.getElementById('svgContainer');
 
         drawModeBtn.addEventListener('click', () => {
+            currentMode = 'draw';
             drawModeBtn.classList.add('active');
             uploadModeBtn.classList.remove('active');
             const textModeBtn = document.getElementById('textModeBtn');
@@ -1723,26 +1864,50 @@
                 textFontSizeSlider.style.display = 'none';
             }
 
-            // Clear uploaded content
+            // Clear all content when switching modes
             if (svgContainer) {
                 svgContainer.tempSVG = null;
                 svgContainer.innerHTML = '<div class="placeholder"><p>✨ Draw something or upload an image to get started!</p></div>';
+                svgContainer.classList.remove('has-content');
             }
 
-            // Clear text mode data
+            // Clear text mode data and text input
             window.userTextData = null;
+            const textInput = document.getElementById('textInput');
+            if (textInput) {
+                textInput.value = '';
+            }
+
+            // Clear upload preview and show placeholder
+            const uploadPlaceholder = document.getElementById('uploadPlaceholder');
+            const uploadPreview = document.getElementById('uploadPreview');
+            if (uploadPlaceholder && uploadPreview) {
+                uploadPlaceholder.style.display = 'block';
+                uploadPreview.style.display = 'none';
+            }
+
+            // Clear drawing canvas
+            if (typeof allStrokes !== 'undefined') {
+                allStrokes.length = 0;
+            }
+            const drawingCanvas = document.getElementById('drawingCanvas');
+            if (drawingCanvas) {
+                const ctx = drawingCanvas.getContext('2d');
+                ctx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
+            }
+
+            // Reset position offset for this mode
+            drawModeOffset.x = 0;
+            drawModeOffset.y = 0;
+            resetPositionBtn.style.display = 'none';
 
             // Disable animate button until something is drawn
             const animateBtn = document.getElementById('animateBtn');
-            if (animateBtn && (!allStrokes || allStrokes.length === 0)) {
-                animateBtn.disabled = true;
-                
-                // Hide svg container if no drawing
-                if (svgContainer) svgContainer.classList.remove('has-content');
-            }
+            animateBtn.disabled = true;
         });
 
         uploadModeBtn.addEventListener('click', () => {
+            currentMode = 'upload';
             uploadModeBtn.classList.add('active');
             drawModeBtn.classList.remove('active');
             const textModeBtn = document.getElementById('textModeBtn');
@@ -1778,8 +1943,12 @@
             allStrokes = [];
             window.userDrawingData = null;
 
-            // Clear text mode data
+            // Clear text mode data and text input
             window.userTextData = null;
+            const textInput = document.getElementById('textInput');
+            if (textInput) {
+                textInput.value = '';
+            }
 
             // Clear the canvas
             ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -1788,8 +1957,9 @@
             if (svgContainer) {
                 svgContainer.tempSVG = null;
                 svgContainer.innerHTML = '<div class="placeholder"><p>✨ Draw something or upload an image to get started!</p></div>';
+                svgContainer.classList.remove('has-content');
             }
-            
+
             // Clear upload preview and show placeholder
             const uploadPlaceholder = document.getElementById('uploadPlaceholder');
             const uploadPreview = document.getElementById('uploadPreview');
@@ -1797,7 +1967,12 @@
                 uploadPlaceholder.style.display = 'block';
                 uploadPreview.style.display = 'none';
             }
-            
+
+            // Reset position offset for this mode
+            uploadModeOffset.x = 0;
+            uploadModeOffset.y = 0;
+            resetPositionBtn.style.display = 'none';
+
             // Disable animate button until something is uploaded
             const animateBtn = document.getElementById('animateBtn');
             if (animateBtn) {
@@ -1812,6 +1987,7 @@
 
         if (textModeBtn) {
             textModeBtn.addEventListener('click', () => {
+                currentMode = 'text';
                 // Update button states
                 textModeBtn.classList.add('active');
                 drawModeBtn.classList.remove('active');
@@ -1860,17 +2036,39 @@
                 window.uploadedImagePaths = null;
                 window.uploadedImageDimensions = null;
                 svgContainer.tempSVG = null;
+                window.userTextData = null;
 
-                // Check if text is entered to enable/disable animate button
-                const textInput = document.getElementById('textInput');
-                const animateBtn = document.getElementById('animateBtn');
-                if (textInput && textInput.value.trim()) {
-                    animateBtn.disabled = false;
-                } else {
-                    animateBtn.disabled = true;
-                    svgContainer.classList.remove('has-content');
-                    svgContainer.innerHTML = '<div class="placeholder"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5"/></svg><p>Enter text to get started!</p></div>';
+                // Clear the drawing canvas
+                const drawingCanvas = document.getElementById('drawingCanvas');
+                if (drawingCanvas) {
+                    const ctx = drawingCanvas.getContext('2d');
+                    ctx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
                 }
+
+                // Clear upload preview and show placeholder
+                const uploadPlaceholder = document.getElementById('uploadPlaceholder');
+                const uploadPreview = document.getElementById('uploadPreview');
+                if (uploadPlaceholder && uploadPreview) {
+                    uploadPlaceholder.style.display = 'block';
+                    uploadPreview.style.display = 'none';
+                }
+
+                // Clear text input
+                const textInput = document.getElementById('textInput');
+                if (textInput) {
+                    textInput.value = '';
+                }
+
+                // Reset position offset for this mode
+                textModeOffset.x = 0;
+                textModeOffset.y = 0;
+                resetPositionBtn.style.display = 'none';
+
+                // Always show placeholder and disable animate button when switching modes
+                const animateBtn = document.getElementById('animateBtn');
+                animateBtn.disabled = true;
+                svgContainer.classList.remove('has-content');
+                svgContainer.innerHTML = '<div class="placeholder"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5"/></svg><p>Enter text to get started!</p></div>';
             });
         }
 
@@ -2167,6 +2365,21 @@
             userSetDuration = false; // Reset duration flag for new drawing
 
             document.getElementById('animateBtn').disabled = true;
+
+            // Reset draw mode offset when clearing
+            drawModeOffset.x = 0;
+            drawModeOffset.y = 0;
+
+            // Reset SVG transform and hide reset button
+            const svgContainerEl = document.getElementById('svgContainer');
+            const svgElement = svgContainerEl ? svgContainerEl.querySelector('svg') : null;
+            if (svgElement) {
+                svgElement.style.transform = '';
+            }
+            const resetPositionBtn = document.getElementById('resetPositionBtn');
+            if (resetPositionBtn) {
+                resetPositionBtn.style.display = 'none';
+            }
         });
 
         // Undo button
@@ -2176,6 +2389,21 @@
                 redrawCanvas();
                 if (allStrokes.length === 0) {
                     document.getElementById('animateBtn').disabled = true;
+
+                    // Reset draw mode offset when all strokes are undone
+                    drawModeOffset.x = 0;
+                    drawModeOffset.y = 0;
+
+                    // Reset SVG transform and hide reset button
+                    const svgContainerEl = document.getElementById('svgContainer');
+                    const svgElement = svgContainerEl ? svgContainerEl.querySelector('svg') : null;
+                    if (svgElement) {
+                        svgElement.style.transform = '';
+                    }
+                    const resetPositionBtn = document.getElementById('resetPositionBtn');
+                    if (resetPositionBtn) {
+                        resetPositionBtn.style.display = 'none';
+                    }
                 }
             }
         });
@@ -2253,11 +2481,17 @@
             svg.setAttribute('width', canvas.width);
             svg.setAttribute('height', canvas.height);
             svg.setAttribute('viewBox', `0 0 ${canvas.width} ${canvas.height}`);
-            // Use background image if available, otherwise use color
-            if (bgImageData) {
-                svg.style.background = `url(${bgImageData}) center/cover`;
-            } else {
-                svg.style.background = bgColorValue;
+            // SVG background is transparent - background is on preview-content
+            svg.style.background = 'transparent';
+
+            // Apply background to preview-content
+            const previewContent = document.querySelector('.preview-content');
+            if (previewContent) {
+                if (bgImageData) {
+                    previewContent.style.background = `url(${bgImageData}) center/cover`;
+                } else {
+                    previewContent.style.background = bgColorValue;
+                }
             }
 
             // Convert each stroke to a path
@@ -2293,7 +2527,8 @@
 
             svgContainer.innerHTML = '';
             svgContainer.appendChild(svg);
-            
+            applyCurrentModeOffset();
+
             // Store the drawing data globally for animation
             window.userDrawingData = allStrokes;
         }
@@ -2410,9 +2645,13 @@
                 // Create high-resolution canvas to render text outline
                 // Use higher resolution for better quality
                 const scale = 2; // Render at 2x resolution for better quality
+                // Get canvas dimensions based on current aspect ratio
+                const canvasW = currentAspectRatio === '9:16' ? 405 : 640;
+                const canvasH = currentAspectRatio === '9:16' ? 720 : 360;
+
                 const tempCanvas = document.createElement('canvas');
-                tempCanvas.width = 600 * scale;
-                tempCanvas.height = 400 * scale;
+                tempCanvas.width = canvasW * scale;
+                tempCanvas.height = canvasH * scale;
                 const tempCtx = tempCanvas.getContext('2d');
 
                 // Scale context
@@ -2420,7 +2659,7 @@
 
                 // Fill with white background
                 tempCtx.fillStyle = 'white';
-                tempCtx.fillRect(0, 0, 600, 400);
+                tempCtx.fillRect(0, 0, canvasW, canvasH);
 
                 // Set font
                 tempCtx.font = `${fontStyle} ${fontWeight} ${fontSize.value}px ${fontFamily.value}`;
@@ -2435,7 +2674,7 @@
 
                 // Calculate starting Y position to center all lines vertically
                 const totalHeight = lines.length * lineHeight;
-                let currentY = 200 - (totalHeight / 2) + (lineHeight / 2);
+                let currentY = (canvasH / 2) - (totalHeight / 2) + (lineHeight / 2);
 
                 // Left margin for text alignment (matching textarea)
                 const leftMargin = 50;
@@ -2467,9 +2706,9 @@
                     const diacritics = normalized.slice(1); // Rest are diacritical marks
 
                     // Draw base character first
-                    tempCtx.clearRect(0, 0, 600, 400);
+                    tempCtx.clearRect(0, 0, canvasW, canvasH);
                     tempCtx.fillStyle = 'white';
-                    tempCtx.fillRect(0, 0, 600, 400);
+                    tempCtx.fillRect(0, 0, canvasW, canvasH);
                     tempCtx.fillStyle = 'black';
                     tempCtx.textAlign = 'left';
                     tempCtx.fillText(baseChar, currentX, currentY);
@@ -2498,9 +2737,9 @@
 
                     // Draw diacritics after base character
                     if (diacritics.length > 0) {
-                        tempCtx.clearRect(0, 0, 600, 400);
+                        tempCtx.clearRect(0, 0, canvasW, canvasH);
                         tempCtx.fillStyle = 'white';
-                        tempCtx.fillRect(0, 0, 600, 400);
+                        tempCtx.fillRect(0, 0, canvasW, canvasH);
                         tempCtx.fillStyle = 'black';
                         tempCtx.fillText(char, currentX, currentY); // Draw full character
 
@@ -2546,7 +2785,7 @@
 
                 // Store for regeneration
                 window.uploadedImagePaths = scaledPaths;
-                window.uploadedImageDimensions = { width: 600, height: 400 };
+                window.uploadedImageDimensions = { width: canvasW, height: canvasH };
                 window.userTextData = {
                     text,
                     fontFamily: fontFamily.value,
@@ -2560,7 +2799,7 @@
                 const textStrokeWidth = popupStrokeWidth ? parseFloat(popupStrokeWidth.value) : 1;
 
                 // Render as SVG with forced stroke width
-                renderPathsAsSVG(scaledPaths, 600, 400, textStrokeWidth);
+                renderPathsAsSVG(scaledPaths, canvasW, canvasH, textStrokeWidth);
             } catch (error) {
                 console.error('Error in processTextInput:', error);
             }
@@ -3002,9 +3241,9 @@
             const manualStrokeWidth = forceStrokeWidth !== null ? forceStrokeWidth :
                                      (useManualStroke && uploadStrokeWidth ? parseFloat(uploadStrokeWidth.value) : null);
 
-            // Fixed canvas size to match drawing canvas
-            const CANVAS_WIDTH = 600;
-            const CANVAS_HEIGHT = 400;
+            // Canvas size based on current aspect ratio
+            const CANVAS_WIDTH = currentAspectRatio === '9:16' ? 405 : 640;
+            const CANVAS_HEIGHT = currentAspectRatio === '9:16' ? 720 : 360;
 
             // Calculate scale to fit image within fixed canvas while maintaining aspect ratio
             const scaleX = CANVAS_WIDTH / width;
@@ -3021,11 +3260,17 @@
             svg.setAttribute('width', CANVAS_WIDTH);
             svg.setAttribute('height', CANVAS_HEIGHT);
             svg.setAttribute('viewBox', `0 0 ${CANVAS_WIDTH} ${CANVAS_HEIGHT}`);
-            // Use background image if available, otherwise use color
-            if (bgImageData) {
-                svg.style.background = `url(${bgImageData}) center/cover`;
-            } else {
-                svg.style.background = bgColorValue;
+            // SVG background is transparent - background is on preview-content
+            svg.style.background = 'transparent';
+
+            // Apply background to preview-content
+            const previewContent = document.querySelector('.preview-content');
+            if (previewContent) {
+                if (bgImageData) {
+                    previewContent.style.background = `url(${bgImageData}) center/cover`;
+                } else {
+                    previewContent.style.background = bgColorValue;
+                }
             }
 
             let renderedCount = 0;
@@ -3093,10 +3338,11 @@
             
             // Store SVG in tempSVG for later use
             svgContainer.tempSVG = svg;
-            
+
             // Also put it in the container (will be shown when animate is clicked)
             svgContainer.innerHTML = '';
             svgContainer.appendChild(svg);
+            applyCurrentModeOffset();
         }
 
         // Animation functionality
@@ -3297,11 +3543,10 @@
                     bgImageData = null;
                     if (bgUploadPlaceholder) bgUploadPlaceholder.style.display = 'flex';
                     if (bgImagePreview) bgImagePreview.style.display = 'none';
-                    // Update preview if SVG exists
-                    const svgContainer = document.getElementById('svgContainer');
-                    const svg = svgContainer.querySelector('svg');
-                    if (svg) {
-                        svg.style.background = bgColor.value;
+                    // Update preview background (apply to previewContent, not SVG)
+                    const previewContent = document.querySelector('.preview-content');
+                    if (previewContent) {
+                        previewContent.style.background = bgColor.value;
                     }
                 });
             }
@@ -3324,11 +3569,10 @@
                         bgImagePreview.style.display = 'flex';
                     }
 
-                    // Update preview if SVG exists
-                    const svgContainer = document.getElementById('svgContainer');
-                    const svg = svgContainer.querySelector('svg');
-                    if (svg) {
-                        svg.style.background = `url(${bgImageData}) center/cover`;
+                    // Update preview background
+                    const previewContent = document.querySelector('.preview-content');
+                    if (previewContent) {
+                        previewContent.style.background = `url(${bgImageData}) center/cover`;
                     }
                 };
                 reader.readAsDataURL(file);
@@ -3684,10 +3928,11 @@
                 if (bgColorPreview) {
                     bgColorPreview.style.background = color;
                 }
-                
-                const svg = svgContainer ? svgContainer.querySelector('svg') : null;
-                if (svg) {
-                    svg.style.background = color;
+
+                // Apply background to preview-content, not SVG (so dragging SVG doesn't move background)
+                const previewContent = document.querySelector('.preview-content');
+                if (previewContent) {
+                    previewContent.style.background = color;
                 }
             });
         }
@@ -3756,6 +4001,7 @@
                 else if (svgContainer.tempSVG) {
                     svgContainer.innerHTML = '';
                     svgContainer.appendChild(svgContainer.tempSVG.cloneNode(true));
+                    applyCurrentModeOffset();
                 }
 
                 // Small delay to allow browser to render/reflow before animating
@@ -3902,8 +4148,10 @@
                 const scaleX = actualWidth / svgWidth;
                 const scaleY = actualHeight / svgHeight;
 
-                const svgOffsetX = svgRect.left - previewRect.left + contentOffsetX;
-                const svgOffsetY = svgRect.top - previewRect.top + contentOffsetY;
+                // Include both object-fit offset and user drag offset (use current mode's offset)
+                const currentModeOffset = getCurrentOffset();
+                const svgOffsetX = svgRect.left - previewRect.left + contentOffsetX + currentModeOffset.x;
+                const svgOffsetY = svgRect.top - previewRect.top + contentOffsetY + currentModeOffset.y;
 
                 handImage.style.width = handSizeValue + 'px';
                 handImage.style.height = 'auto';
@@ -4171,7 +4419,11 @@
             }
 
             // Calculate SVG positioning and use SVG dimensions for canvas to preserve aspect ratio
+            // Temporarily remove transform to get the base position
+            const originalTransform = svgElement.style.transform;
+            svgElement.style.transform = '';
             const svgRect = svgElement.getBoundingClientRect();
+            svgElement.style.transform = originalTransform;
 
             // Use SVG viewBox to get proper dimensions
             const svgViewBox = svgElement.viewBox.baseVal;
@@ -4197,23 +4449,44 @@
             const canvasAspect = canvasWidth / canvasHeight;
 
             let svgWidth, svgHeight, offsetX, offsetY;
+
+            console.log('=== GIF SVG Scaling Debug ===');
+            console.log('SVG dimensions:', svgWidthAttr, 'x', svgHeightAttr);
+            console.log('Canvas dimensions:', canvasWidth, 'x', canvasHeight);
+            console.log('SVG aspect:', svgAspect, 'Canvas aspect:', canvasAspect);
+
             if (svgAspect > canvasAspect) {
                 // SVG is wider - fit to width
                 svgWidth = canvasWidth;
                 svgHeight = canvasWidth / svgAspect;
                 offsetX = 0;
                 offsetY = (canvasHeight - svgHeight) / 2;
+                console.log('SVG is wider, fitting to width');
             } else {
                 // SVG is taller - fit to height
                 svgHeight = canvasHeight;
                 svgWidth = canvasHeight * svgAspect;
                 offsetX = (canvasWidth - svgWidth) / 2;
                 offsetY = 0;
+                console.log('SVG is taller/equal, fitting to height');
             }
+            console.log('Result: svgWidth:', svgWidth, 'svgHeight:', svgHeight);
+            console.log('Offsets: offsetX:', offsetX, 'offsetY:', offsetY);
+            console.log('=============================');
 
             const scaleX = svgWidth / svgWidthAttr;
             const scaleY = svgHeight / svgHeightAttr;
             const scale = Math.min(scaleX, scaleY); // Use for hand sizing
+
+            // Calculate drag offset for viewBox adjustment
+            // The drag is in preview pixels, we need to convert to SVG viewBox units
+            const currentModeOffset = getCurrentOffset();
+            // svgRect is the preview SVG size, svgWidthAttr/svgHeightAttr is the viewBox size
+            const viewBoxDragX = -currentModeOffset.x * (svgWidthAttr / svgRect.width);
+            const viewBoxDragY = -currentModeOffset.y * (svgHeightAttr / svgRect.height);
+
+            console.log('Drag offset:', currentModeOffset.x, currentModeOffset.y);
+            console.log('ViewBox drag:', viewBoxDragX, viewBoxDragY);
 
             const isDataURL = handImageData && handImageData.startsWith('data:');
             // Try to include hand regardless - if it fails due to CORS, we'll catch the error
@@ -4292,6 +4565,9 @@
 
                 // Clone SVG and modify paths to show partial drawing
                 const svgClone = svgElement.cloneNode(true);
+                // Remove any transform that was applied for dragging
+                svgClone.style.transform = '';
+
                 const pathsClone = svgClone.querySelectorAll('.svg-path');
 
                 pathsClone.forEach((pathClone, index) => {
@@ -4324,7 +4600,13 @@
                     const img = new Image();
 
                     img.onload = () => {
-                        ctx.drawImage(img, offsetX, offsetY, svgWidth, svgHeight);
+                        // Calculate drag offset scaled to canvas coordinates
+                        // currentModeOffset is in preview pixels, scale to canvas pixels
+                        const canvasDragX = currentModeOffset.x * (canvasWidth / svgRect.width);
+                        const canvasDragY = currentModeOffset.y * (canvasHeight / svgRect.height);
+
+                        // Draw SVG at the correct position with drag offset
+                        ctx.drawImage(img, offsetX + canvasDragX, offsetY + canvasDragY, svgWidth, svgHeight);
                         URL.revokeObjectURL(url);
                         resolveFrame();
                     };
