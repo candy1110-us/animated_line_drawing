@@ -4148,10 +4148,10 @@
                 const scaleX = actualWidth / svgWidth;
                 const scaleY = actualHeight / svgHeight;
 
-                // Include both object-fit offset and user drag offset (use current mode's offset)
-                const currentModeOffset = getCurrentOffset();
-                const svgOffsetX = svgRect.left - previewRect.left + contentOffsetX + currentModeOffset.x;
-                const svgOffsetY = svgRect.top - previewRect.top + contentOffsetY + currentModeOffset.y;
+                // svgRect.left/top already includes the CSS transform (drag offset) via getBoundingClientRect()
+                // So we don't need to add currentModeOffset again - it's already reflected in svgRect
+                const svgOffsetX = svgRect.left - previewRect.left + contentOffsetX;
+                const svgOffsetY = svgRect.top - previewRect.top + contentOffsetY;
 
                 handImage.style.width = handSizeValue + 'px';
                 handImage.style.height = 'auto';
@@ -4478,15 +4478,15 @@
             const scaleY = svgHeight / svgHeightAttr;
             const scale = Math.min(scaleX, scaleY); // Use for hand sizing
 
-            // Calculate drag offset for viewBox adjustment
-            // The drag is in preview pixels, we need to convert to SVG viewBox units
+            // Calculate drag offset for canvas
+            // currentModeOffset is in preview pixels, we need to convert to canvas pixels
             const currentModeOffset = getCurrentOffset();
-            // svgRect is the preview SVG size, svgWidthAttr/svgHeightAttr is the viewBox size
-            const viewBoxDragX = -currentModeOffset.x * (svgWidthAttr / svgRect.width);
-            const viewBoxDragY = -currentModeOffset.y * (svgHeightAttr / svgRect.height);
+            // Scale from preview SVG size to canvas SVG size
+            const canvasDragX = currentModeOffset.x * (svgWidth / svgRect.width);
+            const canvasDragY = currentModeOffset.y * (svgHeight / svgRect.height);
 
-            console.log('Drag offset:', currentModeOffset.x, currentModeOffset.y);
-            console.log('ViewBox drag:', viewBoxDragX, viewBoxDragY);
+            console.log('Drag offset (preview pixels):', currentModeOffset.x, currentModeOffset.y);
+            console.log('Drag offset (canvas pixels):', canvasDragX, canvasDragY);
 
             const isDataURL = handImageData && handImageData.startsWith('data:');
             // Try to include hand regardless - if it fails due to CORS, we'll catch the error
@@ -4600,12 +4600,8 @@
                     const img = new Image();
 
                     img.onload = () => {
-                        // Calculate drag offset scaled to canvas coordinates
-                        // currentModeOffset is in preview pixels, scale to canvas pixels
-                        const canvasDragX = currentModeOffset.x * (canvasWidth / svgRect.width);
-                        const canvasDragY = currentModeOffset.y * (canvasHeight / svgRect.height);
-
                         // Draw SVG at the correct position with drag offset
+                        // canvasDragX/Y already calculated above with correct scaling
                         ctx.drawImage(img, offsetX + canvasDragX, offsetY + canvasDragY, svgWidth, svgHeight);
                         URL.revokeObjectURL(url);
                         resolveFrame();
