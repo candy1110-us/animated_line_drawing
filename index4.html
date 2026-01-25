@@ -815,7 +815,7 @@
                         Edge Detection <span class="value-display" id="thresholdDisplay">128</span>
                     </label>
                     <input type="range" id="threshold" min="30" max="220" value="128">
-                    <div class="helper-text">Darker pixels below this value form the outline</div>
+                    <div class="helper-text">Higher = removes more background. Adjust until only the object remains.</div>
                 </div>
 
                 </div>
@@ -973,6 +973,7 @@
         let uploadedImage = null;
         let processedImage = null; // For non-transparent images, this holds the processed version
         let outlinePoints = [];
+        let maskBoundaryPoints = []; // Raw boundary points used for clipping mask (before wiggle)
         let isAnimating = false;
         let bgImageData = null; // Background image data URL
         let cachedBgImage = null; // Cached background image object
@@ -1298,7 +1299,7 @@
             return false; // No transparency (solid image like JPG)
         }
 
-        // Process non-transparent image (JPG) to extract dark strokes as transparent PNG
+        // Process non-transparent image (JPG) to extract object with original colors
         function processNonTransparentImage(img) {
             return new Promise((resolve) => {
                 const thresholdValue = parseInt(threshold.value);
@@ -1315,22 +1316,47 @@
                 const imageData = tempCtx.getImageData(0, 0, img.width, img.height);
                 const data = imageData.data;
 
-                // Convert to transparent image: keep dark pixels, make light pixels transparent
+                // Sample background color from corners (average of corner pixels)
+                const cornerSamples = [
+                    0, // top-left
+                    (img.width - 1) * 4, // top-right
+                    (img.height - 1) * img.width * 4, // bottom-left
+                    ((img.height - 1) * img.width + (img.width - 1)) * 4 // bottom-right
+                ];
+
+                let bgR = 0, bgG = 0, bgB = 0;
+                for (const idx of cornerSamples) {
+                    bgR += data[idx];
+                    bgG += data[idx + 1];
+                    bgB += data[idx + 2];
+                }
+                bgR = Math.round(bgR / 4);
+                bgG = Math.round(bgG / 4);
+                bgB = Math.round(bgB / 4);
+
+                // Calculate color distance threshold based on the slider
+                // Higher threshold value = more pixels removed (more aggressive background removal)
+                const colorThreshold = thresholdValue;
+
+                // Remove pixels similar to the background color
                 for (let i = 0; i < data.length; i += 4) {
                     const r = data[i];
                     const g = data[i + 1];
                     const b = data[i + 2];
-                    const brightness = (r + g + b) / 3;
 
-                    if (brightness < thresholdValue) {
-                        // Dark pixel - keep it (make it black for now)
-                        data[i] = 0;
-                        data[i + 1] = 0;
-                        data[i + 2] = 0;
-                        data[i + 3] = 255;
-                    } else {
-                        // Light pixel - make transparent
+                    // Calculate color distance from background
+                    const colorDist = Math.sqrt(
+                        Math.pow(r - bgR, 2) +
+                        Math.pow(g - bgG, 2) +
+                        Math.pow(b - bgB, 2)
+                    );
+
+                    if (colorDist < colorThreshold) {
+                        // Similar to background - make transparent
                         data[i + 3] = 0;
+                    } else {
+                        // Different from background - keep with original colors
+                        data[i + 3] = 255;
                     }
                 }
 
@@ -1361,6 +1387,7 @@
             uploadedImage = null;
             processedImage = null;
             outlinePoints = [];
+            maskBoundaryPoints = [];
             isNonTransparentImage = false;
             imageOffsetX = 0;
             imageOffsetY = 0;
@@ -1420,9 +1447,6 @@
             const ctx = imageCanvas.getContext('2d');
             ctx.clearRect(0, 0, containerWidth, containerHeight);
 
-            // Use processed image for non-transparent images, original for transparent
-            const sourceImg = (isNonTransparentImage && processedImage) ? processedImage : uploadedImage;
-
             // Calculate scaling to fit image in container
             const scale = Math.min(
                 (containerWidth * 0.8) / uploadedImage.width,
@@ -1434,7 +1458,32 @@
             const x = (containerWidth - drawWidth) / 2 + imageOffsetX;
             const y = (containerHeight - drawHeight) / 2 + imageOffsetY;
 
-            ctx.drawImage(sourceImg, x, y, drawWidth, drawHeight);
+            // For non-transparent images with computed boundary, use clipping mask
+            // This clips the ORIGINAL image to the detected boundary shape
+            if (isNonTransparentImage && maskBoundaryPoints.length > 2) {
+                ctx.save();
+
+                // Create clipping path from boundary points
+                ctx.beginPath();
+                ctx.moveTo(maskBoundaryPoints[0].x, maskBoundaryPoints[0].y);
+                for (let i = 1; i < maskBoundaryPoints.length; i++) {
+                    ctx.lineTo(maskBoundaryPoints[i].x, maskBoundaryPoints[i].y);
+                }
+                ctx.closePath();
+                ctx.clip();
+
+                // Draw the ORIGINAL image clipped to the boundary
+                // This preserves all original colors (skin tones, etc.)
+                ctx.drawImage(uploadedImage, x, y, drawWidth, drawHeight);
+
+                ctx.restore();
+            } else if (isNonTransparentImage && processedImage) {
+                // Before outline is generated, show processedImage as preview
+                ctx.drawImage(processedImage, x, y, drawWidth, drawHeight);
+            } else {
+                // For transparent images, draw normally
+                ctx.drawImage(uploadedImage, x, y, drawWidth, drawHeight);
+            }
         }
 
         // Generate wiggly outline around the image
@@ -1444,12 +1493,49 @@
             const containerWidth = imageCanvas.width;
             const containerHeight = imageCanvas.height;
 
-            // Get image data to find edges
-            const ctx = imageCanvas.getContext('2d');
-            const imageData = ctx.getImageData(0, 0, containerWidth, containerHeight);
+            // For outline detection, use processedImage for non-transparent images
+            // This is because JPGs have no alpha channel, so we need the processed version
+            // which has dark areas as opaque and light areas as transparent
+            let imageData;
+            if (isNonTransparentImage && processedImage) {
+                // Create a temporary canvas with the processed image for edge detection
+                const tempCanvas = document.createElement('canvas');
+                tempCanvas.width = containerWidth;
+                tempCanvas.height = containerHeight;
+                const tempCtx = tempCanvas.getContext('2d');
+
+                // Calculate same positioning as the displayed image
+                const scale = Math.min(
+                    (containerWidth * 0.8) / uploadedImage.width,
+                    (containerHeight * 0.8) / uploadedImage.height
+                );
+                const drawWidth = uploadedImage.width * scale;
+                const drawHeight = uploadedImage.height * scale;
+                const x = (containerWidth - drawWidth) / 2 + imageOffsetX;
+                const y = (containerHeight - drawHeight) / 2 + imageOffsetY;
+
+                tempCtx.drawImage(processedImage, x, y, drawWidth, drawHeight);
+                imageData = tempCtx.getImageData(0, 0, containerWidth, containerHeight);
+            } else {
+                // For transparent images, use the displayed canvas directly
+                const ctx = imageCanvas.getContext('2d');
+                imageData = ctx.getImageData(0, 0, containerWidth, containerHeight);
+            }
             const data = imageData.data;
 
-            // Find boundary points of non-transparent pixels
+            // Find tight boundary points (gap=0) for the clipping mask
+            // This ensures the mask fits exactly around the object
+            const tightBoundaryPoints = findBoundaryPoints(data, containerWidth, containerHeight, 0);
+
+            // Store tight boundary for use as clipping mask
+            maskBoundaryPoints = tightBoundaryPoints;
+
+            // Redraw image with the clipping mask applied
+            if (isNonTransparentImage && maskBoundaryPoints.length > 2) {
+                drawImageOnCanvas();
+            }
+
+            // Find boundary points with user-specified gap for the outline animation
             const gap = parseInt(outlineGap.value);
             const boundaryPoints = findBoundaryPoints(data, containerWidth, containerHeight, gap);
 
@@ -1856,11 +1942,9 @@
                 const elapsed = timestamp - startTime;
                 const rawProgress = elapsed / durationMs;
 
-                // Check if we've completed one full loop
+                // Check if we've completed one full loop - just restart without showing full outline
                 if (rawProgress >= 1 && !hasCompletedOneLoop) {
                     hasCompletedOneLoop = true;
-                    // Draw the complete outline and stop
-                    drawOutlineStatic();
                     stopAnimation();
                     return;
                 }
@@ -2015,35 +2099,7 @@
                 frames.push(tempCanvas.toDataURL('image/png'));
             }
 
-            // Add final frame with complete outline
-            const finalCanvas = document.createElement('canvas');
-            finalCanvas.width = width;
-            finalCanvas.height = height;
-            const finalCtx = finalCanvas.getContext('2d');
-
-            // Draw background (color or image)
-            drawBgOnContext(finalCtx);
-
-            if (showImage.checked) {
-                finalCtx.drawImage(imageCanvas, 0, 0);
-            }
-            finalCtx.strokeStyle = color;
-            finalCtx.lineWidth = thickness;
-            finalCtx.lineCap = 'round';
-            finalCtx.lineJoin = 'round';
-            finalCtx.beginPath();
-            finalCtx.moveTo(outlinePoints[0].x, outlinePoints[0].y);
-            for (let i = 1; i < totalPoints; i++) {
-                finalCtx.lineTo(outlinePoints[i].x, outlinePoints[i].y);
-            }
-            finalCtx.closePath();
-            finalCtx.stroke();
-
-            // Add a few frames of the complete outline at the end
-            const finalFrame = finalCanvas.toDataURL('image/png');
-            for (let i = 0; i < 10; i++) {
-                frames.push(finalFrame);
-            }
+            // No final frame with complete outline - GIF will loop seamlessly
 
             gifshot.createGIF({
                 images: frames,

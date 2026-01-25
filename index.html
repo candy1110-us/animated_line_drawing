@@ -266,9 +266,8 @@
       height: 300px;
     }
 
-    /* Color variations for cards */
-    .product-card:nth-child(1) { background: #ffffff; }
-    .product-card:nth-child(2) { background: #fffefb; }
+    /* All cards use same background color */
+    .product-card { background: #ffffff !important; }
 
     /* Doodle arrows */
     .doodle-arrow {
@@ -375,18 +374,36 @@
         <p class="product-description">Transform your drawing into mesmerizing hand-drawn animations.</p>
       </a>
 
-      <!-- Product 2: Animate Charts -->
-      <a href="index2.html" class="product-card">
+      <!-- Product 2: Wiggly Outline -->
+      <a href="index4.html" class="product-card">
         <span class="card-number">02</span>
+        <h1 class="product-title">Wiggly Outline</h1>
+        <img src="images/card4.gif" alt="Wiggly Outline" class="product-icon">
+
+        <p class="product-description">Add playful hand-drawn outlines that wiggle around your images.</p>
+      </a>
+
+      <!-- Product 3: Jiggle Drawing -->
+      <a href="index5.html" class="product-card">
+        <span class="card-number">03</span>
+        <h1 class="product-title">Jiggle Drawing</h1>
+        <img src="images/card5.gif" alt="Jiggle Drawing" class="product-icon">
+
+        <p class="product-description">Give your line drawings a fun stop-motion jiggle effect.</p>
+      </a>
+
+      <!-- Product 4: Animate Charts -->
+      <a href="index2.html" class="product-card">
+        <span class="card-number">04</span>
         <h1 class="product-title">Animated Charts</h1>
         <img src="images/chart.gif" alt="Chart animation" class="product-icon chart-icon">
 
         <p class="product-description">Create stunning animated charts with a sketch aesthetic.</p>
       </a>
 
-      <!-- Product 3: Text Animation -->
+      <!-- Product 5: Text Animation -->
       <a href="index3.html" class="product-card">
-        <span class="card-number">03</span>
+        <span class="card-number">05</span>
         <h1 class="product-title">Animated Text</h1>
         <img src="images/card3.gif" alt="Text animation" class="product-icon">
 
@@ -396,13 +413,16 @@
   </div>
 
   <script>
-    // Handle GIF replay on hover
+    // Handle GIF replay on hover and auto-replay for specific cards
     document.addEventListener('DOMContentLoaded', function() {
       const productCards = document.querySelectorAll('.product-card');
+      // Cards that should auto-replay: index1.html, index2.html, index3.html (positions 1, 4, 5)
+      const autoReplayLinks = ['index1.html', 'index2.html', 'index3.html'];
 
       productCards.forEach(card => {
         const img = card.querySelector('.product-icon');
         const originalSrc = img.src.split('?')[0]; // Remove any existing query params
+        const cardLink = card.getAttribute('href');
 
         // Function to reload GIF
         function reloadGif() {
@@ -413,6 +433,11 @@
 
         // Replay GIF on card hover
         card.addEventListener('mouseenter', reloadGif);
+
+        // Auto-replay every 3 seconds for specific cards
+        if (autoReplayLinks.includes(cardLink)) {
+          setInterval(reloadGif, 5000);
+        }
       });
     });
   </script>
