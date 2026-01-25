@@ -1,0 +1,2957 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jiggle Line Drawing Animator</title>
+    <style>
+        @font-face {
+            font-family: 'Be Vietnam Pro';
+            src: url('fonts/BeVietnamPro-Regular.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        @font-face {
+            font-family: 'Hmt Regular';
+            src: url('fonts/HmtRegular-WRrv.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background-color: #ecebe4;
+            background-image: url('data:image/svg+xml;utf8,<svg width="28" height="28" xmlns="http://www.w3.org/2000/svg"><circle cx="14" cy="14" r="1" fill="%23d2d1c7"/></svg>');
+            background-size: 28px 28px;
+            min-height: 100vh;
+            padding: 40px 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before,
+        body::after {
+            content: '';
+            position: fixed;
+            border-radius: 50%;
+            opacity: 0.15;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        body::before {
+            background: #6ba3ff;
+            width: 50vh;
+            height: 50vh;
+            top: 20%;
+            left: -10vh;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        body::after {
+            background: #f59e0b;
+            width: 150px;
+            height: 150px;
+            bottom: 15%;
+            right: 8%;
+            animation: float 8s ease-in-out infinite reverse;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(5deg); }
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header {
+            background: transparent;
+            padding: 20px 30px;
+            margin-bottom: 30px;
+            text-align: center;
+            position: relative;
+        }
+
+        .logo-link {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            overflow: hidden;
+            background: white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 100;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .logo-link:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.25);
+        }
+
+        .header-logo {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .header h1 {
+            font-family: 'Hmt Regular', 'Inter', sans-serif;
+            font-size: 3.5rem;
+            color: #2d3436;
+            margin-bottom: 12px;
+            text-shadow: 3px 3px 0px rgba(107, 163, 255, 0.3);
+        }
+
+        .header p {
+            color: #636e72;
+            font-size: 1.1rem;
+        }
+
+        .main-layout {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        @media (min-width: 1024px) {
+            .main-layout {
+                flex-direction: row;
+                align-items: stretch;
+                min-height: calc(100vh - 200px);
+            }
+
+            .sidebar {
+                flex: 1 1 0;
+                min-width: 0;
+                display: flex;
+                flex-direction: column;
+            }
+
+            .preview-section {
+                flex: 1 1 0;
+                min-width: 0;
+                display: flex;
+                flex-direction: column;
+            }
+        }
+
+        .sidebar, .preview-section {
+            background: white;
+            border-radius: 20px;
+            padding: 24px;
+            box-shadow:
+                3px 3px 0px rgba(0, 0, 0, 0.05),
+                6px 6px 0px rgba(107, 163, 255, 0.08);
+            border: 1px solid rgba(45, 52, 54, 0.15);
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .numbered-badge {
+            width: 50px;
+            height: 50px;
+            background: #6ba3ff;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: white;
+            font-size: 24px;
+            box-shadow: 3px 3px 0px rgba(107, 163, 255, 0.3);
+            flex-shrink: 0;
+        }
+
+        .gradient-text {
+            margin: 0;
+            padding: 0;
+            font-family: 'Hmt Regular', 'Inter', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #2d3436;
+            line-height: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+        }
+
+        .upload-section {
+            border: 2px dashed rgba(107, 163, 255, 0.4);
+            border-radius: 20px;
+            padding: 30px 20px;
+            text-align: center;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            min-height: 300px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 3px 3px 0px rgba(107, 163, 255, 0.1);
+        }
+
+        .upload-section:hover {
+            border-color: #6ba3ff;
+            background: #f5f8ff;
+            transform: translateY(-3px) rotate(1deg);
+            box-shadow: 5px 5px 0px rgba(107, 163, 255, 0.2);
+        }
+
+        .upload-section.has-image {
+            border-style: solid;
+            border-color: #6ba3ff;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .upload-label {
+            font-size: 16px;
+            color: #6ba3ff;
+            font-weight: 600;
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .helper-text {
+            font-size: 12px;
+            color: #6b7280;
+            margin-top: 4px;
+            line-height: 1.4;
+        }
+
+        .upload-preview {
+            display: none;
+        }
+
+        .upload-preview.visible {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .upload-preview img {
+            max-width: 200px;
+            max-height: 200px;
+            object-fit: contain;
+            border-radius: 8px;
+            background: repeating-conic-gradient(#e5e7eb 0% 25%, transparent 0% 50%) 50% / 16px 16px;
+        }
+
+        .upload-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .setting-group {
+            margin-bottom: 18px;
+        }
+
+        .setting-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 8px;
+        }
+
+        .setting-group input[type="range"] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #e3ecff;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .setting-group input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #6ba3ff;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .value-display {
+            display: inline-block;
+            background: #6ba3ff;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #6ba3ff 0%, #5a92ee 100%);
+            color: white;
+            border: none;
+            padding: 14px 24px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 3px 3px 0px rgba(107, 163, 255, 0.3);
+            width: 100%;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 5px 5px 0px rgba(107, 163, 255, 0.4);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #dd6143;
+            border: 2px solid #dd6143;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 2px 2px 0px rgba(221, 97, 67, 0.2);
+        }
+
+        .btn-secondary:hover {
+            background: #fff5f2;
+            transform: translateY(-2px);
+            box-shadow: 3px 3px 0px rgba(221, 97, 67, 0.3);
+        }
+
+        .preview-content-wrapper {
+            flex: 1;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            min-height: 0;
+        }
+
+        .preview-content {
+            position: relative;
+            background: #f9fafb;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 100%;
+            aspect-ratio: 16 / 9;
+            display: flex;
+            overflow: hidden;
+            background: repeating-conic-gradient(#e5e7eb 0% 25%, #f9fafb 0% 50%) 50% / 20px 20px;
+            transition: all 0.3s ease;
+        }
+
+        .preview-content.vertical {
+            aspect-ratio: 9 / 16;
+            width: auto;
+            height: 100%;
+            max-height: 600px;
+            max-width: none;
+        }
+
+        /* Aspect Ratio Buttons */
+        .aspect-ratio-group {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .aspect-ratio-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            padding: 4px 6px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            color: #6ba3ff;
+            opacity: 0.4;
+            transition: opacity 0.2s;
+        }
+
+        .aspect-ratio-btn:hover {
+            opacity: 0.7;
+        }
+
+        .aspect-ratio-btn.selected {
+            opacity: 1;
+        }
+
+        .aspect-ratio-btn span {
+            font-size: 9px;
+            font-weight: 500;
+        }
+
+        .preview-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            cursor: grab;
+        }
+
+        .preview-canvas:active {
+            cursor: grabbing;
+        }
+
+        .preview-canvas.dragging {
+            cursor: grabbing;
+        }
+
+        .placeholder {
+            text-align: center;
+            color: #9ca3af;
+            margin: auto;
+        }
+
+        .placeholder svg {
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 16px;
+            opacity: 0.3;
+        }
+
+        .controls-row {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 10px;
+            background: #f9fafb;
+            border-radius: 8px;
+            height: 36px;
+        }
+
+        .label-text {
+            font-size: 12px;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .slider-compact {
+            width: 100px;
+            height: 4px;
+            border-radius: 2px;
+            background: #e3ecff;
+            outline: none;
+            -webkit-appearance: none;
+            cursor: pointer;
+        }
+
+        .slider-compact::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: #6ba3ff;
+            cursor: pointer;
+        }
+
+        .color-preview-box {
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+            border: 2px solid #e5e7eb;
+            cursor: pointer;
+        }
+
+        .popup-menu {
+            display: none;
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 8px;
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            width: 280px;
+            z-index: 1000;
+        }
+
+        .popup-menu.visible {
+            display: block;
+        }
+
+        /* Color Picker Elements */
+        .color-square {
+            position: relative;
+            width: 100%;
+            height: 150px;
+            background: linear-gradient(to right, white, red);
+            border-radius: 8px;
+            margin-bottom: 12px;
+            cursor: crosshair;
+            border: 2px solid #e5e7eb;
+        }
+
+        .color-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(to bottom, transparent, black);
+            border-radius: 6px;
+        }
+
+        .color-cursor {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            border: 2px solid white;
+            border-radius: 50%;
+            pointer-events: none;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 3px rgba(0,0,0,0.5);
+        }
+
+        .hue-slider {
+            height: 20px;
+            border-radius: 6px;
+            background: linear-gradient(to right, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000);
+            position: relative;
+            cursor: pointer;
+            border: 2px solid #e5e7eb;
+            margin-bottom: 12px;
+        }
+
+        .hue-cursor {
+            position: absolute;
+            width: 4px;
+            height: 24px;
+            background: white;
+            border: 2px solid #666;
+            border-radius: 2px;
+            top: -2px;
+            transform: translateX(-50%);
+            pointer-events: none;
+        }
+
+        .hex-input {
+            flex: 1;
+            padding: 6px 10px;
+            border: 2px solid #e5e7eb;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 13px;
+        }
+
+        .color-input {
+            width: 40px;
+            height: 32px;
+            border: 2px solid #e5e7eb;
+            border-radius: 6px;
+            cursor: pointer;
+            padding: 0;
+        }
+
+        .flex-center-gap-8 {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .pos-relative {
+            position: relative;
+        }
+
+        .mb-12 {
+            margin-bottom: 12px;
+        }
+
+        .action-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 24px;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .checkbox-input {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: #6ba3ff;
+        }
+
+        .color-input {
+            width: 40px;
+            height: 32px;
+            border: 2px solid #e5e7eb;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .export-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 16px;
+        }
+
+        .export-buttons button {
+            width: auto;
+            min-width: 120px;
+        }
+
+        .export-buttons button.exporting {
+            pointer-events: none;
+            opacity: 0.8;
+        }
+
+        .export-buttons button .btn-text {
+            display: inline;
+        }
+
+        .export-buttons button .btn-loading {
+            display: none;
+        }
+
+        .export-buttons button.exporting .btn-text {
+            display: none;
+        }
+
+        .export-buttons button.exporting .btn-loading {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .spinner {
+            width: 14px;
+            height: 14px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Mode toggle buttons */
+        .mode-toggle {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .mode-btn {
+            flex: 1;
+            padding: 10px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            background: white;
+            font-size: 13px;
+            font-weight: 600;
+            color: #6b7280;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .mode-btn:hover {
+            border-color: #6ba3ff;
+            color: #6ba3ff;
+        }
+
+        .mode-btn.active {
+            border-color: #6ba3ff;
+            background: linear-gradient(135deg, #6ba3ff 0%, #5a92ee 100%);
+            color: white;
+        }
+
+        /* Drawing section */
+        .drawing-section {
+            display: none;
+            flex-direction: column;
+            flex: 1;
+            min-height: 0;
+        }
+
+        .drawing-section.active {
+            display: flex;
+        }
+
+        .drawing-canvas-wrapper {
+            flex: 1;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            min-height: 0;
+        }
+
+        .drawing-canvas-container {
+            position: relative;
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            overflow: hidden;
+            width: 100%;
+            max-width: 100%;
+            aspect-ratio: 16 / 9;
+            cursor: crosshair;
+            transition: all 0.3s ease;
+        }
+
+        .drawing-canvas-container.vertical {
+            aspect-ratio: 9 / 16;
+            width: auto;
+            height: 100%;
+            max-height: 600px;
+            max-width: none;
+        }
+
+        #drawingCanvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+            touch-action: none;
+        }
+
+        .drawing-controls {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .drawing-controls .control-group {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-small {
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+        }
+
+        .btn-undo {
+            background: #f3f4f6;
+            color: #374151;
+        }
+
+        .btn-undo:hover {
+            background: #e5e7eb;
+        }
+
+        .btn-clear {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .btn-clear:hover {
+            background: #fecaca;
+        }
+
+        .btn-use-drawing {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            flex: 1;
+        }
+
+        .btn-use-drawing:hover {
+            transform: translateY(-1px);
+            box-shadow: 2px 2px 0px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-use-drawing:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .stroke-width-slider {
+            width: 80px;
+            height: 4px;
+            border-radius: 2px;
+            background: #e3ecff;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .stroke-width-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: #6ba3ff;
+            cursor: pointer;
+        }
+
+        .settings-row {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 18px;
+        }
+
+        .settings-row .setting-group {
+            margin-bottom: 0;
+        }
+
+        /* Background image upload */
+        .bg-upload-area {
+            border: 2px dashed #c7d2fe;
+            border-radius: 8px;
+            padding: 12px;
+            text-align: center;
+            background: #f5f8ff;
+            cursor: pointer;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 12px;
+        }
+
+        .bg-upload-area:hover {
+            border-color: #6ba3ff;
+            background: #eef4ff;
+        }
+
+        .text-small-blue {
+            font-size: 11px;
+            color: #5a92ee;
+        }
+
+        .text-tiny-gray {
+            font-size: 10px;
+            color: #6b7280;
+        }
+
+        .text-tiny-blue {
+            font-size: 9px;
+            color: #6ba3ff;
+            cursor: pointer;
+        }
+
+        .img-thumb {
+            max-width: 60px;
+            max-height: 40px;
+            object-fit: contain;
+            border-radius: 4px;
+        }
+
+        .flex-col-center {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* Jiggle toggle buttons */
+        .jiggle-toggle {
+            display: flex;
+            gap: 4px;
+        }
+
+        .jiggle-btn {
+            padding: 4px 10px;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            background: white;
+            font-size: 11px;
+            font-weight: 600;
+            color: #6b7280;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .jiggle-btn:hover {
+            border-color: #6ba3ff;
+            color: #6ba3ff;
+        }
+
+        .jiggle-btn.active {
+            border-color: #6ba3ff;
+            background: #6ba3ff;
+            color: white;
+        }
+
+        .settings-controls-row {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .compact-slider-group {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .compact-slider-group .label-text {
+            font-size: 11px;
+            white-space: nowrap;
+        }
+
+        .compact-slider-group .slider-compact {
+            width: 60px;
+        }
+
+        .compact-slider-group .value-display {
+            font-size: 10px;
+            padding: 1px 5px;
+        }
+
+        .sliders-row {
+            flex-wrap: nowrap;
+        }
+
+        .slider-third {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 12px;
+            background: #f9fafb;
+            border-radius: 8px;
+        }
+
+        .slider-third .label-text {
+            font-size: 11px;
+            white-space: nowrap;
+        }
+
+        .slider-third .slider-compact {
+            flex: 1;
+            min-width: 40px;
+        }
+
+        .slider-third .value-display {
+            font-size: 10px;
+            padding: 1px 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <a href="index.html" class="logo-link">
+                <img src="images/mefn.gif" alt="Logo" class="header-logo">
+            </a>
+            <div class="header-content">
+                <h1>Jiggle Line Drawing Animator</h1>
+                <p>Upload a line drawing PNG and watch it come alive with stop-motion jiggle effect</p>
+            </div>
+        </div>
+
+        <div class="main-layout">
+            <!-- LEFT - Controls -->
+            <div class="sidebar">
+                <div class="section-header">
+                    <div class="numbered-badge">1</div>
+                    <h3 class="gradient-text">Create Drawing</h3>
+                </div>
+
+                <!-- Mode Toggle -->
+                <div class="mode-toggle">
+                    <button class="mode-btn active" id="drawModeBtn">Draw</button>
+                    <button class="mode-btn" id="uploadModeBtn">Upload</button>
+                </div>
+
+                <!-- Drawing Section -->
+                <div class="drawing-section active" id="drawingSection">
+                    <div class="drawing-controls">
+                        <div class="control-group">
+                            <span class="label-text">Stroke:</span>
+                            <input type="range" id="strokeWidth" min="2" max="12" value="4" class="stroke-width-slider">
+                            <span class="value-display" id="strokeWidthDisplay">4px</span>
+                        </div>
+                        <button class="btn-small btn-undo" id="undoBtn">Undo</button>
+                        <button class="btn-small btn-clear" id="clearBtn">Clear</button>
+                    </div>
+                    <div class="drawing-canvas-wrapper">
+                        <div class="drawing-canvas-container" id="drawingCanvasContainer">
+                            <canvas id="drawingCanvas" width="640" height="360"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Upload Section -->
+                <div class="upload-section" id="uploadSection" style="display: none;">
+                    <input type="file" id="imageUpload" accept="image/png,image/gif,image/webp,image/jpeg,image/jpg">
+                    <div id="uploadPlaceholder">
+                        <label for="imageUpload" class="upload-label">
+                            Click to Upload Line Drawing
+                        </label>
+                        <div class="helper-text">
+                            PNG with transparency, or JPG (black lines will be auto-detected)
+                        </div>
+                    </div>
+                    <div id="uploadPreview" class="upload-preview">
+                        <img id="previewImg" />
+                        <div class="label-text" id="imageName"></div>
+                        <div class="upload-actions">
+                            <label for="imageUpload" class="helper-text" style="color: #6ba3ff; cursor: pointer;">Change</label>
+                            <span class="helper-text" style="color: #9ca3af;">|</span>
+                            <span id="removeImage" class="helper-text" style="color: #dd6143; cursor: pointer;">Remove</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="setting-group" style="margin-top: 24px; display: none;" id="thresholdGroup">
+                    <label>
+                        Line Detection Threshold <span class="value-display" id="thresholdDisplay">128</span>
+                    </label>
+                    <input type="range" id="threshold" min="50" max="220" value="128">
+                    <div class="helper-text">For JPG: pixels darker than this become the drawing</div>
+                </div>
+
+            </div>
+
+            <!-- RIGHT - Preview -->
+            <div class="preview-section">
+                <div class="section-header">
+                    <div class="numbered-badge">2</div>
+                    <h3 class="gradient-text">Animate</h3>
+                </div>
+                <div class="controls-row">
+                    <div class="control-group">
+                        <span class="label-text">Ratio:</span>
+                        <div class="aspect-ratio-group">
+                            <button class="aspect-ratio-btn selected" id="ratio16x9" title="16:9 Landscape">
+                                <svg width="20" height="12" viewBox="0 0 20 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <rect x="0.5" y="0.5" width="19" height="11" rx="1" stroke="currentColor" fill="none"/>
+                                </svg>
+                                <span>16:9</span>
+                            </button>
+                            <button class="aspect-ratio-btn" id="ratio9x16" title="9:16 Portrait">
+                                <svg width="12" height="20" viewBox="0 0 12 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <rect x="0.5" y="0.5" width="11" height="19" rx="1" stroke="currentColor" fill="none"/>
+                                </svg>
+                                <span>9:16</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="pos-relative">
+                        <div class="control-group" id="strokeIndicator" style="cursor: pointer;">
+                            <span class="label-text">Stroke:</span>
+                            <div id="strokePreview" class="color-preview-box" style="background: #000000;"></div>
+                        </div>
+                        <div id="strokePopup" class="popup-menu">
+                            <!-- Color square picker -->
+                            <div class="color-square" id="strokeColorSquare">
+                                <div class="color-overlay"></div>
+                                <div id="strokeColorCursor" class="color-cursor"></div>
+                            </div>
+                            <!-- Hue slider -->
+                            <div class="hue-slider" id="strokeHueSlider">
+                                <div id="strokeHueCursor" class="hue-cursor"></div>
+                            </div>
+                            <!-- Hex input -->
+                            <div class="flex-center-gap-8 mb-12">
+                                <span class="label-text">Hex:</span>
+                                <input type="text" id="strokeColorHexInput" value="#000000" class="hex-input">
+                                <input type="color" id="strokeColor" value="#000000" class="color-input">
+                            </div>
+                            <div id="strokeThicknessSection" style="display: none; border-top: 1px solid #e5e7eb; padding-top: 12px;">
+                                <div class="label-text" style="margin-bottom: 8px;">Line Thickness <span class="value-display" id="lineWidthDisplay2">0</span></div>
+                                <input type="range" id="lineWidth2" min="-3" max="5" value="0" style="width: 100%;">
+                                <div class="helper-text">Adjust line thickness (-3 thinner, +5 thicker)</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="pos-relative">
+                        <div class="control-group" id="bgIndicator" style="cursor: pointer;">
+                            <span class="label-text">Background:</span>
+                            <div id="bgPreview" class="color-preview-box" style="background: #00ff00;"></div>
+                        </div>
+                        <div id="bgPopup" class="popup-menu">
+                            <!-- Color square picker -->
+                            <div class="color-square" id="bgColorSquare">
+                                <div class="color-overlay"></div>
+                                <div id="bgColorCursor" class="color-cursor"></div>
+                            </div>
+                            <!-- Hue slider -->
+                            <div class="hue-slider" id="bgHueSlider">
+                                <div id="bgHueCursor" class="hue-cursor"></div>
+                            </div>
+                            <!-- Hex input -->
+                            <div class="flex-center-gap-8 mb-12">
+                                <span class="label-text">Hex:</span>
+                                <input type="text" id="bgColorHexInput" value="#00ff00" class="hex-input">
+                                <input type="color" id="bgColor" value="#00ff00" class="color-input">
+                            </div>
+                            <div style="border-top: 1px solid #e5e7eb; padding-top: 12px;">
+                                <div class="text-tiny-gray" style="margin-bottom: 6px;">Or use background image:</div>
+                                <div class="bg-upload-area" id="bgImageUploadArea">
+                                    <input type="file" id="bgImageUpload" accept="image/*" style="display: none;">
+                                    <div id="bgUploadPlaceholder" class="flex-col-center">
+                                        <span class="text-small-blue">Click to upload</span>
+                                    </div>
+                                    <div id="bgImagePreview" class="flex-col-center" style="display: none;">
+                                        <img id="bgPreviewImg" class="img-thumb" />
+                                        <span class="text-tiny-gray" id="bgImageName"></span>
+                                        <div class="flex-center-gap-8">
+                                            <span class="text-tiny-blue" id="changeBgImage">Change</span>
+                                            <span class="text-tiny-blue" id="removeBgImage" style="color: #dd6143;">Remove</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <span class="label-text">Jiggle:</span>
+                        <div class="jiggle-toggle">
+                            <button class="jiggle-btn" data-value="1">Low</button>
+                            <button class="jiggle-btn active" data-value="2">Med</button>
+                            <button class="jiggle-btn" data-value="3">High</button>
+                        </div>
+                        <input type="hidden" id="jiggleAmount" value="2">
+                    </div>
+                </div>
+
+                <div class="settings-controls-row sliders-row">
+                    <div class="slider-third">
+                        <span class="label-text">Frames:</span>
+                        <input type="range" id="frameCount" min="2" max="5" value="3" class="slider-compact">
+                        <span class="value-display" id="frameCountDisplay">3</span>
+                    </div>
+                    <div class="slider-third">
+                        <span class="label-text">Angle:</span>
+                        <input type="range" id="angleAmount" min="0" max="2" step="0.1" value="0.5" class="slider-compact">
+                        <span class="value-display" id="angleDisplay">0.5°</span>
+                    </div>
+                    <div class="slider-third">
+                        <span class="label-text">Speed:</span>
+                        <input type="range" id="animSpeed" min="50" max="300" step="10" value="120" class="slider-compact">
+                        <span class="value-display" id="speedDisplay">120ms</span>
+                    </div>
+                </div>
+
+                <div class="preview-content-wrapper">
+                    <div class="preview-content" id="previewContent">
+                        <canvas id="mainCanvas" class="preview-canvas"></canvas>
+                        <div class="placeholder" id="previewPlaceholder">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="17 8 12 3 7 8"></polyline>
+                                <line x1="12" y1="3" x2="12" y2="15"></line>
+                            </svg>
+                            <p>Draw or upload a line drawing to get started</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="export-buttons">
+                    <button class="btn-primary" id="exportGifBtn" disabled style="background: linear-gradient(135deg, #6ba3ff 0%, #5a92ee 100%); box-shadow: 3px 3px 0px rgba(107, 163, 255, 0.3);"><span class="btn-text">Export GIF</span><span class="btn-loading"><span class="spinner"></span>Exporting...</span></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/gifshot@0.4.5/dist/gifshot.min.js"></script>
+    <script>
+        // State
+        let uploadedImage = null;
+        let processedImage = null; // The image after line extraction
+        let isJpgUpload = false;
+        let isUploadedFile = false; // Track if current image is from file upload (vs drawn)
+        let isDrawMode = true; // Track current input mode
+        let jiggleFrames = []; // Array of canvas elements with jiggled versions
+        let isAnimating = false;
+        let animationId = null;
+        let currentFrame = 0;
+        let bgImageData = null; // Background image data URL
+        let cachedBgImage = null; // Cached Image object for animation
+        let currentAspectRatio = '16:9'; // Current aspect ratio
+
+        // Drag offset for repositioning the drawing
+        let imageOffsetX = 0;
+        let imageOffsetY = 0;
+        let isDragging = false;
+        let dragStartX = 0;
+        let dragStartY = 0;
+        let initialOffsetX = 0;
+        let initialOffsetY = 0;
+
+        // Drawing state
+        let isDrawing = false;
+        let allStrokes = [];
+        let currentStroke = [];
+
+        // DOM Elements
+        const imageUpload = document.getElementById('imageUpload');
+        const uploadSection = document.getElementById('uploadSection');
+        const uploadPlaceholder = document.getElementById('uploadPlaceholder');
+        const uploadPreview = document.getElementById('uploadPreview');
+        const previewImg = document.getElementById('previewImg');
+        const imageName = document.getElementById('imageName');
+        const removeImage = document.getElementById('removeImage');
+        const previewPlaceholder = document.getElementById('previewPlaceholder');
+        const previewContent = document.getElementById('previewContent');
+        const mainCanvas = document.getElementById('mainCanvas');
+        const exportGifBtn = document.getElementById('exportGifBtn');
+
+        // Sliders
+        const jiggleAmount = document.getElementById('jiggleAmount');
+        const frameCount = document.getElementById('frameCount');
+        const angleAmount = document.getElementById('angleAmount');
+        const animSpeed = document.getElementById('animSpeed');
+        const bgColor = document.getElementById('bgColor');
+        const strokeColorInput = document.getElementById('strokeColor');
+        const strokeIndicator = document.getElementById('strokeIndicator');
+        const strokePopup = document.getElementById('strokePopup');
+        const strokePreview = document.getElementById('strokePreview');
+        const strokeThicknessSection = document.getElementById('strokeThicknessSection');
+        const lineWidth2 = document.getElementById('lineWidth2');
+        const lineWidthDisplay2 = document.getElementById('lineWidthDisplay2');
+        const threshold = document.getElementById('threshold');
+        const thresholdGroup = document.getElementById('thresholdGroup');
+
+        // Displays
+        const frameCountDisplay = document.getElementById('frameCountDisplay');
+        const angleDisplay = document.getElementById('angleDisplay');
+        const speedDisplay = document.getElementById('speedDisplay');
+        const bgPreview = document.getElementById('bgPreview');
+        const bgPopup = document.getElementById('bgPopup');
+        const bgIndicator = document.getElementById('bgIndicator');
+        const thresholdDisplay = document.getElementById('thresholdDisplay');
+        const lineWidthDisplay = document.getElementById('lineWidthDisplay');
+
+        // Drawing elements
+        const drawModeBtn = document.getElementById('drawModeBtn');
+        const uploadModeBtn = document.getElementById('uploadModeBtn');
+        const drawingSection = document.getElementById('drawingSection');
+        const drawingCanvasContainer = document.getElementById('drawingCanvasContainer');
+        const drawingCanvas = document.getElementById('drawingCanvas');
+        const drawCtx = drawingCanvas.getContext('2d');
+        const strokeWidthSlider = document.getElementById('strokeWidth');
+        const strokeWidthDisplay = document.getElementById('strokeWidthDisplay');
+        const undoBtn = document.getElementById('undoBtn');
+        const clearBtn = document.getElementById('clearBtn');
+
+        // Background image elements
+        const bgImageUploadArea = document.getElementById('bgImageUploadArea');
+        const bgImageUpload = document.getElementById('bgImageUpload');
+        const bgUploadPlaceholder = document.getElementById('bgUploadPlaceholder');
+        const bgImagePreview = document.getElementById('bgImagePreview');
+        const bgPreviewImg = document.getElementById('bgPreviewImg');
+        const bgImageName = document.getElementById('bgImageName');
+        const changeBgImage = document.getElementById('changeBgImage');
+        const removeBgImage = document.getElementById('removeBgImage');
+
+        // Aspect ratio elements
+        const ratio16x9Btn = document.getElementById('ratio16x9');
+        const ratio9x16Btn = document.getElementById('ratio9x16');
+
+        // Initialize drawing canvas
+        drawCtx.strokeStyle = '#000000';
+        drawCtx.lineWidth = 4;
+        drawCtx.lineCap = 'round';
+        drawCtx.lineJoin = 'round';
+
+        // Stroke color control
+        strokeColorInput.addEventListener('input', () => {
+            drawCtx.strokeStyle = strokeColorInput.value;
+            strokePreview.style.background = strokeColorInput.value;
+
+            // Auto-update animation with new stroke color
+            if (uploadedImage) {
+                if (isUploadedFile) {
+                    // For uploaded files (JPG/PNG), reprocess with new stroke color then regenerate
+                    processUploadedImage().then(() => {
+                        if (isAnimating) {
+                            generateJiggleFrames();
+                        } else {
+                            drawOriginalImage();
+                        }
+                    });
+                } else {
+                    // For drawings, just regenerate frames
+                    if (isAnimating) {
+                        generateJiggleFrames();
+                    } else {
+                        drawOriginalImage();
+                    }
+                }
+            }
+        });
+
+        // Stroke popup toggle
+        strokeIndicator.addEventListener('click', (e) => {
+            e.stopPropagation();
+            strokePopup.classList.toggle('visible');
+            bgPopup.classList.remove('visible');
+        });
+
+        strokePopup.addEventListener('click', (e) => {
+            e.stopPropagation();
+        });
+
+        // Line thickness in stroke popup (for uploaded images)
+        lineWidth2.addEventListener('input', () => {
+            const val = parseInt(lineWidth2.value);
+            lineWidthDisplay2.textContent = val > 0 ? `+${val}` : val;
+            if (isUploadedFile && uploadedImage) {
+                processUploadedImage(val).then(() => {
+                    // Auto-update animation
+                    if (isAnimating) {
+                        generateJiggleFrames();
+                    } else {
+                        drawOriginalImage();
+                    }
+                });
+            }
+        });
+
+        // Jiggle button handlers
+        const jiggleBtns = document.querySelectorAll('.jiggle-btn');
+        jiggleBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                jiggleBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                jiggleAmount.value = btn.dataset.value;
+                // Auto-update animation when setting changes
+                if (isAnimating && uploadedImage) {
+                    generateJiggleFrames();
+                }
+            });
+        });
+
+        // Update displays
+        frameCount.addEventListener('input', () => {
+            frameCountDisplay.textContent = frameCount.value;
+            // Auto-update animation when setting changes
+            if (isAnimating && uploadedImage) {
+                generateJiggleFrames();
+            }
+        });
+
+        angleAmount.addEventListener('input', () => {
+            angleDisplay.textContent = angleAmount.value + '°';
+            // Auto-update animation when setting changes
+            if (isAnimating && uploadedImage) {
+                generateJiggleFrames();
+            }
+        });
+
+        animSpeed.addEventListener('input', () => {
+            speedDisplay.textContent = animSpeed.value + 'ms';
+        });
+
+        bgColor.addEventListener('input', () => {
+            bgPreview.style.background = bgColor.value;
+            bgImageData = null; // Clear background image when color is changed
+            cachedBgImage = null;
+            if (bgImagePreview) bgImagePreview.style.display = 'none';
+            if (bgUploadPlaceholder) bgUploadPlaceholder.style.display = 'flex';
+        });
+
+        // Aspect ratio handlers
+        function selectAspectRatio(ratio) {
+            currentAspectRatio = ratio;
+            const isVertical = ratio === '9:16';
+
+            // Update button states
+            ratio16x9Btn.classList.toggle('selected', !isVertical);
+            ratio9x16Btn.classList.toggle('selected', isVertical);
+
+            // Update preview container
+            previewContent.classList.toggle('vertical', isVertical);
+
+            // Update drawing canvas container and dimensions
+            drawingCanvasContainer.classList.toggle('vertical', isVertical);
+
+            // Update drawing canvas dimensions (preserve aspect ratio)
+            if (isVertical) {
+                drawingCanvas.width = 360;
+                drawingCanvas.height = 640;
+            } else {
+                drawingCanvas.width = 640;
+                drawingCanvas.height = 360;
+            }
+
+            // Redraw existing strokes on resized canvas
+            redrawStrokes();
+
+            // Redraw preview with new aspect ratio - use setTimeout to let CSS transition complete
+            setTimeout(() => {
+                if (uploadedImage) {
+                    if (isAnimating) {
+                        generateJiggleFrames();
+                    } else {
+                        drawOriginalImage();
+                    }
+                } else {
+                    // Redraw background (green by default)
+                    const ctx = mainCanvas.getContext('2d');
+                    mainCanvas.width = previewContent.clientWidth;
+                    mainCanvas.height = previewContent.clientHeight;
+                    if (bgImageData && cachedBgImage) {
+                        ctx.drawImage(cachedBgImage, 0, 0, mainCanvas.width, mainCanvas.height);
+                    } else {
+                        ctx.fillStyle = bgColor.value;
+                        ctx.fillRect(0, 0, mainCanvas.width, mainCanvas.height);
+                    }
+                }
+            }, 50);
+        }
+
+        ratio16x9Btn.addEventListener('click', () => selectAspectRatio('16:9'));
+        ratio9x16Btn.addEventListener('click', () => selectAspectRatio('9:16'));
+
+        // Background image upload handlers
+        if (bgImageUploadArea && bgImageUpload) {
+            bgImageUploadArea.addEventListener('click', (e) => {
+                if (e.target.id === 'changeBgImage') {
+                    bgImageUpload.click();
+                } else if (e.target.id === 'removeBgImage') {
+                    bgImageData = null;
+                    cachedBgImage = null;
+                    bgImagePreview.style.display = 'none';
+                    bgUploadPlaceholder.style.display = 'flex';
+                    previewContent.style.background = '';
+                    // Redraw to show background color instead
+                    if (isAnimating) {
+                        drawFrame(currentFrame);
+                    } else if (uploadedImage) {
+                        drawOriginalImage();
+                    }
+                } else if (!e.target.closest('#bgImagePreview') || e.target.id === 'changeBgImage') {
+                    bgImageUpload.click();
+                }
+            });
+
+            bgImageUpload.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        bgImageData = event.target.result;
+                        bgPreviewImg.src = bgImageData;
+                        bgImageName.textContent = file.name;
+                        bgUploadPlaceholder.style.display = 'none';
+                        bgImagePreview.style.display = 'flex';
+                        previewContent.style.background = `url(${bgImageData}) center/cover`;
+
+                        // Cache the image for animation
+                        cachedBgImage = new Image();
+                        cachedBgImage.onload = () => {
+                            // Redraw to show background image
+                            if (isAnimating) {
+                                drawFrame(currentFrame);
+                            } else if (uploadedImage) {
+                                drawOriginalImage();
+                            }
+                        };
+                        cachedBgImage.src = bgImageData;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        }
+
+        threshold.addEventListener('input', () => {
+            thresholdDisplay.textContent = threshold.value;
+            if (isUploadedFile && uploadedImage) {
+                processUploadedImage().then(() => {
+                    // Auto-update animation
+                    if (isAnimating) {
+                        generateJiggleFrames();
+                    } else {
+                        drawOriginalImage();
+                    }
+                });
+            }
+        });
+
+
+        // Stroke width control
+        strokeWidthSlider.addEventListener('input', () => {
+            const width = parseInt(strokeWidthSlider.value);
+            strokeWidthDisplay.textContent = width + 'px';
+            drawCtx.lineWidth = width;
+        });
+
+        // Store upload state separately to preserve when switching modes
+        let uploadState = {
+            image: null,
+            processedImage: null,
+            isJpg: false,
+            isUploaded: false,
+            previewSrc: null,
+            fileName: null,
+            thresholdValue: 128,
+            lineWidthValue: 0
+        };
+
+        // Mode toggle
+        drawModeBtn.addEventListener('click', () => {
+            if (isDrawMode) return;
+
+            // Save upload state before switching
+            if (uploadedImage && !isDrawMode) {
+                uploadState.image = uploadedImage;
+                uploadState.processedImage = processedImage;
+                uploadState.isJpg = isJpgUpload;
+                uploadState.isUploaded = isUploadedFile;
+                uploadState.previewSrc = previewImg.src;
+                uploadState.fileName = imageName.textContent;
+                uploadState.thresholdValue = parseInt(threshold.value);
+                uploadState.lineWidthValue = parseInt(lineWidth2.value);
+            }
+
+            isDrawMode = true;
+            drawModeBtn.classList.add('active');
+            uploadModeBtn.classList.remove('active');
+            drawingSection.classList.add('active');
+            uploadSection.style.display = 'none';
+            thresholdGroup.style.display = 'none';
+            strokeThicknessSection.style.display = 'none';
+
+            // Clear preview and reset for draw mode
+            if (isAnimating) stopAnimation();
+            uploadedImage = null;
+            processedImage = null;
+            isJpgUpload = false;
+            isUploadedFile = false;
+            jiggleFrames = [];
+
+            // Reset drag offset
+            imageOffsetX = 0;
+            imageOffsetY = 0;
+
+            // Show green background in preview
+            const ctx = mainCanvas.getContext('2d');
+            mainCanvas.width = previewContent.clientWidth;
+            mainCanvas.height = previewContent.clientHeight;
+            ctx.fillStyle = bgColor.value;
+            ctx.fillRect(0, 0, mainCanvas.width, mainCanvas.height);
+
+            if (allStrokes.length === 0) {
+                previewPlaceholder.classList.remove('hidden');
+                exportGifBtn.disabled = true;
+            } else {
+                previewPlaceholder.classList.add('hidden');
+                exportGifBtn.disabled = false;
+                updateDrawingPreview();
+            }
+        });
+
+        uploadModeBtn.addEventListener('click', () => {
+            if (!isDrawMode) return;
+            isDrawMode = false;
+            uploadModeBtn.classList.add('active');
+            drawModeBtn.classList.remove('active');
+            drawingSection.classList.remove('active');
+            uploadSection.style.display = '';
+
+            // Clear preview and reset for upload mode
+            if (isAnimating) stopAnimation();
+            jiggleFrames = [];
+            frameAngles = [];
+
+            // Reset drag offset
+            imageOffsetX = 0;
+            imageOffsetY = 0;
+
+            // Restore upload state if we had an uploaded image
+            if (uploadState.image) {
+                uploadedImage = uploadState.image;
+                processedImage = uploadState.processedImage;
+                isJpgUpload = uploadState.isJpg;
+                isUploadedFile = uploadState.isUploaded;
+                previewImg.src = uploadState.previewSrc;
+                imageName.textContent = uploadState.fileName;
+                threshold.value = uploadState.thresholdValue;
+                thresholdDisplay.textContent = uploadState.thresholdValue;
+                lineWidth2.value = uploadState.lineWidthValue;
+                const val = uploadState.lineWidthValue;
+                lineWidthDisplay2.textContent = val > 0 ? `+${val}` : val;
+
+                uploadPlaceholder.classList.add('hidden');
+                uploadPreview.classList.add('visible');
+                uploadSection.classList.add('has-image');
+                previewPlaceholder.classList.add('hidden');
+                exportGifBtn.disabled = false;
+
+                // Show controls for uploaded images
+                thresholdGroup.style.display = 'block';
+                strokeThicknessSection.style.display = 'block';
+
+                // Auto-start animation
+                generateJiggleFrames();
+                startAnimation();
+            } else {
+                uploadedImage = null;
+                processedImage = null;
+                isJpgUpload = false;
+                isUploadedFile = false;
+
+                // Show green background in preview
+                const ctx = mainCanvas.getContext('2d');
+                mainCanvas.width = previewContent.clientWidth;
+                mainCanvas.height = previewContent.clientHeight;
+                ctx.fillStyle = bgColor.value;
+                ctx.fillRect(0, 0, mainCanvas.width, mainCanvas.height);
+
+                previewPlaceholder.classList.remove('hidden');
+                exportGifBtn.disabled = true;
+            }
+        });
+
+        // Drawing functions
+        function getDrawCoordinates(e) {
+            const rect = drawingCanvas.getBoundingClientRect();
+            const scaleX = drawingCanvas.width / rect.width;
+            const scaleY = drawingCanvas.height / rect.height;
+
+            if (e.touches) {
+                return {
+                    x: (e.touches[0].clientX - rect.left) * scaleX,
+                    y: (e.touches[0].clientY - rect.top) * scaleY
+                };
+            }
+            return {
+                x: (e.clientX - rect.left) * scaleX,
+                y: (e.clientY - rect.top) * scaleY
+            };
+        }
+
+        function startDrawing(e) {
+            e.preventDefault();
+            isDrawing = true;
+            const pos = getDrawCoordinates(e);
+            currentStroke = [{ x: pos.x, y: pos.y }];
+            drawCtx.beginPath();
+            drawCtx.moveTo(pos.x, pos.y);
+        }
+
+        function draw(e) {
+            if (!isDrawing) return;
+            e.preventDefault();
+
+            const pos = getDrawCoordinates(e);
+            currentStroke.push({ x: pos.x, y: pos.y });
+
+            drawCtx.lineTo(pos.x, pos.y);
+            drawCtx.stroke();
+        }
+
+        function stopDrawing(e) {
+            if (!isDrawing) return;
+            if (e) e.preventDefault();
+
+            isDrawing = false;
+            if (currentStroke.length > 1) {
+                allStrokes.push({
+                    points: [...currentStroke],
+                    lineWidth: drawCtx.lineWidth,
+                    strokeColor: drawCtx.strokeStyle
+                });
+                // Auto-update preview when stroke is completed
+                updateDrawingPreview();
+            }
+            currentStroke = [];
+        }
+
+        // Auto-update preview from drawing
+        function updateDrawingPreview() {
+            if (allStrokes.length === 0) return;
+
+            const dataUrl = drawingCanvas.toDataURL('image/png');
+            const img = new Image();
+            img.onload = () => {
+                uploadedImage = img;
+                processedImage = null;
+                isJpgUpload = false;
+                isUploadedFile = false; // Mark as drawn (not uploaded file)
+
+                thresholdGroup.style.display = 'none';
+                strokeThicknessSection.style.display = 'none';
+
+                previewPlaceholder.classList.add('hidden');
+                exportGifBtn.disabled = false;
+
+                // Always generate frames and start/update animation
+                generateJiggleFrames();
+                if (!isAnimating) {
+                    startAnimation();
+                }
+            };
+            img.src = dataUrl;
+        }
+
+        // Mouse events for drawing
+        drawingCanvas.addEventListener('mousedown', startDrawing);
+        drawingCanvas.addEventListener('mousemove', draw);
+        drawingCanvas.addEventListener('mouseup', stopDrawing);
+        drawingCanvas.addEventListener('mouseleave', stopDrawing);
+
+        // Touch events for drawing
+        drawingCanvas.addEventListener('touchstart', startDrawing);
+        drawingCanvas.addEventListener('touchmove', draw);
+        drawingCanvas.addEventListener('touchend', stopDrawing);
+
+        // Redraw canvas from strokes
+        function redrawDrawingCanvas() {
+            drawCtx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
+
+            allStrokes.forEach(stroke => {
+                drawCtx.lineWidth = stroke.lineWidth;
+                drawCtx.strokeStyle = stroke.strokeColor || '#000000';
+                drawCtx.beginPath();
+                drawCtx.moveTo(stroke.points[0].x, stroke.points[0].y);
+                stroke.points.forEach(point => {
+                    drawCtx.lineTo(point.x, point.y);
+                });
+                drawCtx.stroke();
+            });
+
+            // Restore current settings
+            drawCtx.lineWidth = parseInt(strokeWidthSlider.value);
+            drawCtx.strokeStyle = strokeColorInput.value;
+        }
+
+        // Redraw strokes scaled to new canvas dimensions
+        function redrawStrokes() {
+            // Clear and just redraw - strokes are stored in canvas coordinates
+            // Since CSS scales the canvas display, we just need to clear and redraw
+            drawCtx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
+
+            // Note: When aspect ratio changes, existing strokes may look stretched
+            // This is expected as they were drawn in the original aspect ratio
+            allStrokes.forEach(stroke => {
+                drawCtx.lineWidth = stroke.lineWidth;
+                drawCtx.strokeStyle = stroke.strokeColor || '#000000';
+                drawCtx.lineCap = 'round';
+                drawCtx.lineJoin = 'round';
+                drawCtx.beginPath();
+                if (stroke.points.length > 0) {
+                    drawCtx.moveTo(stroke.points[0].x, stroke.points[0].y);
+                    stroke.points.forEach(point => {
+                        drawCtx.lineTo(point.x, point.y);
+                    });
+                }
+                drawCtx.stroke();
+            });
+
+            // Restore current settings
+            drawCtx.lineWidth = parseInt(strokeWidthSlider.value);
+            drawCtx.strokeStyle = strokeColorInput.value;
+            drawCtx.lineCap = 'round';
+            drawCtx.lineJoin = 'round';
+        }
+
+        // Undo button
+        undoBtn.addEventListener('click', () => {
+            if (allStrokes.length > 0) {
+                allStrokes.pop();
+                redrawDrawingCanvas();
+                if (allStrokes.length === 0) {
+                    uploadedImage = null;
+                    jiggleFrames = [];
+                    frameAngles = [];
+                    if (isAnimating) stopAnimation();
+                    previewPlaceholder.classList.remove('hidden');
+                    exportGifBtn.disabled = true;
+                    // Show green background
+                    const ctx = mainCanvas.getContext('2d');
+                    mainCanvas.width = previewContent.clientWidth;
+                    mainCanvas.height = previewContent.clientHeight;
+                    ctx.fillStyle = bgColor.value;
+                    ctx.fillRect(0, 0, mainCanvas.width, mainCanvas.height);
+                } else {
+                    updateDrawingPreview();
+                }
+            }
+        });
+
+        // Clear button
+        clearBtn.addEventListener('click', () => {
+            drawCtx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
+            allStrokes = [];
+            uploadedImage = null;
+            jiggleFrames = [];
+            frameAngles = [];
+            if (isAnimating) stopAnimation();
+            previewPlaceholder.classList.remove('hidden');
+            exportGifBtn.disabled = true;
+            // Show green background
+            const ctx = mainCanvas.getContext('2d');
+            mainCanvas.width = previewContent.clientWidth;
+            mainCanvas.height = previewContent.clientHeight;
+            ctx.fillStyle = bgColor.value;
+            ctx.fillRect(0, 0, mainCanvas.width, mainCanvas.height);
+        });
+
+        // Background popup toggle
+        bgIndicator.addEventListener('click', (e) => {
+            e.stopPropagation();
+            bgPopup.classList.toggle('visible');
+            strokePopup.classList.remove('visible');
+        });
+
+        document.addEventListener('click', () => {
+            bgPopup.classList.remove('visible');
+            strokePopup.classList.remove('visible');
+        });
+
+        bgPopup.addEventListener('click', (e) => {
+            e.stopPropagation();
+        });
+
+        // Upload handling
+        uploadSection.addEventListener('click', (e) => {
+            if (e.target.id === 'removeImage') return;
+            imageUpload.click();
+        });
+
+        imageUpload.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        uploadedImage = img;
+                        previewImg.src = event.target.result;
+                        imageName.textContent = file.name;
+                        uploadPlaceholder.classList.add('hidden');
+                        uploadPreview.classList.add('visible');
+                        uploadSection.classList.add('has-image');
+                        previewPlaceholder.classList.add('hidden');
+                        exportGifBtn.disabled = false;
+
+                        // Check if it's a JPG/JPEG (for showing threshold controls)
+                        const fileType = file.type.toLowerCase();
+                        isJpgUpload = fileType === 'image/jpeg' || fileType === 'image/jpg';
+                        isUploadedFile = true; // Mark as uploaded file (not drawn)
+
+                        // Reset drag offset for new image
+                        imageOffsetX = 0;
+                        imageOffsetY = 0;
+
+                        // Show controls for all uploaded images (both JPG and PNG need processing)
+                        thresholdGroup.style.display = 'block';
+                        strokeThicknessSection.style.display = 'block';
+
+                        // Process the image to extract lines and remove background
+                        // Then start animation after processing is complete
+                        processUploadedImage().then(() => {
+                            generateJiggleFrames();
+                            startAnimation();
+                        });
+                    };
+                    img.src = event.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Dilate or erode a binary mask
+        function adjustLineWidth(mask, width, height, amount) {
+            if (amount === 0) return mask;
+
+            const result = new Uint8Array(width * height);
+            const radius = Math.abs(amount);
+
+            if (amount > 0) {
+                // Dilation - expand lines (make thicker)
+                for (let y = 0; y < height; y++) {
+                    for (let x = 0; x < width; x++) {
+                        if (mask[y * width + x]) {
+                            // Set all pixels within radius
+                            for (let dy = -radius; dy <= radius; dy++) {
+                                for (let dx = -radius; dx <= radius; dx++) {
+                                    if (dx * dx + dy * dy <= radius * radius) {
+                                        const nx = x + dx;
+                                        const ny = y + dy;
+                                        if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
+                                            result[ny * width + nx] = 1;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            } else {
+                // Erosion - shrink lines (make thinner)
+                for (let y = 0; y < height; y++) {
+                    for (let x = 0; x < width; x++) {
+                        if (mask[y * width + x]) {
+                            // Check if all pixels within radius are also set
+                            let allSet = true;
+                            outer: for (let dy = -radius; dy <= radius && allSet; dy++) {
+                                for (let dx = -radius; dx <= radius && allSet; dx++) {
+                                    if (dx * dx + dy * dy <= radius * radius) {
+                                        const nx = x + dx;
+                                        const ny = y + dy;
+                                        if (nx < 0 || nx >= width || ny < 0 || ny >= height || !mask[ny * width + nx]) {
+                                            allSet = false;
+                                            break outer;
+                                        }
+                                    }
+                                }
+                            }
+                            if (allSet) {
+                                result[y * width + x] = 1;
+                            }
+                        }
+                    }
+                }
+            }
+
+            return result;
+        }
+
+        // Process uploaded image to extract lines and remove background
+        // Returns a Promise that resolves when the processed image is ready
+        function processUploadedImage(lineWidthOverride) {
+            return new Promise((resolve) => {
+                if (!uploadedImage) {
+                    resolve();
+                    return;
+                }
+
+                const thresholdValue = parseInt(threshold.value);
+                const lineWidthValue = lineWidthOverride !== undefined ? lineWidthOverride : parseInt(lineWidth2.value);
+
+                // Create a canvas to process the image
+                const tempCanvas = document.createElement('canvas');
+                tempCanvas.width = uploadedImage.width;
+                tempCanvas.height = uploadedImage.height;
+                const tempCtx = tempCanvas.getContext('2d');
+
+                // Draw original image
+                tempCtx.drawImage(uploadedImage, 0, 0);
+
+                // Get image data
+                const imageData = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
+                const data = imageData.data;
+                const width = tempCanvas.width;
+                const height = tempCanvas.height;
+
+                // First pass: create binary mask of dark pixels
+                // Skip transparent pixels (alpha < 128) - they are not part of the drawing
+                const mask = new Uint8Array(width * height);
+                for (let i = 0; i < data.length; i += 4) {
+                    const r = data[i];
+                    const g = data[i + 1];
+                    const b = data[i + 2];
+                    const a = data[i + 3];
+                    // Only consider pixels that are not transparent
+                    if (a >= 128) {
+                        const brightness = (r + g + b) / 3;
+                        if (brightness < thresholdValue) {
+                            mask[i / 4] = 1;
+                        }
+                    }
+                }
+
+                // Adjust line width using dilation/erosion
+                const adjustedMask = adjustLineWidth(mask, width, height, lineWidthValue);
+
+                // Get selected stroke color and convert to RGB
+                const strokeHex = strokeColorInput.value;
+                const strokeR = parseInt(strokeHex.substr(1, 2), 16);
+                const strokeG = parseInt(strokeHex.substr(3, 2), 16);
+                const strokeB = parseInt(strokeHex.substr(5, 2), 16);
+
+                // Convert mask back to image data
+                for (let i = 0; i < adjustedMask.length; i++) {
+                    const dataIdx = i * 4;
+                    if (adjustedMask[i]) {
+                        // Dark pixel - use selected stroke color
+                        data[dataIdx] = strokeR;
+                        data[dataIdx + 1] = strokeG;
+                        data[dataIdx + 2] = strokeB;
+                        data[dataIdx + 3] = 255; // Full alpha
+                    } else {
+                        // Light pixel - make transparent
+                        data[dataIdx + 3] = 0;
+                    }
+                }
+
+                tempCtx.putImageData(imageData, 0, 0);
+
+                // Store processed image as a new Image object
+                processedImage = new Image();
+                processedImage.onload = () => {
+                    resolve();
+                };
+                processedImage.src = tempCanvas.toDataURL('image/png');
+            });
+        }
+
+        // Remove image
+        removeImage.addEventListener('click', (e) => {
+            e.stopPropagation();
+            clearAll();
+        });
+
+        function clearAll() {
+            if (isAnimating) {
+                stopAnimation();
+            }
+
+            uploadedImage = null;
+            processedImage = null;
+            isJpgUpload = false;
+            isUploadedFile = false;
+            jiggleFrames = [];
+
+            // Reset drag offset
+            imageOffsetX = 0;
+            imageOffsetY = 0;
+            uploadPlaceholder.classList.remove('hidden');
+            uploadPreview.classList.remove('visible');
+            uploadSection.classList.remove('has-image');
+            previewPlaceholder.classList.remove('hidden');
+            exportGifBtn.disabled = true;
+            imageUpload.value = '';
+            thresholdGroup.style.display = 'none';
+            strokeThicknessSection.style.display = 'none';
+
+            // Clear saved upload state
+            uploadState.image = null;
+            uploadState.processedImage = null;
+            uploadState.isJpg = false;
+            uploadState.isUploaded = false;
+            uploadState.previewSrc = null;
+            uploadState.fileName = null;
+
+            // Show green background
+            const ctx = mainCanvas.getContext('2d');
+            mainCanvas.width = previewContent.clientWidth;
+            mainCanvas.height = previewContent.clientHeight;
+            ctx.fillStyle = bgColor.value;
+            ctx.fillRect(0, 0, mainCanvas.width, mainCanvas.height);
+        }
+
+        // Get the image to use (processed for uploads, original for drawings)
+        function getSourceImage() {
+            if (isUploadedFile && processedImage && processedImage.complete) {
+                return processedImage;
+            }
+            return uploadedImage;
+        }
+
+        // Draw original image on main canvas
+        function drawOriginalImage() {
+            if (!uploadedImage) return;
+
+            const container = previewContent;
+            const containerWidth = container.clientWidth;
+            const containerHeight = container.clientHeight;
+
+            mainCanvas.width = containerWidth;
+            mainCanvas.height = containerHeight;
+
+            const ctx = mainCanvas.getContext('2d');
+            ctx.clearRect(0, 0, containerWidth, containerHeight);
+
+            // Draw background (image or color)
+            if (bgImageData && cachedBgImage) {
+                ctx.drawImage(cachedBgImage, 0, 0, containerWidth, containerHeight);
+            } else {
+                ctx.fillStyle = bgColor.value;
+                ctx.fillRect(0, 0, containerWidth, containerHeight);
+            }
+
+            const sourceImg = getSourceImage();
+
+            // Calculate scaling to fit image in container
+            const scale = Math.min(
+                (containerWidth * 0.9) / uploadedImage.width,
+                (containerHeight * 0.9) / uploadedImage.height
+            );
+
+            const drawWidth = uploadedImage.width * scale;
+            const drawHeight = uploadedImage.height * scale;
+            const x = (containerWidth - drawWidth) / 2 + imageOffsetX;
+            const y = (containerHeight - drawHeight) / 2 + imageOffsetY;
+
+            // For drawings (not uploaded files), apply stroke color recoloring
+            // Uploaded files are already processed with the correct color
+            if (!isUploadedFile) {
+                const tempCanvas = document.createElement('canvas');
+                tempCanvas.width = sourceImg.width;
+                tempCanvas.height = sourceImg.height;
+                const tempCtx = tempCanvas.getContext('2d');
+                tempCtx.drawImage(sourceImg, 0, 0);
+
+                const imageData = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
+                const data = imageData.data;
+
+                const strokeHex = strokeColorInput.value;
+                const strokeR = parseInt(strokeHex.substr(1, 2), 16);
+                const strokeG = parseInt(strokeHex.substr(3, 2), 16);
+                const strokeB = parseInt(strokeHex.substr(5, 2), 16);
+
+                for (let i = 0; i < data.length; i += 4) {
+                    if (data[i + 3] > 0) {
+                        data[i] = strokeR;
+                        data[i + 1] = strokeG;
+                        data[i + 2] = strokeB;
+                    }
+                }
+
+                tempCtx.putImageData(imageData, 0, 0);
+                ctx.drawImage(tempCanvas, x, y, drawWidth, drawHeight);
+            } else {
+                // Uploaded files already have correct color from processUploadedImage
+                ctx.drawImage(sourceImg, x, y, drawWidth, drawHeight);
+            }
+        }
+
+        // Simple noise function for smooth random displacement
+        function noise2D(x, y, seed) {
+            const n = Math.sin(x * 12.9898 + y * 78.233 + seed * 43.1234) * 43758.5453;
+            return (n - Math.floor(n)) * 2 - 1; // Returns -1 to 1
+        }
+
+        // Smooth noise using interpolation
+        function smoothNoise(x, y, seed, frequency) {
+            const fx = x * frequency;
+            const fy = y * frequency;
+
+            const x0 = Math.floor(fx);
+            const y0 = Math.floor(fy);
+            const x1 = x0 + 1;
+            const y1 = y0 + 1;
+
+            const sx = fx - x0;
+            const sy = fy - y0;
+
+            // Smooth interpolation
+            const smoothX = sx * sx * (3 - 2 * sx);
+            const smoothY = sy * sy * (3 - 2 * sy);
+
+            const n00 = noise2D(x0, y0, seed);
+            const n10 = noise2D(x1, y0, seed);
+            const n01 = noise2D(x0, y1, seed);
+            const n11 = noise2D(x1, y1, seed);
+
+            const nx0 = n00 + smoothX * (n10 - n00);
+            const nx1 = n01 + smoothX * (n11 - n01);
+
+            return nx0 + smoothY * (nx1 - nx0);
+        }
+
+        // Store angle for each frame
+        let frameAngles = [];
+
+        function generateJiggleFrames() {
+            const numFrames = parseInt(frameCount.value);
+            const jiggle = parseInt(jiggleAmount.value);
+            const maxAngle = parseFloat(angleAmount.value);
+
+            // Get the source image (processed for JPG, original for PNG)
+            const sourceImg = getSourceImage();
+            if (!sourceImg || !sourceImg.complete) {
+                console.error('Source image not ready');
+                return;
+            }
+
+            const imgWidth = uploadedImage.width;
+            const imgHeight = uploadedImage.height;
+
+            if (imgWidth === 0 || imgHeight === 0) {
+                console.error('Image has zero dimensions');
+                return;
+            }
+
+            jiggleFrames = [];
+            frameAngles = [];
+
+            // Create source canvas with the source image at full resolution
+            const srcCanvas = document.createElement('canvas');
+            srcCanvas.width = imgWidth;
+            srcCanvas.height = imgHeight;
+            const srcCtx = srcCanvas.getContext('2d');
+            srcCtx.drawImage(sourceImg, 0, 0, imgWidth, imgHeight);
+            const srcData = srcCtx.getImageData(0, 0, imgWidth, imgHeight);
+
+            // Apply stroke color to non-transparent pixels (for PNG/drawings)
+            // Uploaded files already have stroke color applied in processUploadedImage
+            // For drawings, apply stroke color recoloring
+            if (!isUploadedFile) {
+                const strokeHex = strokeColorInput.value;
+                const strokeR = parseInt(strokeHex.substr(1, 2), 16);
+                const strokeG = parseInt(strokeHex.substr(3, 2), 16);
+                const strokeB = parseInt(strokeHex.substr(5, 2), 16);
+
+                for (let i = 0; i < srcData.data.length; i += 4) {
+                    // If pixel has any opacity, recolor it
+                    if (srcData.data[i + 3] > 0) {
+                        srcData.data[i] = strokeR;
+                        srcData.data[i + 1] = strokeG;
+                        srcData.data[i + 2] = strokeB;
+                    }
+                }
+            }
+
+            // Bilinear interpolation helper for smooth sampling
+            function bilinearSample(data, width, height, x, y) {
+                const x0 = Math.floor(x);
+                const y0 = Math.floor(y);
+                const x1 = Math.min(x0 + 1, width - 1);
+                const y1 = Math.min(y0 + 1, height - 1);
+
+                const fx = x - x0;
+                const fy = y - y0;
+
+                const idx00 = (y0 * width + x0) * 4;
+                const idx10 = (y0 * width + x1) * 4;
+                const idx01 = (y1 * width + x0) * 4;
+                const idx11 = (y1 * width + x1) * 4;
+
+                const result = [0, 0, 0, 0];
+                for (let c = 0; c < 4; c++) {
+                    const v00 = data[idx00 + c];
+                    const v10 = data[idx10 + c];
+                    const v01 = data[idx01 + c];
+                    const v11 = data[idx11 + c];
+
+                    // Bilinear interpolation
+                    const v0 = v00 + fx * (v10 - v00);
+                    const v1 = v01 + fx * (v11 - v01);
+                    result[c] = Math.round(v0 + fy * (v1 - v0));
+                }
+                return result;
+            }
+
+            // Generate each frame with per-region displacement at full resolution
+            for (let f = 0; f < numFrames; f++) {
+                // Create a unique seed for this frame's displacement field
+                const seedX = f * 100 + Math.random() * 1000;
+                const seedY = f * 100 + 500 + Math.random() * 1000;
+
+                // Generate random angle for this frame (in degrees, converted to radians for storage)
+                const frameAngle = (Math.random() * 2 - 1) * maxAngle * (Math.PI / 180);
+                frameAngles.push(frameAngle);
+
+                // Create displaced version of the image at full resolution
+                const workCanvas = document.createElement('canvas');
+                workCanvas.width = imgWidth;
+                workCanvas.height = imgHeight;
+                const workCtx = workCanvas.getContext('2d');
+                const destData = workCtx.createImageData(imgWidth, imgHeight);
+
+                // Displacement frequency - lower = larger regions move together
+                // Higher jiggle = more variation
+                const frequency = 0.02 + (jiggle / 8) * 0.03;
+
+                // Apply displacement to each pixel with bilinear interpolation
+                for (let y = 0; y < imgHeight; y++) {
+                    for (let x = 0; x < imgWidth; x++) {
+                        // Get displacement for this region using smooth noise
+                        const dispX = smoothNoise(x, y, seedX, frequency) * jiggle;
+                        const dispY = smoothNoise(x, y, seedY, frequency) * jiggle;
+
+                        // Source coordinates (where to sample from)
+                        const srcX = x - dispX;
+                        const srcY = y - dispY;
+
+                        const destIdx = (y * imgWidth + x) * 4;
+
+                        if (srcX >= 0 && srcX < imgWidth - 1 && srcY >= 0 && srcY < imgHeight - 1) {
+                            // Use bilinear interpolation for smooth sampling
+                            const pixel = bilinearSample(srcData.data, imgWidth, imgHeight, srcX, srcY);
+                            destData.data[destIdx] = pixel[0];
+                            destData.data[destIdx + 1] = pixel[1];
+                            destData.data[destIdx + 2] = pixel[2];
+                            destData.data[destIdx + 3] = pixel[3];
+                        } else if (srcX >= 0 && srcX < imgWidth && srcY >= 0 && srcY < imgHeight) {
+                            // Edge case: use nearest neighbor
+                            const srcIdx = (Math.floor(srcY) * imgWidth + Math.floor(srcX)) * 4;
+                            destData.data[destIdx] = srcData.data[srcIdx];
+                            destData.data[destIdx + 1] = srcData.data[srcIdx + 1];
+                            destData.data[destIdx + 2] = srcData.data[srcIdx + 2];
+                            destData.data[destIdx + 3] = srcData.data[srcIdx + 3];
+                        } else {
+                            // Transparent if out of bounds
+                            destData.data[destIdx + 3] = 0;
+                        }
+                    }
+                }
+
+                workCtx.putImageData(destData, 0, 0);
+
+                // Store frame at full resolution (not scaled down)
+                const frameCanvas = document.createElement('canvas');
+                frameCanvas.width = imgWidth;
+                frameCanvas.height = imgHeight;
+                const frameCtx = frameCanvas.getContext('2d');
+                frameCtx.drawImage(workCanvas, 0, 0);
+
+                jiggleFrames.push(frameCanvas);
+            }
+
+            // Show first frame
+            currentFrame = 0;
+            drawFrame(0);
+        }
+
+        function drawFrame(frameIndex) {
+            if (jiggleFrames.length === 0) return;
+
+            // Ensure canvas has dimensions
+            const container = previewContent;
+            const containerWidth = container.clientWidth;
+            const containerHeight = container.clientHeight;
+
+            if (containerWidth === 0 || containerHeight === 0) return;
+
+            mainCanvas.width = containerWidth;
+            mainCanvas.height = containerHeight;
+
+            const ctx = mainCanvas.getContext('2d');
+
+            ctx.clearRect(0, 0, containerWidth, containerHeight);
+
+            // Draw background (image or color)
+            if (bgImageData && cachedBgImage) {
+                ctx.drawImage(cachedBgImage, 0, 0, containerWidth, containerHeight);
+            } else {
+                ctx.fillStyle = bgColor.value;
+                ctx.fillRect(0, 0, containerWidth, containerHeight);
+            }
+
+            // Get angle for this frame
+            const angle = frameAngles[frameIndex] || 0;
+
+            // Scale and center the full-resolution frame for display
+            const frame = jiggleFrames[frameIndex];
+            const imgWidth = frame.width;
+            const imgHeight = frame.height;
+
+            const scale = Math.min(
+                (containerWidth * 0.9) / imgWidth,
+                (containerHeight * 0.9) / imgHeight
+            );
+
+            const drawWidth = imgWidth * scale;
+            const drawHeight = imgHeight * scale;
+            const x = (containerWidth - drawWidth) / 2 + imageOffsetX;
+            const y = (containerHeight - drawHeight) / 2 + imageOffsetY;
+
+            // Apply rotation around center of image
+            if (angle !== 0) {
+                const centerX = x + drawWidth / 2;
+                const centerY = y + drawHeight / 2;
+                ctx.save();
+                ctx.translate(centerX, centerY);
+                ctx.rotate(angle);
+                ctx.drawImage(frame, -drawWidth / 2, -drawHeight / 2, drawWidth, drawHeight);
+                ctx.restore();
+            } else {
+                ctx.drawImage(frame, x, y, drawWidth, drawHeight);
+            }
+        }
+
+        // Drag functionality for repositioning the drawing
+        mainCanvas.addEventListener('mousedown', (e) => {
+            if (!uploadedImage) return;
+            isDragging = true;
+            mainCanvas.classList.add('dragging');
+            dragStartX = e.clientX;
+            dragStartY = e.clientY;
+            initialOffsetX = imageOffsetX;
+            initialOffsetY = imageOffsetY;
+            e.preventDefault();
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            const deltaX = e.clientX - dragStartX;
+            const deltaY = e.clientY - dragStartY;
+            imageOffsetX = initialOffsetX + deltaX;
+            imageOffsetY = initialOffsetY + deltaY;
+
+            if (isAnimating) {
+                drawFrame(currentFrame);
+            } else {
+                drawOriginalImage();
+            }
+        });
+
+        document.addEventListener('mouseup', () => {
+            if (isDragging) {
+                isDragging = false;
+                mainCanvas.classList.remove('dragging');
+            }
+        });
+
+        // Touch support for dragging
+        mainCanvas.addEventListener('touchstart', (e) => {
+            if (!uploadedImage) return;
+            isDragging = true;
+            mainCanvas.classList.add('dragging');
+            dragStartX = e.touches[0].clientX;
+            dragStartY = e.touches[0].clientY;
+            initialOffsetX = imageOffsetX;
+            initialOffsetY = imageOffsetY;
+            e.preventDefault();
+        }, { passive: false });
+
+        document.addEventListener('touchmove', (e) => {
+            if (!isDragging) return;
+            const deltaX = e.touches[0].clientX - dragStartX;
+            const deltaY = e.touches[0].clientY - dragStartY;
+            imageOffsetX = initialOffsetX + deltaX;
+            imageOffsetY = initialOffsetY + deltaY;
+
+            if (isAnimating) {
+                drawFrame(currentFrame);
+            } else {
+                drawOriginalImage();
+            }
+        }, { passive: true });
+
+        document.addEventListener('touchend', () => {
+            if (isDragging) {
+                isDragging = false;
+                mainCanvas.classList.remove('dragging');
+            }
+        });
+
+        // Animation
+        function startAnimation() {
+            isAnimating = true;
+
+            function animate() {
+                if (!isAnimating) return;
+
+                currentFrame = (currentFrame + 1) % jiggleFrames.length;
+                drawFrame(currentFrame);
+
+                animationId = setTimeout(animate, parseInt(animSpeed.value));
+            }
+
+            animate();
+        }
+
+        function stopAnimation() {
+            isAnimating = false;
+
+            if (animationId) {
+                clearTimeout(animationId);
+                animationId = null;
+            }
+        }
+
+        // Export GIF
+        exportGifBtn.addEventListener('click', () => {
+            if (!uploadedImage) {
+                console.log('No uploaded image for export');
+                return;
+            }
+            // Generate frames if not yet generated
+            if (jiggleFrames.length === 0) {
+                generateJiggleFrames();
+            }
+            if (jiggleFrames.length === 0) {
+                console.log('No frames to export');
+                return;
+            }
+            // Show loading state
+            exportGifBtn.classList.add('exporting');
+            exportGifBtn.disabled = true;
+            exportAsGif();
+        });
+
+        function exportAsGif() {
+            // Use fixed export dimensions based on aspect ratio (720p)
+            let width, height;
+            if (currentAspectRatio === '16:9') {
+                width = 1280;
+                height = 720;
+            } else {
+                width = 720;
+                height = 1280;
+            }
+            const speed = parseInt(animSpeed.value);
+
+            // If there's a background image, we need to load it first
+            if (bgImageData) {
+                const bgImg = new Image();
+                bgImg.onload = () => {
+                    createGifWithBackground(bgImg, width, height, speed);
+                };
+                bgImg.src = bgImageData;
+            } else {
+                createGifWithBackground(null, width, height, speed);
+            }
+        }
+
+        function createGifWithBackground(bgImg, width, height, speed) {
+            const frames = [];
+
+            // Calculate scale factor from preview to export dimensions
+            const previewWidth = previewContent.clientWidth;
+            const previewHeight = previewContent.clientHeight;
+            const exportScaleX = width / previewWidth;
+            const exportScaleY = height / previewHeight;
+
+            // Scale the offset to export dimensions
+            const scaledOffsetX = imageOffsetX * exportScaleX;
+            const scaledOffsetY = imageOffsetY * exportScaleY;
+
+            for (let i = 0; i < jiggleFrames.length; i++) {
+                const frame = jiggleFrames[i];
+                const angle = frameAngles[i] || 0;
+
+                const tempCanvas = document.createElement('canvas');
+                tempCanvas.width = width;
+                tempCanvas.height = height;
+                const tempCtx = tempCanvas.getContext('2d');
+
+                // Draw background (image or color)
+                if (bgImg) {
+                    tempCtx.drawImage(bgImg, 0, 0, width, height);
+                } else {
+                    tempCtx.fillStyle = bgColor.value;
+                    tempCtx.fillRect(0, 0, width, height);
+                }
+
+                // Scale frame to fit export canvas (90% of canvas, centered)
+                const scale = Math.min(
+                    (width * 0.9) / frame.width,
+                    (height * 0.9) / frame.height
+                );
+                const drawWidth = frame.width * scale;
+                const drawHeight = frame.height * scale;
+                const x = (width - drawWidth) / 2 + scaledOffsetX;
+                const y = (height - drawHeight) / 2 + scaledOffsetY;
+
+                // Draw frame with rotation
+                if (angle !== 0) {
+                    const centerX = x + drawWidth / 2;
+                    const centerY = y + drawHeight / 2;
+                    tempCtx.save();
+                    tempCtx.translate(centerX, centerY);
+                    tempCtx.rotate(angle);
+                    tempCtx.drawImage(frame, -drawWidth / 2, -drawHeight / 2, drawWidth, drawHeight);
+                    tempCtx.restore();
+                } else {
+                    tempCtx.drawImage(frame, x, y, drawWidth, drawHeight);
+                }
+
+                frames.push(tempCanvas.toDataURL('image/png'));
+            }
+
+            gifshot.createGIF({
+                images: frames,
+                gifWidth: width,
+                gifHeight: height,
+                interval: speed / 1000,
+                numFrames: frames.length,
+                frameDuration: 1,
+                sampleInterval: 10
+            }, function(obj) {
+                // Remove loading state
+                exportGifBtn.classList.remove('exporting');
+                exportGifBtn.disabled = false;
+
+                if (!obj.error) {
+                    const link = document.createElement('a');
+                    link.href = obj.image;
+                    link.download = 'jiggle-drawing.gif';
+                    link.click();
+                }
+            });
+        }
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            if (uploadedImage) {
+                drawOriginalImage();
+                if (jiggleFrames.length > 0) {
+                    generateJiggleFrames();
+                }
+            } else {
+                // Keep green background on resize
+                const ctx = mainCanvas.getContext('2d');
+                mainCanvas.width = previewContent.clientWidth;
+                mainCanvas.height = previewContent.clientHeight;
+                ctx.fillStyle = bgColor.value;
+                ctx.fillRect(0, 0, mainCanvas.width, mainCanvas.height);
+            }
+        });
+
+        // Initialize with green background on page load
+        function initializePreview() {
+            const ctx = mainCanvas.getContext('2d');
+            mainCanvas.width = previewContent.clientWidth;
+            mainCanvas.height = previewContent.clientHeight;
+            ctx.fillStyle = bgColor.value;
+            ctx.fillRect(0, 0, mainCanvas.width, mainCanvas.height);
+        }
+
+        // Call on page load
+        initializePreview();
+
+        // HSV to Hex helper function
+        function hsvToHex(h, s, v) {
+            s /= 100;
+            v /= 100;
+            const c = v * s;
+            const x = c * (1 - Math.abs((h / 60) % 2 - 1));
+            const m = v - c;
+            let r, g, b;
+            if (h < 60) { r = c; g = x; b = 0; }
+            else if (h < 120) { r = x; g = c; b = 0; }
+            else if (h < 180) { r = 0; g = c; b = x; }
+            else if (h < 240) { r = 0; g = x; b = c; }
+            else if (h < 300) { r = x; g = 0; b = c; }
+            else { r = c; g = 0; b = x; }
+            const toHex = n => Math.round((n + m) * 255).toString(16).padStart(2, '0');
+            return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+        }
+
+        // Hex to HSV helper function
+        function hexToHsv(hex) {
+            const r = parseInt(hex.substr(1, 2), 16) / 255;
+            const g = parseInt(hex.substr(3, 2), 16) / 255;
+            const b = parseInt(hex.substr(5, 2), 16) / 255;
+            const max = Math.max(r, g, b);
+            const min = Math.min(r, g, b);
+            const d = max - min;
+            let h = 0;
+            const s = max === 0 ? 0 : (d / max) * 100;
+            const v = max * 100;
+            if (d !== 0) {
+                if (max === r) h = ((g - b) / d + (g < b ? 6 : 0)) * 60;
+                else if (max === g) h = ((b - r) / d + 2) * 60;
+                else h = ((r - g) / d + 4) * 60;
+            }
+            return { h, s, v };
+        }
+
+        // Custom color picker for Stroke
+        const strokeColorSquare = document.getElementById('strokeColorSquare');
+        const strokeColorCursor = document.getElementById('strokeColorCursor');
+        const strokeHueSlider = document.getElementById('strokeHueSlider');
+        const strokeHueCursor = document.getElementById('strokeHueCursor');
+        const strokeColorHexInput = document.getElementById('strokeColorHexInput');
+
+        let strokeHue = 0;
+        let strokeSaturation = 100;
+        let strokeValue = 0;
+
+        function updateStrokeColorFromHsv() {
+            const hex = hsvToHex(strokeHue, strokeSaturation, strokeValue);
+            strokeColorInput.value = hex;
+            strokeColorHexInput.value = hex;
+            strokePreview.style.background = hex;
+            strokeColorSquare.style.background = `linear-gradient(to top, #000, transparent), linear-gradient(to right, #fff, hsl(${strokeHue}, 100%, 50%))`;
+
+            // Trigger the color change logic
+            drawCtx.strokeStyle = hex;
+            if (uploadedImage) {
+                if (isUploadedFile) {
+                    processUploadedImage().then(() => {
+                        if (isAnimating) {
+                            generateJiggleFrames();
+                        } else {
+                            drawOriginalImage();
+                        }
+                    });
+                } else {
+                    if (isAnimating) {
+                        generateJiggleFrames();
+                    } else {
+                        drawOriginalImage();
+                    }
+                }
+            }
+        }
+
+        function setStrokeColorCursorPosition() {
+            const rect = strokeColorSquare.getBoundingClientRect();
+            strokeColorCursor.style.left = (strokeSaturation / 100 * rect.width) + 'px';
+            strokeColorCursor.style.top = ((100 - strokeValue) / 100 * rect.height) + 'px';
+        }
+
+        function setStrokeHueCursorPosition() {
+            const rect = strokeHueSlider.getBoundingClientRect();
+            strokeHueCursor.style.left = (strokeHue / 360 * rect.width) + 'px';
+        }
+
+        // Initialize stroke color picker
+        strokeColorSquare.style.background = `linear-gradient(to top, #000, transparent), linear-gradient(to right, #fff, hsl(${strokeHue}, 100%, 50%))`;
+        setStrokeColorCursorPosition();
+        setStrokeHueCursorPosition();
+
+        strokeColorSquare.addEventListener('mousedown', (e) => {
+            function pickColor(event) {
+                const rect = strokeColorSquare.getBoundingClientRect();
+                const x = Math.max(0, Math.min(event.clientX - rect.left, rect.width));
+                const y = Math.max(0, Math.min(event.clientY - rect.top, rect.height));
+                strokeSaturation = (x / rect.width) * 100;
+                strokeValue = 100 - (y / rect.height) * 100;
+                strokeColorCursor.style.left = x + 'px';
+                strokeColorCursor.style.top = y + 'px';
+                updateStrokeColorFromHsv();
+            }
+            pickColor(e);
+            function onMouseMove(event) { pickColor(event); }
+            function onMouseUp() {
+                document.removeEventListener('mousemove', onMouseMove);
+                document.removeEventListener('mouseup', onMouseUp);
+            }
+            document.addEventListener('mousemove', onMouseMove);
+            document.addEventListener('mouseup', onMouseUp);
+        });
+
+        strokeHueSlider.addEventListener('mousedown', (e) => {
+            function pickHue(event) {
+                const rect = strokeHueSlider.getBoundingClientRect();
+                const x = Math.max(0, Math.min(event.clientX - rect.left, rect.width));
+                strokeHue = (x / rect.width) * 360;
+                strokeHueCursor.style.left = x + 'px';
+                updateStrokeColorFromHsv();
+            }
+            pickHue(e);
+            function onMouseMove(event) { pickHue(event); }
+            function onMouseUp() {
+                document.removeEventListener('mousemove', onMouseMove);
+                document.removeEventListener('mouseup', onMouseUp);
+            }
+            document.addEventListener('mousemove', onMouseMove);
+            document.addEventListener('mouseup', onMouseUp);
+        });
+
+        strokeColorHexInput.addEventListener('input', (e) => {
+            let hex = e.target.value;
+            if (hex.match(/^#[0-9A-Fa-f]{6}$/)) {
+                const hsv = hexToHsv(hex);
+                strokeHue = hsv.h;
+                strokeSaturation = hsv.s;
+                strokeValue = hsv.v;
+                strokeColorInput.value = hex;
+                strokePreview.style.background = hex;
+                strokeColorSquare.style.background = `linear-gradient(to top, #000, transparent), linear-gradient(to right, #fff, hsl(${strokeHue}, 100%, 50%))`;
+                setStrokeColorCursorPosition();
+                setStrokeHueCursorPosition();
+
+                drawCtx.strokeStyle = hex;
+                if (uploadedImage) {
+                    if (isUploadedFile) {
+                        processUploadedImage().then(() => {
+                            if (isAnimating) {
+                                generateJiggleFrames();
+                            } else {
+                                drawOriginalImage();
+                            }
+                        });
+                    } else {
+                        if (isAnimating) {
+                            generateJiggleFrames();
+                        } else {
+                            drawOriginalImage();
+                        }
+                    }
+                }
+            }
+        });
+
+        strokeColorInput.addEventListener('input', (e) => {
+            const hex = e.target.value;
+            strokeColorHexInput.value = hex;
+            const hsv = hexToHsv(hex);
+            strokeHue = hsv.h;
+            strokeSaturation = hsv.s;
+            strokeValue = hsv.v;
+            strokeColorSquare.style.background = `linear-gradient(to top, #000, transparent), linear-gradient(to right, #fff, hsl(${strokeHue}, 100%, 50%))`;
+            setStrokeColorCursorPosition();
+            setStrokeHueCursorPosition();
+        });
+
+        // Custom color picker for Background
+        const bgColorSquare = document.getElementById('bgColorSquare');
+        const bgColorCursor = document.getElementById('bgColorCursor');
+        const bgHueSlider = document.getElementById('bgHueSlider');
+        const bgHueCursor = document.getElementById('bgHueCursor');
+        const bgColorHexInput = document.getElementById('bgColorHexInput');
+
+        let bgHue = 120; // Green
+        let bgSaturation = 100;
+        let bgValue = 100;
+
+        function updateBgColorFromHsv() {
+            const hex = hsvToHex(bgHue, bgSaturation, bgValue);
+            bgColor.value = hex;
+            bgColorHexInput.value = hex;
+            bgPreview.style.background = hex;
+            bgColorSquare.style.background = `linear-gradient(to top, #000, transparent), linear-gradient(to right, #fff, hsl(${bgHue}, 100%, 50%))`;
+
+            // Clear background image when color is changed
+            bgImageData = null;
+            cachedBgImage = null;
+            if (bgImagePreview) bgImagePreview.style.display = 'none';
+            if (bgUploadPlaceholder) bgUploadPlaceholder.style.display = '';
+
+            // Redraw preview with new background
+            if (isAnimating && jiggleFrames.length > 0) {
+                drawFrame(currentFrame);
+            } else if (uploadedImage) {
+                drawOriginalImage();
+            } else {
+                const ctx = mainCanvas.getContext('2d');
+                ctx.fillStyle = hex;
+                ctx.fillRect(0, 0, mainCanvas.width, mainCanvas.height);
+            }
+        }
+
+        function setBgColorCursorPosition() {
+            const rect = bgColorSquare.getBoundingClientRect();
+            bgColorCursor.style.left = (bgSaturation / 100 * rect.width) + 'px';
+            bgColorCursor.style.top = ((100 - bgValue) / 100 * rect.height) + 'px';
+        }
+
+        function setBgHueCursorPosition() {
+            const rect = bgHueSlider.getBoundingClientRect();
+            bgHueCursor.style.left = (bgHue / 360 * rect.width) + 'px';
+        }
+
+        // Initialize background color picker
+        bgColorSquare.style.background = `linear-gradient(to top, #000, transparent), linear-gradient(to right, #fff, hsl(${bgHue}, 100%, 50%))`;
+        setBgColorCursorPosition();
+        setBgHueCursorPosition();
+
+        bgColorSquare.addEventListener('mousedown', (e) => {
+            function pickColor(event) {
+                const rect = bgColorSquare.getBoundingClientRect();
+                const x = Math.max(0, Math.min(event.clientX - rect.left, rect.width));
+                const y = Math.max(0, Math.min(event.clientY - rect.top, rect.height));
+                bgSaturation = (x / rect.width) * 100;
+                bgValue = 100 - (y / rect.height) * 100;
+                bgColorCursor.style.left = x + 'px';
+                bgColorCursor.style.top = y + 'px';
+                updateBgColorFromHsv();
+            }
+            pickColor(e);
+            function onMouseMove(event) { pickColor(event); }
+            function onMouseUp() {
+                document.removeEventListener('mousemove', onMouseMove);
+                document.removeEventListener('mouseup', onMouseUp);
+            }
+            document.addEventListener('mousemove', onMouseMove);
+            document.addEventListener('mouseup', onMouseUp);
+        });
+
+        bgHueSlider.addEventListener('mousedown', (e) => {
+            function pickHue(event) {
+                const rect = bgHueSlider.getBoundingClientRect();
+                const x = Math.max(0, Math.min(event.clientX - rect.left, rect.width));
+                bgHue = (x / rect.width) * 360;
+                bgHueCursor.style.left = x + 'px';
+                updateBgColorFromHsv();
+            }
+            pickHue(e);
+            function onMouseMove(event) { pickHue(event); }
+            function onMouseUp() {
+                document.removeEventListener('mousemove', onMouseMove);
+                document.removeEventListener('mouseup', onMouseUp);
+            }
+            document.addEventListener('mousemove', onMouseMove);
+            document.addEventListener('mouseup', onMouseUp);
+        });
+
+        bgColorHexInput.addEventListener('input', (e) => {
+            let hex = e.target.value;
+            if (hex.match(/^#[0-9A-Fa-f]{6}$/)) {
+                const hsv = hexToHsv(hex);
+                bgHue = hsv.h;
+                bgSaturation = hsv.s;
+                bgValue = hsv.v;
+                bgColor.value = hex;
+                bgPreview.style.background = hex;
+                bgColorSquare.style.background = `linear-gradient(to top, #000, transparent), linear-gradient(to right, #fff, hsl(${bgHue}, 100%, 50%))`;
+                setBgColorCursorPosition();
+                setBgHueCursorPosition();
+
+                bgImageData = null;
+                cachedBgImage = null;
+                if (bgImagePreview) bgImagePreview.style.display = 'none';
+                if (bgUploadPlaceholder) bgUploadPlaceholder.style.display = '';
+
+                if (isAnimating && jiggleFrames.length > 0) {
+                    drawFrame(currentFrame);
+                } else if (uploadedImage) {
+                    drawOriginalImage();
+                } else {
+                    const ctx = mainCanvas.getContext('2d');
+                    ctx.fillStyle = hex;
+                    ctx.fillRect(0, 0, mainCanvas.width, mainCanvas.height);
+                }
+            }
+        });
+
+        bgColor.addEventListener('input', (e) => {
+            const hex = e.target.value;
+            bgColorHexInput.value = hex;
+            const hsv = hexToHsv(hex);
+            bgHue = hsv.h;
+            bgSaturation = hsv.s;
+            bgValue = hsv.v;
+            bgColorSquare.style.background = `linear-gradient(to top, #000, transparent), linear-gradient(to right, #fff, hsl(${bgHue}, 100%, 50%))`;
+            setBgColorCursorPosition();
+            setBgHueCursorPosition();
+        });
+    </script>
+</body>
+</html>
