@@ -18,6 +18,8 @@ export default defineConfig({
         drawing: resolve(__dirname, 'index1.html'),
         charts: resolve(__dirname, 'index2.html'),
         text: resolve(__dirname, 'index3.html'),
+        outline: resolve(__dirname, 'index4.html'),
+        jiggle: resolve(__dirname, 'index5.html'),
       },
     },
     minify: 'terser',
