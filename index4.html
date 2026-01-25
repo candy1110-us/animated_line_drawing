@@ -1,0 +1,2346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wiggly Outline Animator</title>
+    <style>
+        @font-face {
+            font-family: 'Be Vietnam Pro';
+            src: url('fonts/BeVietnamPro-Regular.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        @font-face {
+            font-family: 'Hmt Regular';
+            src: url('fonts/HmtRegular-WRrv.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background-color: #ecebe4;
+            background-image: url('data:image/svg+xml;utf8,<svg width="28" height="28" xmlns="http://www.w3.org/2000/svg"><circle cx="14" cy="14" r="1" fill="%23d2d1c7"/></svg>');
+            background-size: 28px 28px;
+            min-height: 100vh;
+            padding: 40px 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before,
+        body::after {
+            content: '';
+            position: fixed;
+            border-radius: 50%;
+            opacity: 0.15;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        body::before {
+            background: #6ba3ff;
+            width: 50vh;
+            height: 50vh;
+            top: 20%;
+            left: -10vh;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        body::after {
+            background: #f59e0b;
+            width: 150px;
+            height: 150px;
+            bottom: 15%;
+            right: 8%;
+            animation: float 8s ease-in-out infinite reverse;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(5deg); }
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header {
+            background: transparent;
+            padding: 20px 30px;
+            margin-bottom: 30px;
+            text-align: center;
+            position: relative;
+        }
+
+        .logo-link {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            overflow: hidden;
+            background: white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 100;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .logo-link:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.25);
+        }
+
+        .header-logo {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .header h1 {
+            font-family: 'Hmt Regular', 'Inter', sans-serif;
+            font-size: 3.5rem;
+            color: #2d3436;
+            margin-bottom: 12px;
+            text-shadow: 3px 3px 0px rgba(107, 163, 255, 0.3);
+        }
+
+        .header p {
+            color: #636e72;
+            font-size: 1.1rem;
+        }
+
+        .main-layout {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        @media (min-width: 1024px) {
+            .main-layout {
+                flex-direction: row;
+                align-items: stretch;
+            }
+
+            .sidebar {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                min-width: 0;
+            }
+
+            .preview-section {
+                flex: 2;
+                display: flex;
+                flex-direction: column;
+                min-width: 0;
+            }
+        }
+
+        .sidebar, .preview-section {
+            background: white;
+            border-radius: 20px;
+            padding: 24px;
+            box-shadow:
+                3px 3px 0px rgba(0, 0, 0, 0.05),
+                6px 6px 0px rgba(107, 163, 255, 0.08);
+            border: 1px solid rgba(45, 52, 54, 0.15);
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .numbered-badge {
+            width: 50px;
+            height: 50px;
+            background: #6ba3ff;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: white;
+            font-size: 24px;
+            box-shadow: 3px 3px 0px rgba(107, 163, 255, 0.3);
+            flex-shrink: 0;
+        }
+
+        .gradient-text {
+            margin: 0;
+            padding: 0;
+            font-family: 'Hmt Regular', 'Inter', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #2d3436;
+            line-height: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+        }
+
+        .upload-section {
+            border: 2px dashed rgba(107, 163, 255, 0.4);
+            border-radius: 20px;
+            padding: 30px 20px;
+            text-align: center;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            min-height: 300px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 3px 3px 0px rgba(107, 163, 255, 0.1);
+        }
+
+        .upload-section:hover {
+            border-color: #6ba3ff;
+            background: #f8f9ff;
+            transform: translateY(-3px) rotate(1deg);
+            box-shadow: 5px 5px 0px rgba(107, 163, 255, 0.2);
+        }
+
+        .upload-section.has-image {
+            border-style: solid;
+            border-color: #6ba3ff;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .upload-label {
+            font-size: 16px;
+            color: #5a92ee;
+            font-weight: 600;
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .helper-text {
+            font-size: 12px;
+            color: #6b7280;
+            margin-top: 4px;
+            line-height: 1.4;
+        }
+
+        .upload-preview {
+            display: none;
+        }
+
+        .upload-preview.visible {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .upload-preview img {
+            max-width: 200px;
+            max-height: 200px;
+            object-fit: contain;
+            border-radius: 8px;
+            background: repeating-conic-gradient(#e5e7eb 0% 25%, transparent 0% 50%) 50% / 16px 16px;
+        }
+
+        .upload-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .setting-group {
+            margin-bottom: 18px;
+        }
+
+        .setting-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 8px;
+        }
+
+        .setting-group input[type="range"] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #e3f2ff;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .setting-group input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #6ba3ff;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .value-display {
+            display: inline-block;
+            background: #6ba3ff;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #6ba3ff 0%, #5a92ee 100%);
+            color: white;
+            border: none;
+            padding: 14px 24px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 3px 3px 0px rgba(107, 163, 255, 0.3);
+            width: 100%;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 5px 5px 0px rgba(107, 163, 255, 0.4);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #dd6143;
+            border: 2px solid #dd6143;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 2px 2px 0px rgba(221, 97, 67, 0.2);
+        }
+
+        .btn-secondary:hover {
+            background: #fff5f2;
+            transform: translateY(-2px);
+            box-shadow: 3px 3px 0px rgba(221, 97, 67, 0.3);
+        }
+
+        .preview-content-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 300px;
+        }
+
+        .preview-content {
+            position: relative;
+            background: #f9fafb;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 640px;
+            aspect-ratio: 16 / 9;
+            display: flex;
+            overflow: hidden;
+            background: repeating-conic-gradient(#e5e7eb 0% 25%, #f9fafb 0% 50%) 50% / 20px 20px;
+            cursor: grab;
+        }
+
+        .preview-content:active {
+            cursor: grabbing;
+        }
+
+        .preview-content.ratio-16-9 {
+            aspect-ratio: 16 / 9;
+            max-width: 640px;
+        }
+
+        .preview-content.ratio-9-16 {
+            aspect-ratio: 9 / 16;
+            max-width: 280px;
+        }
+
+        .preview-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .placeholder {
+            text-align: center;
+            color: #9ca3af;
+            margin: auto;
+        }
+
+        .placeholder svg {
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 16px;
+            opacity: 0.3;
+        }
+
+        .controls-row {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: #f9fafb;
+            border-radius: 8px;
+        }
+
+        .label-text {
+            font-size: 12px;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .slider-compact {
+            width: 100px;
+            height: 4px;
+            border-radius: 2px;
+            background: #e3f2ff;
+            outline: none;
+            -webkit-appearance: none;
+            cursor: pointer;
+        }
+
+        .slider-compact::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: #6ba3ff;
+            cursor: pointer;
+        }
+
+        .color-preview-box {
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+            border: 2px solid #e5e7eb;
+            cursor: pointer;
+        }
+
+        .popup-menu {
+            display: none;
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 8px;
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            width: 280px;
+            z-index: 1000;
+        }
+
+        .popup-menu.visible {
+            display: block;
+        }
+
+        /* Color Picker Elements */
+        .color-square {
+            position: relative;
+            width: 100%;
+            height: 150px;
+            background: linear-gradient(to right, white, red);
+            border-radius: 8px;
+            margin-bottom: 12px;
+            cursor: crosshair;
+            border: 2px solid #e5e7eb;
+        }
+
+        .color-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(to bottom, transparent, black);
+            border-radius: 6px;
+        }
+
+        .color-cursor {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            border: 2px solid white;
+            border-radius: 50%;
+            pointer-events: none;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 3px rgba(0,0,0,0.5);
+        }
+
+        .hue-slider {
+            height: 20px;
+            border-radius: 6px;
+            background: linear-gradient(to right, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000);
+            position: relative;
+            cursor: pointer;
+            border: 2px solid #e5e7eb;
+            margin-bottom: 12px;
+        }
+
+        .hue-cursor {
+            position: absolute;
+            width: 4px;
+            height: 24px;
+            background: white;
+            border: 2px solid #666;
+            border-radius: 2px;
+            top: -2px;
+            transform: translateX(-50%);
+            pointer-events: none;
+        }
+
+        .hex-input {
+            flex: 1;
+            padding: 6px 10px;
+            border: 2px solid #e5e7eb;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 13px;
+        }
+
+        .style-options {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .style-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .style-option:hover {
+            border-color: #6ba3ff;
+            background: #f8f9ff;
+        }
+
+        .style-option:has(input:checked) {
+            border-color: #6ba3ff;
+            background: #f0f7ff;
+        }
+
+        .style-option input {
+            accent-color: #6ba3ff;
+        }
+
+        .style-label {
+            font-size: 13px;
+            color: #374151;
+        }
+
+        .color-input {
+            width: 40px;
+            height: 32px;
+            border: 2px solid #e5e7eb;
+            border-radius: 6px;
+            cursor: pointer;
+            padding: 0;
+        }
+
+        .mb-12 {
+            margin-bottom: 12px;
+        }
+
+        .settings-controls-row {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .slider-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 10px;
+            background: #f9fafb;
+            border-radius: 8px;
+            height: 36px;
+        }
+
+        .flex-center-gap-8 {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .pos-relative {
+            position: relative;
+        }
+
+        .action-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 24px;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .checkbox-input {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: #6ba3ff;
+        }
+
+        @keyframes drawOutline {
+            from {
+                stroke-dashoffset: var(--dash-length);
+            }
+            to {
+                stroke-dashoffset: 0;
+            }
+        }
+
+        .animate-outline {
+            animation: drawOutline var(--duration) ease-out forwards;
+        }
+
+        .export-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 16px;
+            justify-content: center;
+        }
+
+        .export-buttons .btn-primary {
+            width: auto;
+        }
+
+        /* Background upload styles */
+        .bg-upload-area {
+            border: 2px dashed #e5e7eb;
+            border-radius: 8px;
+            padding: 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .bg-upload-area:hover {
+            border-color: #6ba3ff;
+            background: #f8f9ff;
+        }
+
+        .text-tiny-gray {
+            font-size: 11px;
+            color: #9ca3af;
+        }
+
+        .text-tiny-blue {
+            font-size: 11px;
+            color: #5a92ee;
+            cursor: pointer;
+        }
+
+        .text-small-blue {
+            font-size: 12px;
+            color: #5a92ee;
+        }
+
+        .img-thumb {
+            max-width: 60px;
+            max-height: 40px;
+            object-fit: contain;
+            border-radius: 4px;
+            margin-bottom: 4px;
+        }
+
+        .flex-col-center {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* Aspect ratio buttons - like index5.html */
+        .aspect-ratio-group {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .aspect-ratio-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            padding: 4px 6px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            opacity: 0.4;
+            transition: opacity 0.2s;
+        }
+
+        .aspect-ratio-btn:hover {
+            opacity: 0.7;
+        }
+
+        .aspect-ratio-btn.selected {
+            opacity: 1;
+        }
+
+        .aspect-ratio-btn span {
+            font-size: 9px;
+            font-weight: 500;
+        }
+
+        /* Style toggle buttons */
+        .style-toggle {
+            display: flex;
+            gap: 4px;
+        }
+
+        .style-btn {
+            padding: 6px 12px;
+            border: 1px solid #e5e7eb;
+            background: white;
+            border-radius: 6px;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .style-btn:hover {
+            border-color: #6ba3ff;
+        }
+
+        .style-btn.active {
+            background: #6ba3ff;
+            color: white;
+            border-color: #6ba3ff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <a href="index.html" class="logo-link">
+                <img src="images/mefn.gif" alt="Logo" class="header-logo">
+            </a>
+            <div class="header-content">
+                <h1>Wiggly Outline Animator</h1>
+                <!-- <p>Upload a transparent image and watch a hand-drawn style outline animate around it</p> -->
+            </div>
+        </div>
+
+        <div class="main-layout">
+            <!-- LEFT - Controls -->
+            <div class="sidebar">
+                <div class="section-header">
+                    <div class="numbered-badge">1</div>
+                    <h3 class="gradient-text">Upload Image</h3>
+                </div>
+
+                <div class="upload-section" id="uploadSection">
+                    <input type="file" id="imageUpload" accept="image/*">
+                    <div id="uploadPlaceholder">
+                        <label for="imageUpload" class="upload-label">
+                            Click to Upload Image
+                        </label>
+                        <div class="helper-text">
+                            PNG with transparency or any image (JPG, etc.)
+                        </div>
+                    </div>
+                    <div id="uploadPreview" class="upload-preview">
+                        <img id="previewImg" />
+                        <div class="label-text" id="imageName"></div>
+                        <div class="upload-actions">
+                            <label for="imageUpload" class="helper-text" style="color: #5a92ee; cursor: pointer;">Change</label>
+                            <span class="helper-text" style="color: #9ca3af;">|</span>
+                            <span id="removeImage" class="helper-text" style="color: #dd6143; cursor: pointer;">Remove</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="setting-group" style="margin-top: 16px; display: none;" id="thresholdGroup">
+                    <label>
+                        Edge Detection <span class="value-display" id="thresholdDisplay">128</span>
+                    </label>
+                    <input type="range" id="threshold" min="30" max="220" value="128">
+                    <div class="helper-text">Darker pixels below this value form the outline</div>
+                </div>
+
+                </div>
+
+            <!-- RIGHT - Preview -->
+            <div class="preview-section">
+                <div class="section-header">
+                    <div class="numbered-badge">2</div>
+                    <h3 class="gradient-text">Animate</h3>
+                </div>
+                <!-- Row 1: Style, Show Image, Background, Stroke, Ratio -->
+                <div class="controls-row">
+                    <div class="control-group">
+                        <span class="label-text">Style:</span>
+                        <div class="style-toggle">
+                            <button class="style-btn active" data-style="line">Simple</button>
+                            <button class="style-btn" data-style="line-dash">Sketchy</button>
+                        </div>
+                        <input type="hidden" id="lineStyleSelect" value="line">
+                    </div>
+                    <div class="control-group">
+                        <input type="checkbox" id="showImage" class="checkbox-input" checked>
+                        <span class="label-text">Show Image</span>
+                    </div>
+                    <div class="pos-relative">
+                        <div class="control-group" id="bgIndicator" style="cursor: pointer;">
+                            <span class="label-text">Background:</span>
+                            <div id="bgPreview" class="color-preview-box" style="background: #00ff00;"></div>
+                        </div>
+                        <div id="bgPopup" class="popup-menu">
+                            <div class="color-square" id="bgColorSquare">
+                                <div class="color-overlay"></div>
+                                <div id="bgColorCursor" class="color-cursor"></div>
+                            </div>
+                            <div class="hue-slider" id="bgHueSlider">
+                                <div id="bgHueCursor" class="hue-cursor"></div>
+                            </div>
+                            <div class="flex-center-gap-8 mb-12">
+                                <span class="label-text">Hex:</span>
+                                <input type="text" id="bgColorHexInput" value="#00ff00" class="hex-input">
+                                <input type="color" id="bgColor" value="#00ff00" class="color-input">
+                            </div>
+                            <div style="border-top: 1px solid #e5e7eb; padding-top: 12px;">
+                                <div class="text-tiny-gray" style="margin-bottom: 6px;">Or use background image:</div>
+                                <div class="bg-upload-area" id="bgImageUploadArea">
+                                    <input type="file" id="bgImageUpload" accept="image/*" style="display: none;">
+                                    <div id="bgUploadPlaceholder" class="flex-col-center">
+                                        <span class="text-small-blue">Click to upload</span>
+                                    </div>
+                                    <div id="bgImagePreview" class="flex-col-center" style="display: none;">
+                                        <img id="bgPreviewImg" class="img-thumb" />
+                                        <span class="text-tiny-gray" id="bgImageName"></span>
+                                        <div class="flex-center-gap-8">
+                                            <span class="text-tiny-blue" id="changeBgImage">Change</span>
+                                            <span class="text-tiny-blue" id="removeBgImage" style="color: #dd6143;">Remove</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="pos-relative">
+                        <div class="control-group" id="strokeIndicator" style="cursor: pointer;">
+                            <span class="label-text">Stroke:</span>
+                            <div id="strokePreview" class="color-preview-box" style="background: #2d3436;"></div>
+                        </div>
+                        <div id="strokePopup" class="popup-menu">
+                            <div class="color-square" id="strokeColorSquare">
+                                <div class="color-overlay"></div>
+                                <div id="strokeColorCursor" class="color-cursor"></div>
+                            </div>
+                            <div class="hue-slider" id="strokeHueSlider">
+                                <div id="strokeHueCursor" class="hue-cursor"></div>
+                            </div>
+                            <div class="flex-center-gap-8 mb-12">
+                                <span class="label-text">Hex:</span>
+                                <input type="text" id="strokeColorHexInput" value="#2d3436" class="hex-input">
+                                <input type="color" id="outlineColor" value="#2d3436" class="color-input">
+                            </div>
+                            <div style="border-top: 1px solid #e5e7eb; padding-top: 12px;">
+                                <div class="label-text" style="margin-bottom: 8px;">Thickness <span class="value-display" id="thicknessDisplay">3px</span></div>
+                                <input type="range" id="outlineThickness" min="1" max="10" value="3" style="width: 100%;">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <span class="label-text">Ratio:</span>
+                        <div class="aspect-ratio-group">
+                            <button class="aspect-ratio-btn selected" id="ratio16x9" title="16:9 Landscape">
+                                <svg width="20" height="12" viewBox="0 0 20 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <rect x="0.5" y="0.5" width="19" height="11" rx="1" stroke="currentColor" fill="none"/>
+                                </svg>
+                                <span>16:9</span>
+                            </button>
+                            <button class="aspect-ratio-btn" id="ratio9x16" title="9:16 Portrait">
+                                <svg width="12" height="20" viewBox="0 0 12 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <rect x="0.5" y="0.5" width="11" height="19" rx="1" stroke="currentColor" fill="none"/>
+                                </svg>
+                                <span>9:16</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <!-- Row 2: All sliders -->
+                <div class="settings-controls-row">
+                    <div class="slider-item">
+                        <span class="label-text">Gap:</span>
+                        <input type="range" id="outlineGap" min="2" max="50" value="10" class="slider-compact">
+                        <span class="value-display" id="gapDisplay">10</span>
+                    </div>
+                    <div class="slider-item">
+                        <span class="label-text">Wiggle:</span>
+                        <input type="range" id="wiggleAmount" min="0" max="15" value="4" class="slider-compact">
+                        <span class="value-display" id="wiggleDisplay">4</span>
+                    </div>
+                    <div class="slider-item">
+                        <span class="label-text">Tail:</span>
+                        <input type="range" id="tailLength" min="1" max="20" value="8" class="slider-compact">
+                        <span class="value-display" id="tailDisplay">8%</span>
+                    </div>
+                    <div class="slider-item">
+                        <span class="label-text">Duration:</span>
+                        <input type="range" id="duration" min="0.5" max="5" step="0.1" value="2" class="slider-compact">
+                        <span class="value-display" id="durationDisplay">2.0s</span>
+                    </div>
+                </div>
+
+                <div class="preview-content-wrapper">
+                    <div class="preview-content ratio-16-9" id="previewContent">
+                        <canvas id="bgCanvas" class="preview-canvas"></canvas>
+                        <canvas id="imageCanvas" class="preview-canvas"></canvas>
+                        <canvas id="outlineCanvas" class="preview-canvas"></canvas>
+                        <div class="placeholder" id="previewPlaceholder">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="17 8 12 3 7 8"></polyline>
+                                <line x1="12" y1="3" x2="12" y2="15"></line>
+                            </svg>
+                            <p>Upload a transparent image to get started</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="export-buttons">
+                    <button class="btn-primary" id="animateBtn" disabled>Start Animation</button>
+                    <button class="btn-primary" id="exportGifBtn" disabled style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); box-shadow: 3px 3px 0px rgba(245, 158, 11, 0.3);">Export GIF</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/gifshot@0.4.5/dist/gifshot.min.js"></script>
+    <script>
+        // State
+        let uploadedImage = null;
+        let processedImage = null; // For non-transparent images, this holds the processed version
+        let outlinePoints = [];
+        let isAnimating = false;
+        let bgImageData = null; // Background image data URL
+        let cachedBgImage = null; // Cached background image object
+        let imageOffsetX = 0; // Drag offset for image
+        let imageOffsetY = 0;
+        let isDragging = false;
+        let dragStartX = 0;
+        let dragStartY = 0;
+
+        // DOM Elements
+        const imageUpload = document.getElementById('imageUpload');
+        const uploadSection = document.getElementById('uploadSection');
+        const uploadPlaceholder = document.getElementById('uploadPlaceholder');
+        const uploadPreview = document.getElementById('uploadPreview');
+        const previewImg = document.getElementById('previewImg');
+        const imageName = document.getElementById('imageName');
+        const removeImage = document.getElementById('removeImage');
+        const previewPlaceholder = document.getElementById('previewPlaceholder');
+        const previewContent = document.getElementById('previewContent');
+        const bgCanvas = document.getElementById('bgCanvas');
+        const imageCanvas = document.getElementById('imageCanvas');
+        const outlineCanvas = document.getElementById('outlineCanvas');
+        const animateBtn = document.getElementById('animateBtn');
+        const exportGifBtn = document.getElementById('exportGifBtn');
+        const bgColor = document.getElementById('bgColor');
+        const bgPreview = document.getElementById('bgPreview');
+        const bgPopup = document.getElementById('bgPopup');
+        const bgIndicator = document.getElementById('bgIndicator');
+
+        // Sliders
+        const outlineGap = document.getElementById('outlineGap');
+        const wiggleAmount = document.getElementById('wiggleAmount');
+        const outlineThickness = document.getElementById('outlineThickness');
+        const tailLength = document.getElementById('tailLength');
+        const duration = document.getElementById('duration');
+        const outlineColor = document.getElementById('outlineColor');
+        const showImage = document.getElementById('showImage');
+        const threshold = document.getElementById('threshold');
+        const thresholdGroup = document.getElementById('thresholdGroup');
+
+        // Displays
+        const gapDisplay = document.getElementById('gapDisplay');
+        const wiggleDisplay = document.getElementById('wiggleDisplay');
+        const thicknessDisplay = document.getElementById('thicknessDisplay');
+        const tailDisplay = document.getElementById('tailDisplay');
+        const durationDisplay = document.getElementById('durationDisplay');
+        const strokePreview = document.getElementById('strokePreview');
+        const strokePopup = document.getElementById('strokePopup');
+        const strokeIndicator = document.getElementById('strokeIndicator');
+        const lineStyleSelect = document.getElementById('lineStyleSelect');
+        const thresholdDisplay = document.getElementById('thresholdDisplay');
+
+        let animationId = null;
+        let isNonTransparentImage = false;
+
+        // Color picker state
+        let strokeHue = 0;
+        let strokeSaturation = 0;
+        let strokeValue = 20;
+
+        // Background color picker state
+        let bgHue = 120; // Green
+        let bgSaturation = 100;
+        let bgValue = 100;
+
+        // Update displays and auto-regenerate outline
+        outlineGap.addEventListener('input', () => {
+            gapDisplay.textContent = outlineGap.value;
+            if (uploadedImage) generateWigglyOutline();
+        });
+
+        wiggleAmount.addEventListener('input', () => {
+            wiggleDisplay.textContent = wiggleAmount.value;
+            if (uploadedImage) generateWigglyOutline();
+        });
+
+        outlineThickness.addEventListener('input', () => {
+            thicknessDisplay.textContent = outlineThickness.value + 'px';
+            if (outlinePoints.length > 0) drawOutlineStatic();
+        });
+
+        tailLength.addEventListener('input', () => {
+            tailDisplay.textContent = tailLength.value + '%';
+        });
+
+        duration.addEventListener('input', () => {
+            durationDisplay.textContent = parseFloat(duration.value).toFixed(1) + 's';
+        });
+
+        threshold.addEventListener('input', async () => {
+            thresholdDisplay.textContent = threshold.value;
+            if (uploadedImage && isNonTransparentImage) {
+                await processNonTransparentImage(uploadedImage);
+                drawImageOnCanvas();
+                generateWigglyOutline();
+            }
+        });
+
+        outlineColor.addEventListener('input', () => {
+            const hex = outlineColor.value;
+            strokePreview.style.background = hex;
+            document.getElementById('strokeColorHexInput').value = hex;
+            const hsv = hexToHSV(hex);
+            strokeHue = hsv.h;
+            strokeSaturation = hsv.s;
+            strokeValue = hsv.v;
+            updateStrokeColorSquare();
+            updateStrokeCursors();
+            if (outlinePoints.length > 0) {
+                drawOutlineStatic();
+            }
+        });
+
+        showImage.addEventListener('change', () => {
+            imageCanvas.style.display = showImage.checked ? 'block' : 'none';
+        });
+
+        // Stroke popup toggle
+        strokeIndicator.addEventListener('click', (e) => {
+            e.stopPropagation();
+            strokePopup.classList.toggle('visible');
+            bgPopup.classList.remove('visible');
+        });
+
+        // Background popup toggle
+        bgIndicator.addEventListener('click', (e) => {
+            e.stopPropagation();
+            bgPopup.classList.toggle('visible');
+            strokePopup.classList.remove('visible');
+        });
+
+        document.addEventListener('click', () => {
+            strokePopup.classList.remove('visible');
+            bgPopup.classList.remove('visible');
+        });
+
+        bgPopup.addEventListener('click', (e) => {
+            e.stopPropagation();
+        });
+
+        // Background color change
+        bgColor.addEventListener('input', () => {
+            bgPreview.style.background = bgColor.value;
+            bgImageData = null; // Clear background image when color is changed
+            cachedBgImage = null;
+            document.getElementById('bgImagePreview').style.display = 'none';
+            document.getElementById('bgUploadPlaceholder').style.display = 'flex';
+            drawBackground();
+        });
+
+        // Background image upload
+        const bgImageUpload = document.getElementById('bgImageUpload');
+        const bgImageUploadArea = document.getElementById('bgImageUploadArea');
+
+        bgImageUploadArea.addEventListener('click', (e) => {
+            if (e.target.id !== 'removeBgImage') {
+                bgImageUpload.click();
+            }
+        });
+
+        bgImageUpload.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    bgImageData = event.target.result;
+                    document.getElementById('bgPreviewImg').src = bgImageData;
+                    document.getElementById('bgImageName').textContent = file.name;
+                    document.getElementById('bgUploadPlaceholder').style.display = 'none';
+                    document.getElementById('bgImagePreview').style.display = 'flex';
+
+                    // Cache the background image
+                    const img = new Image();
+                    img.onload = () => {
+                        cachedBgImage = img;
+                        drawBackground();
+                    };
+                    img.src = bgImageData;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        document.getElementById('changeBgImage').addEventListener('click', (e) => {
+            e.stopPropagation();
+            bgImageUpload.click();
+        });
+
+        document.getElementById('removeBgImage').addEventListener('click', (e) => {
+            e.stopPropagation();
+            bgImageData = null;
+            cachedBgImage = null;
+            document.getElementById('bgImagePreview').style.display = 'none';
+            document.getElementById('bgUploadPlaceholder').style.display = 'flex';
+            bgImageUpload.value = '';
+            drawBackground();
+        });
+
+        // Style toggle buttons
+        document.querySelectorAll('.style-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.style-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                lineStyleSelect.value = btn.dataset.style;
+            });
+        });
+
+        // Aspect ratio buttons
+        const ratio16x9Btn = document.getElementById('ratio16x9');
+        const ratio9x16Btn = document.getElementById('ratio9x16');
+
+        function selectAspectRatio(ratio) {
+            const isVertical = ratio === '9:16';
+
+            ratio16x9Btn.classList.toggle('selected', !isVertical);
+            ratio9x16Btn.classList.toggle('selected', isVertical);
+
+            previewContent.className = 'preview-content';
+            if (isVertical) {
+                previewContent.classList.add('ratio-9-16');
+            } else {
+                previewContent.classList.add('ratio-16-9');
+            }
+
+            // Redraw everything with new dimensions
+            if (uploadedImage) {
+                drawBackground();
+                drawImageOnCanvas();
+                generateWigglyOutline();
+            } else {
+                drawBackground();
+            }
+        }
+
+        ratio16x9Btn.addEventListener('click', () => selectAspectRatio('16:9'));
+        ratio9x16Btn.addEventListener('click', () => selectAspectRatio('9:16'));
+
+        // Drag to reposition image
+        previewContent.addEventListener('mousedown', (e) => {
+            if (!uploadedImage) return;
+            isDragging = true;
+            dragStartX = e.clientX - imageOffsetX;
+            dragStartY = e.clientY - imageOffsetY;
+            previewContent.style.cursor = 'grabbing';
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            imageOffsetX = e.clientX - dragStartX;
+            imageOffsetY = e.clientY - dragStartY;
+            drawImageOnCanvas();
+            generateWigglyOutline();
+        });
+
+        document.addEventListener('mouseup', () => {
+            if (isDragging) {
+                isDragging = false;
+                previewContent.style.cursor = 'grab';
+            }
+        });
+
+        strokePopup.addEventListener('click', (e) => {
+            e.stopPropagation();
+        });
+
+        // Upload handling
+        uploadSection.addEventListener('click', (e) => {
+            // Don't trigger file input if clicking remove button
+            if (e.target.id === 'removeImage') return;
+            imageUpload.click();
+        });
+
+        imageUpload.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const img = new Image();
+                    img.onload = async () => {
+                        uploadedImage = img;
+                        previewImg.src = event.target.result;
+                        imageName.textContent = file.name;
+                        uploadPlaceholder.classList.add('hidden');
+                        uploadPreview.classList.add('visible');
+                        uploadSection.classList.add('has-image');
+                        previewPlaceholder.classList.add('hidden');
+
+                        // Check if image has transparency
+                        isNonTransparentImage = !checkImageHasTransparency(img);
+                        thresholdGroup.style.display = isNonTransparentImage ? 'block' : 'none';
+
+                        // Process non-transparent images to extract strokes
+                        if (isNonTransparentImage) {
+                            await processNonTransparentImage(img);
+                        } else {
+                            processedImage = null;
+                        }
+
+                        drawImageOnCanvas();
+                        // Auto-generate outline
+                        generateWigglyOutline();
+                    };
+                    img.src = event.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Check if an image has transparency
+        function checkImageHasTransparency(img) {
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = img.width;
+            tempCanvas.height = img.height;
+            const tempCtx = tempCanvas.getContext('2d');
+            tempCtx.drawImage(img, 0, 0);
+            const data = tempCtx.getImageData(0, 0, img.width, img.height).data;
+
+            for (let i = 3; i < data.length; i += 4) {
+                if (data[i] < 250) {
+                    return true; // Has transparency
+                }
+            }
+            return false; // No transparency (solid image like JPG)
+        }
+
+        // Process non-transparent image (JPG) to extract dark strokes as transparent PNG
+        function processNonTransparentImage(img) {
+            return new Promise((resolve) => {
+                const thresholdValue = parseInt(threshold.value);
+
+                const tempCanvas = document.createElement('canvas');
+                tempCanvas.width = img.width;
+                tempCanvas.height = img.height;
+                const tempCtx = tempCanvas.getContext('2d');
+
+                // Draw original image
+                tempCtx.drawImage(img, 0, 0);
+
+                // Get image data
+                const imageData = tempCtx.getImageData(0, 0, img.width, img.height);
+                const data = imageData.data;
+
+                // Convert to transparent image: keep dark pixels, make light pixels transparent
+                for (let i = 0; i < data.length; i += 4) {
+                    const r = data[i];
+                    const g = data[i + 1];
+                    const b = data[i + 2];
+                    const brightness = (r + g + b) / 3;
+
+                    if (brightness < thresholdValue) {
+                        // Dark pixel - keep it (make it black for now)
+                        data[i] = 0;
+                        data[i + 1] = 0;
+                        data[i + 2] = 0;
+                        data[i + 3] = 255;
+                    } else {
+                        // Light pixel - make transparent
+                        data[i + 3] = 0;
+                    }
+                }
+
+                tempCtx.putImageData(imageData, 0, 0);
+
+                // Create new image from processed canvas
+                const newImg = new Image();
+                newImg.onload = () => {
+                    processedImage = newImg;
+                    resolve(newImg);
+                };
+                newImg.src = tempCanvas.toDataURL('image/png');
+            });
+        }
+
+        // Remove image
+        removeImage.addEventListener('click', (e) => {
+            e.stopPropagation();
+            clearAll();
+        });
+
+        function clearAll() {
+            // Stop any running animation
+            if (isAnimating) {
+                stopAnimation();
+            }
+
+            uploadedImage = null;
+            processedImage = null;
+            outlinePoints = [];
+            isNonTransparentImage = false;
+            imageOffsetX = 0;
+            imageOffsetY = 0;
+            uploadPlaceholder.classList.remove('hidden');
+            uploadPreview.classList.remove('visible');
+            uploadSection.classList.remove('has-image');
+            previewPlaceholder.classList.remove('hidden');
+            animateBtn.disabled = true;
+            exportGifBtn.disabled = true;
+            imageUpload.value = '';
+            thresholdGroup.style.display = 'none';
+
+            const imageCtx = imageCanvas.getContext('2d');
+            const outlineCtx = outlineCanvas.getContext('2d');
+            imageCtx.clearRect(0, 0, imageCanvas.width, imageCanvas.height);
+            outlineCtx.clearRect(0, 0, outlineCanvas.width, outlineCanvas.height);
+            drawBackground();
+        }
+
+        // Draw background (color or image)
+        function drawBackground() {
+            const container = previewContent;
+            const containerWidth = container.clientWidth;
+            const containerHeight = container.clientHeight;
+
+            bgCanvas.width = containerWidth;
+            bgCanvas.height = containerHeight;
+
+            const ctx = bgCanvas.getContext('2d');
+
+            if (bgImageData && cachedBgImage) {
+                ctx.drawImage(cachedBgImage, 0, 0, containerWidth, containerHeight);
+            } else {
+                ctx.fillStyle = bgColor.value;
+                ctx.fillRect(0, 0, containerWidth, containerHeight);
+            }
+        }
+
+        // Draw image on canvas
+        function drawImageOnCanvas() {
+            if (!uploadedImage) return;
+
+            const container = previewContent;
+            const containerWidth = container.clientWidth;
+            const containerHeight = container.clientHeight;
+
+            bgCanvas.width = containerWidth;
+            bgCanvas.height = containerHeight;
+            imageCanvas.width = containerWidth;
+            imageCanvas.height = containerHeight;
+            outlineCanvas.width = containerWidth;
+            outlineCanvas.height = containerHeight;
+
+            // Draw background first
+            drawBackground();
+
+            const ctx = imageCanvas.getContext('2d');
+            ctx.clearRect(0, 0, containerWidth, containerHeight);
+
+            // Use processed image for non-transparent images, original for transparent
+            const sourceImg = (isNonTransparentImage && processedImage) ? processedImage : uploadedImage;
+
+            // Calculate scaling to fit image in container
+            const scale = Math.min(
+                (containerWidth * 0.8) / uploadedImage.width,
+                (containerHeight * 0.8) / uploadedImage.height
+            );
+
+            const drawWidth = uploadedImage.width * scale;
+            const drawHeight = uploadedImage.height * scale;
+            const x = (containerWidth - drawWidth) / 2 + imageOffsetX;
+            const y = (containerHeight - drawHeight) / 2 + imageOffsetY;
+
+            ctx.drawImage(sourceImg, x, y, drawWidth, drawHeight);
+        }
+
+        // Generate wiggly outline around the image
+        function generateWigglyOutline() {
+            if (!uploadedImage) return;
+
+            const containerWidth = imageCanvas.width;
+            const containerHeight = imageCanvas.height;
+
+            // Get image data to find edges
+            const ctx = imageCanvas.getContext('2d');
+            const imageData = ctx.getImageData(0, 0, containerWidth, containerHeight);
+            const data = imageData.data;
+
+            // Find boundary points of non-transparent pixels
+            const gap = parseInt(outlineGap.value);
+            const boundaryPoints = findBoundaryPoints(data, containerWidth, containerHeight, gap);
+
+            if (boundaryPoints.length < 3) {
+                alert('Could not detect image boundary.');
+                return;
+            }
+
+            // Add wiggle to the points
+            const wiggle = parseInt(wiggleAmount.value);
+            outlinePoints = addWiggleToPoints(boundaryPoints, wiggle);
+
+            // Draw the outline
+            drawOutlineStatic();
+            animateBtn.disabled = false;
+            exportGifBtn.disabled = false;
+        }
+
+        // Find boundary points of image content (transparent or non-transparent)
+        function findBoundaryPoints(data, width, height, gap) {
+            // Create a binary mask based on alpha channel
+            // For non-transparent images, processedImage has already converted them to transparent PNG
+            // where dark strokes are opaque and light areas are transparent
+            let mask = new Uint8Array(width * height);
+
+            for (let i = 0; i < data.length; i += 4) {
+                const alpha = data[i + 3];
+                if (alpha > 20) {
+                    mask[i / 4] = 1;
+                }
+            }
+
+            // Dilate the mask by the gap amount
+            const dilatedMask = dilateMask(mask, width, height, gap);
+
+            // Find the boundary of the dilated mask using marching squares
+            const contours = marchingSquares(dilatedMask, width, height);
+
+            // Simplify and smooth the contour
+            if (contours.length > 0) {
+                return simplifyContour(contours, 3);
+            }
+
+            return [];
+        }
+
+        // Create a filled shape from dark pixels using convex hull
+        // This finds all dark pixels and computes their convex hull boundary
+        function fillInteriorFromLines(mask, width, height) {
+            // Collect all dark pixel coordinates
+            const points = [];
+            for (let y = 0; y < height; y++) {
+                for (let x = 0; x < width; x++) {
+                    if (mask[y * width + x]) {
+                        points.push({ x, y });
+                    }
+                }
+            }
+
+            if (points.length < 3) {
+                return mask; // Not enough points
+            }
+
+            // Compute convex hull using Graham scan
+            const hull = convexHull(points);
+
+            if (hull.length < 3) {
+                return mask;
+            }
+
+            // Fill the convex hull polygon into a new mask
+            const result = new Uint8Array(width * height);
+            fillPolygon(result, width, height, hull);
+
+            return result;
+        }
+
+        // Graham scan convex hull algorithm
+        function convexHull(points) {
+            if (points.length < 3) return points;
+
+            // Find the bottom-most point (or left-most in case of tie)
+            let start = 0;
+            for (let i = 1; i < points.length; i++) {
+                if (points[i].y > points[start].y ||
+                    (points[i].y === points[start].y && points[i].x < points[start].x)) {
+                    start = i;
+                }
+            }
+
+            // Swap start point to index 0
+            [points[0], points[start]] = [points[start], points[0]];
+            const pivot = points[0];
+
+            // Sort points by polar angle with respect to pivot
+            const sorted = points.slice(1).sort((a, b) => {
+                const angleA = Math.atan2(a.y - pivot.y, a.x - pivot.x);
+                const angleB = Math.atan2(b.y - pivot.y, b.x - pivot.x);
+                if (angleA !== angleB) return angleA - angleB;
+                // If same angle, closer point first
+                const distA = (a.x - pivot.x) ** 2 + (a.y - pivot.y) ** 2;
+                const distB = (b.x - pivot.x) ** 2 + (b.y - pivot.y) ** 2;
+                return distA - distB;
+            });
+
+            // Build hull
+            const hull = [pivot];
+            for (const p of sorted) {
+                while (hull.length > 1 && cross(hull[hull.length - 2], hull[hull.length - 1], p) <= 0) {
+                    hull.pop();
+                }
+                hull.push(p);
+            }
+
+            return hull;
+        }
+
+        // Cross product of vectors OA and OB
+        function cross(o, a, b) {
+            return (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
+        }
+
+        // Fill a polygon into a mask using scanline algorithm
+        function fillPolygon(mask, width, height, vertices) {
+            if (vertices.length < 3) return;
+
+            // Find bounding box
+            let minY = height, maxY = 0;
+            for (const v of vertices) {
+                minY = Math.min(minY, Math.floor(v.y));
+                maxY = Math.max(maxY, Math.ceil(v.y));
+            }
+
+            // Scanline fill
+            for (let y = minY; y <= maxY; y++) {
+                const intersections = [];
+
+                // Find intersections with polygon edges
+                for (let i = 0; i < vertices.length; i++) {
+                    const v1 = vertices[i];
+                    const v2 = vertices[(i + 1) % vertices.length];
+
+                    // Check if edge crosses this scanline
+                    if ((v1.y <= y && v2.y > y) || (v2.y <= y && v1.y > y)) {
+                        // Calculate x intersection
+                        const t = (y - v1.y) / (v2.y - v1.y);
+                        const x = v1.x + t * (v2.x - v1.x);
+                        intersections.push(x);
+                    }
+                }
+
+                // Sort intersections
+                intersections.sort((a, b) => a - b);
+
+                // Fill between pairs of intersections
+                for (let i = 0; i < intersections.length - 1; i += 2) {
+                    const x1 = Math.max(0, Math.floor(intersections[i]));
+                    const x2 = Math.min(width - 1, Math.ceil(intersections[i + 1]));
+                    for (let x = x1; x <= x2; x++) {
+                        if (y >= 0 && y < height) {
+                            mask[y * width + x] = 1;
+                        }
+                    }
+                }
+            }
+        }
+
+        // Dilate the mask
+        function dilateMask(mask, width, height, radius) {
+            const result = new Uint8Array(width * height);
+
+            for (let y = 0; y < height; y++) {
+                for (let x = 0; x < width; x++) {
+                    if (mask[y * width + x]) {
+                        // Set all pixels within radius
+                        for (let dy = -radius; dy <= radius; dy++) {
+                            for (let dx = -radius; dx <= radius; dx++) {
+                                if (dx * dx + dy * dy <= radius * radius) {
+                                    const nx = x + dx;
+                                    const ny = y + dy;
+                                    if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
+                                        result[ny * width + nx] = 1;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            return result;
+        }
+
+        // Marching squares algorithm to find contour
+        function marchingSquares(mask, width, height) {
+            const points = [];
+
+            // Find a starting point on the boundary
+            let startX = -1, startY = -1;
+            outer: for (let y = 0; y < height - 1; y++) {
+                for (let x = 0; x < width - 1; x++) {
+                    if (mask[y * width + x] && !mask[y * width + (x - 1)] && x > 0) {
+                        startX = x;
+                        startY = y;
+                        break outer;
+                    }
+                    if (mask[y * width + x] && y === 0) {
+                        startX = x;
+                        startY = y;
+                        break outer;
+                    }
+                }
+            }
+
+            if (startX === -1) return points;
+
+            // Trace the boundary
+            const visited = new Set();
+            let x = startX, y = startY;
+            let dir = 0; // 0=right, 1=down, 2=left, 3=up
+            const dx = [1, 0, -1, 0];
+            const dy = [0, 1, 0, -1];
+
+            const maxIterations = width * height;
+            let iterations = 0;
+
+            do {
+                const key = `${x},${y}`;
+                if (!visited.has(key)) {
+                    points.push({ x, y });
+                    visited.add(key);
+                }
+
+                // Turn right and try to move
+                let found = false;
+                for (let i = 0; i < 4; i++) {
+                    const newDir = (dir + 3 + i) % 4; // Try right, straight, left, back
+                    const nx = x + dx[newDir];
+                    const ny = y + dy[newDir];
+
+                    if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
+                        if (mask[ny * width + nx]) {
+                            x = nx;
+                            y = ny;
+                            dir = newDir;
+                            found = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (!found) break;
+                iterations++;
+            } while ((x !== startX || y !== startY) && iterations < maxIterations);
+
+            return points;
+        }
+
+        // Simplify contour by removing points that are too close
+        function simplifyContour(points, minDist) {
+            if (points.length < 3) return points;
+
+            const result = [points[0]];
+            for (let i = 1; i < points.length; i++) {
+                const last = result[result.length - 1];
+                const curr = points[i];
+                const dist = Math.sqrt((curr.x - last.x) ** 2 + (curr.y - last.y) ** 2);
+                if (dist >= minDist) {
+                    result.push(curr);
+                }
+            }
+
+            return result;
+        }
+
+        // Add wiggle effect to points
+        function addWiggleToPoints(points, wiggleAmount) {
+            if (wiggleAmount === 0) return points;
+
+            return points.map((point, i) => {
+                // Use noise based on position for consistent wiggle
+                const noise1 = Math.sin(i * 0.3) * Math.cos(i * 0.7);
+                const noise2 = Math.cos(i * 0.4) * Math.sin(i * 0.5);
+
+                return {
+                    x: point.x + noise1 * wiggleAmount,
+                    y: point.y + noise2 * wiggleAmount
+                };
+            });
+        }
+
+        // Draw static outline
+        function drawOutlineStatic() {
+            const ctx = outlineCanvas.getContext('2d');
+            ctx.clearRect(0, 0, outlineCanvas.width, outlineCanvas.height);
+
+            if (outlinePoints.length < 2) return;
+
+            ctx.strokeStyle = outlineColor.value;
+            ctx.lineWidth = parseInt(outlineThickness.value);
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+
+            ctx.beginPath();
+            ctx.moveTo(outlinePoints[0].x, outlinePoints[0].y);
+
+            for (let i = 1; i < outlinePoints.length; i++) {
+                ctx.lineTo(outlinePoints[i].x, outlinePoints[i].y);
+            }
+
+            ctx.closePath();
+            ctx.stroke();
+        }
+
+        // Animate button
+        animateBtn.addEventListener('click', () => {
+            if (outlinePoints.length < 2) return;
+
+            if (isAnimating) {
+                // Stop animation
+                stopAnimation();
+            } else {
+                // Start animation
+                animateOutline();
+            }
+        });
+
+        function stopAnimation() {
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+                animationId = null;
+            }
+            isAnimating = false;
+            animateBtn.textContent = 'Start Animation';
+            animateBtn.style.background = '';
+            // Redraw static outline
+            drawOutlineStatic();
+        }
+
+        // Get current line style
+        function getLineStyle() {
+            return lineStyleSelect.value;
+        }
+
+        // Draw running line segment with optional trailing dash
+        function drawRunningSegment(ctx, startIdx, endIdx, totalPoints) {
+            if (endIdx <= startIdx) return;
+
+            const lineStyle = getLineStyle();
+            const thickness = parseInt(outlineThickness.value);
+
+            ctx.strokeStyle = outlineColor.value;
+            ctx.lineWidth = thickness;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+
+            // Draw the main line
+            ctx.beginPath();
+            ctx.moveTo(outlinePoints[startIdx].x, outlinePoints[startIdx].y);
+
+            for (let i = startIdx + 1; i <= endIdx && i < totalPoints; i++) {
+                ctx.lineTo(outlinePoints[i].x, outlinePoints[i].y);
+            }
+            ctx.stroke();
+
+            // Draw short trailing dash if line-dash style (almost like a dot)
+            if (lineStyle === 'line-dash') {
+                const gapSize = Math.max(3, Math.floor(totalPoints * 0.008)); // Small gap between line and dash
+                const dashLength = Math.max(2, Math.floor(totalPoints * 0.004)); // Very short dash (almost a dot)
+
+                const dashStart = endIdx + gapSize;
+                const dashEnd = dashStart + dashLength;
+
+                if (dashStart < totalPoints && dashEnd <= totalPoints) {
+                    ctx.beginPath();
+                    ctx.moveTo(outlinePoints[dashStart].x, outlinePoints[dashStart].y);
+                    for (let i = dashStart + 1; i <= dashEnd && i < totalPoints; i++) {
+                        ctx.lineTo(outlinePoints[i].x, outlinePoints[i].y);
+                    }
+                    ctx.stroke();
+                }
+            }
+        }
+
+        // Animate the outline with running line effect
+        function animateOutline() {
+            isAnimating = true;
+            animateBtn.textContent = 'Stop Animation';
+            animateBtn.style.background = 'linear-gradient(135deg, #dd6143 0%, #c4533a 100%)';
+
+            const ctx = outlineCanvas.getContext('2d');
+            const durationMs = parseFloat(duration.value) * 1000;
+            const totalPoints = outlinePoints.length;
+            const tailPercent = parseInt(tailLength.value) / 100;
+            const tailPoints = Math.floor(totalPoints * tailPercent);
+
+            let startTime = null;
+            let hasCompletedOneLoop = false;
+
+            function animate(timestamp) {
+                if (!isAnimating) return;
+
+                if (!startTime) startTime = timestamp;
+                const elapsed = timestamp - startTime;
+                const rawProgress = elapsed / durationMs;
+
+                // Check if we've completed one full loop
+                if (rawProgress >= 1 && !hasCompletedOneLoop) {
+                    hasCompletedOneLoop = true;
+                    // Draw the complete outline and stop
+                    drawOutlineStatic();
+                    stopAnimation();
+                    return;
+                }
+
+                const progress = rawProgress % 1;
+
+                // Calculate head and tail for fixed-length segment
+                // Head starts at tailPoints and moves to totalPoints
+                const headIndex = tailPoints + Math.floor(progress * (totalPoints - tailPoints));
+                // Tail is always tailPoints behind head
+                const tailIndex = headIndex - tailPoints;
+
+                ctx.clearRect(0, 0, outlineCanvas.width, outlineCanvas.height);
+
+                // Draw the running line segment
+                drawRunningSegment(ctx, tailIndex, headIndex, totalPoints);
+
+                animationId = requestAnimationFrame(animate);
+            }
+
+            animationId = requestAnimationFrame(animate);
+        }
+
+        // Export GIF
+        exportGifBtn.addEventListener('click', () => {
+            if (outlinePoints.length < 2) return;
+            exportAsGif();
+        });
+
+        // Draw running segment for GIF export (reuses the same logic)
+        function drawRunningSegmentForExport(ctx, startIdx, endIdx, totalPoints) {
+            if (endIdx <= startIdx) return;
+
+            const lineStyle = getLineStyle();
+            const thickness = parseInt(outlineThickness.value);
+
+            ctx.strokeStyle = outlineColor.value;
+            ctx.lineWidth = thickness;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+
+            // Draw the main line
+            ctx.beginPath();
+            ctx.moveTo(outlinePoints[startIdx].x, outlinePoints[startIdx].y);
+
+            for (let i = startIdx + 1; i <= endIdx && i < totalPoints; i++) {
+                ctx.lineTo(outlinePoints[i].x, outlinePoints[i].y);
+            }
+            ctx.stroke();
+
+            // Draw short trailing dash if line-dash style (almost like a dot)
+            if (lineStyle === 'line-dash') {
+                const gapSize = Math.max(3, Math.floor(totalPoints * 0.008));
+                const dashLength = Math.max(2, Math.floor(totalPoints * 0.004));
+
+                const dashStart = endIdx + gapSize;
+                const dashEnd = dashStart + dashLength;
+
+                if (dashStart < totalPoints && dashEnd <= totalPoints) {
+                    ctx.beginPath();
+                    ctx.moveTo(outlinePoints[dashStart].x, outlinePoints[dashStart].y);
+                    for (let i = dashStart + 1; i <= dashEnd && i < totalPoints; i++) {
+                        ctx.lineTo(outlinePoints[i].x, outlinePoints[i].y);
+                    }
+                    ctx.stroke();
+                }
+            }
+        }
+
+        function exportAsGif() {
+            const frames = [];
+            const durationMs = parseFloat(duration.value) * 1000;
+            const fps = 20;
+            const numFrames = Math.ceil((durationMs / 1000) * fps);
+            const totalPoints = outlinePoints.length;
+            const tailPercent = parseInt(tailLength.value) / 100;
+            const tailPoints = Math.floor(totalPoints * tailPercent);
+            const width = outlineCanvas.width;
+            const height = outlineCanvas.height;
+
+            const lineStyle = getLineStyle();
+            const thickness = parseInt(outlineThickness.value);
+            const color = outlineColor.value;
+
+            // Helper function to draw background on a canvas context
+            function drawBgOnContext(ctx) {
+                if (bgImageData && cachedBgImage) {
+                    ctx.drawImage(cachedBgImage, 0, 0, width, height);
+                } else {
+                    ctx.fillStyle = bgColor.value;
+                    ctx.fillRect(0, 0, width, height);
+                }
+            }
+
+            // Generate frames for the running line animation
+            for (let frame = 0; frame < numFrames; frame++) {
+                // Create a fresh canvas for each frame
+                const tempCanvas = document.createElement('canvas');
+                tempCanvas.width = width;
+                tempCanvas.height = height;
+                const tempCtx = tempCanvas.getContext('2d');
+
+                // Draw background (color or image)
+                drawBgOnContext(tempCtx);
+
+                const progress = frame / numFrames;
+
+                // Calculate head and tail for fixed-length segment
+                // Head starts at tailPoints and moves to totalPoints
+                const headIndex = tailPoints + Math.floor(progress * (totalPoints - tailPoints));
+                // Tail is always tailPoints behind head
+                const tailIndex = headIndex - tailPoints;
+
+                // Draw image if checkbox is checked
+                if (showImage.checked) {
+                    tempCtx.drawImage(imageCanvas, 0, 0);
+                }
+
+                // Draw the running line segment directly
+                if (headIndex > tailIndex) {
+                    tempCtx.strokeStyle = color;
+                    tempCtx.lineWidth = thickness;
+                    tempCtx.lineCap = 'round';
+                    tempCtx.lineJoin = 'round';
+
+                    // Draw the main line
+                    tempCtx.beginPath();
+                    tempCtx.moveTo(outlinePoints[tailIndex].x, outlinePoints[tailIndex].y);
+                    for (let i = tailIndex + 1; i <= headIndex && i < totalPoints; i++) {
+                        tempCtx.lineTo(outlinePoints[i].x, outlinePoints[i].y);
+                    }
+                    tempCtx.stroke();
+
+                    // Draw short trailing dash if line-dash style
+                    if (lineStyle === 'line-dash') {
+                        const gapSize = Math.max(3, Math.floor(totalPoints * 0.008));
+                        const dashLength = Math.max(2, Math.floor(totalPoints * 0.004));
+                        const dashStart = headIndex + gapSize;
+                        const dashEnd = dashStart + dashLength;
+
+                        if (dashStart < totalPoints && dashEnd <= totalPoints) {
+                            tempCtx.beginPath();
+                            tempCtx.moveTo(outlinePoints[dashStart].x, outlinePoints[dashStart].y);
+                            for (let i = dashStart + 1; i <= dashEnd && i < totalPoints; i++) {
+                                tempCtx.lineTo(outlinePoints[i].x, outlinePoints[i].y);
+                            }
+                            tempCtx.stroke();
+                        }
+                    }
+                }
+
+                frames.push(tempCanvas.toDataURL('image/png'));
+            }
+
+            // Add final frame with complete outline
+            const finalCanvas = document.createElement('canvas');
+            finalCanvas.width = width;
+            finalCanvas.height = height;
+            const finalCtx = finalCanvas.getContext('2d');
+
+            // Draw background (color or image)
+            drawBgOnContext(finalCtx);
+
+            if (showImage.checked) {
+                finalCtx.drawImage(imageCanvas, 0, 0);
+            }
+            finalCtx.strokeStyle = color;
+            finalCtx.lineWidth = thickness;
+            finalCtx.lineCap = 'round';
+            finalCtx.lineJoin = 'round';
+            finalCtx.beginPath();
+            finalCtx.moveTo(outlinePoints[0].x, outlinePoints[0].y);
+            for (let i = 1; i < totalPoints; i++) {
+                finalCtx.lineTo(outlinePoints[i].x, outlinePoints[i].y);
+            }
+            finalCtx.closePath();
+            finalCtx.stroke();
+
+            // Add a few frames of the complete outline at the end
+            const finalFrame = finalCanvas.toDataURL('image/png');
+            for (let i = 0; i < 10; i++) {
+                frames.push(finalFrame);
+            }
+
+            gifshot.createGIF({
+                images: frames,
+                gifWidth: width,
+                gifHeight: height,
+                interval: 1 / fps,
+                numFrames: frames.length,
+                frameDuration: 1,
+                sampleInterval: 10
+            }, function(obj) {
+                if (!obj.error) {
+                    const link = document.createElement('a');
+                    link.href = obj.image;
+                    link.download = 'wiggly-outline.gif';
+                    link.click();
+                }
+            });
+        }
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            if (uploadedImage) {
+                drawImageOnCanvas();
+                if (outlinePoints.length > 0) {
+                    generateWigglyOutline();
+                }
+            }
+        });
+
+        // ========== COLOR PICKER FUNCTIONS ==========
+        function hsvToRgb(h, s, v) {
+            s /= 100;
+            v /= 100;
+            const c = v * s;
+            const x = c * (1 - Math.abs((h / 60) % 2 - 1));
+            const m = v - c;
+            let r, g, b;
+            if (h < 60) { r = c; g = x; b = 0; }
+            else if (h < 120) { r = x; g = c; b = 0; }
+            else if (h < 180) { r = 0; g = c; b = x; }
+            else if (h < 240) { r = 0; g = x; b = c; }
+            else if (h < 300) { r = x; g = 0; b = c; }
+            else { r = c; g = 0; b = x; }
+            return {
+                r: Math.round((r + m) * 255),
+                g: Math.round((g + m) * 255),
+                b: Math.round((b + m) * 255)
+            };
+        }
+
+        function rgbToHex(r, g, b) {
+            return '#' + [r, g, b].map(x => x.toString(16).padStart(2, '0')).join('');
+        }
+
+        function hexToRgb(hex) {
+            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? {
+                r: parseInt(result[1], 16),
+                g: parseInt(result[2], 16),
+                b: parseInt(result[3], 16)
+            } : null;
+        }
+
+        function rgbToHsv(r, g, b) {
+            r /= 255; g /= 255; b /= 255;
+            const max = Math.max(r, g, b), min = Math.min(r, g, b);
+            const d = max - min;
+            let h, s, v = max;
+            s = max === 0 ? 0 : d / max;
+            if (max === min) {
+                h = 0;
+            } else {
+                switch (max) {
+                    case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+                    case g: h = (b - r) / d + 2; break;
+                    case b: h = (r - g) / d + 4; break;
+                }
+                h /= 6;
+            }
+            return { h: h * 360, s: s * 100, v: v * 100 };
+        }
+
+        function hexToHSV(hex) {
+            const rgb = hexToRgb(hex);
+            return rgb ? rgbToHsv(rgb.r, rgb.g, rgb.b) : { h: 0, s: 0, v: 0 };
+        }
+
+        function updateStrokeColor(hex) {
+            outlineColor.value = hex;
+            document.getElementById('strokeColorHexInput').value = hex;
+            strokePreview.style.background = hex;
+            if (outlinePoints.length > 0) {
+                drawOutlineStatic();
+            }
+        }
+
+        function updateStrokeColorSquare() {
+            const strokeColorSquare = document.getElementById('strokeColorSquare');
+            strokeColorSquare.style.background = `linear-gradient(to top, #000, transparent), linear-gradient(to right, #fff, hsl(${strokeHue}, 100%, 50%))`;
+        }
+
+        function updateStrokeCursors() {
+            const strokeColorSquare = document.getElementById('strokeColorSquare');
+            const strokeColorCursor = document.getElementById('strokeColorCursor');
+            const strokeHueCursor = document.getElementById('strokeHueCursor');
+            const strokeHueSlider = document.getElementById('strokeHueSlider');
+
+            const rect = strokeColorSquare.getBoundingClientRect();
+            strokeColorCursor.style.left = (strokeSaturation / 100 * rect.width) + 'px';
+            strokeColorCursor.style.top = ((100 - strokeValue) / 100 * rect.height) + 'px';
+
+            const hueRect = strokeHueSlider.getBoundingClientRect();
+            strokeHueCursor.style.left = (strokeHue / 360 * hueRect.width) + 'px';
+        }
+
+        // Initialize stroke color picker
+        const strokeColorSquare = document.getElementById('strokeColorSquare');
+        const strokeColorCursor = document.getElementById('strokeColorCursor');
+        const strokeHueSlider = document.getElementById('strokeHueSlider');
+        const strokeHueCursor = document.getElementById('strokeHueCursor');
+        const strokeColorHexInput = document.getElementById('strokeColorHexInput');
+
+        // Initialize from default color
+        const initialHsv = hexToHSV('#2d3436');
+        strokeHue = initialHsv.h;
+        strokeSaturation = initialHsv.s;
+        strokeValue = initialHsv.v;
+        updateStrokeColorSquare();
+
+        // Color square interaction
+        strokeColorSquare.addEventListener('mousedown', (e) => {
+            function updateFromMouse(e) {
+                const rect = strokeColorSquare.getBoundingClientRect();
+                let x = Math.max(0, Math.min(e.clientX - rect.left, rect.width));
+                let y = Math.max(0, Math.min(e.clientY - rect.top, rect.height));
+                strokeSaturation = (x / rect.width) * 100;
+                strokeValue = 100 - (y / rect.height) * 100;
+                strokeColorCursor.style.left = x + 'px';
+                strokeColorCursor.style.top = y + 'px';
+                const rgb = hsvToRgb(strokeHue, strokeSaturation, strokeValue);
+                const hex = rgbToHex(rgb.r, rgb.g, rgb.b);
+                updateStrokeColor(hex);
+            }
+            updateFromMouse(e);
+            function onMouseMove(e) { updateFromMouse(e); }
+            function onMouseUp() {
+                document.removeEventListener('mousemove', onMouseMove);
+                document.removeEventListener('mouseup', onMouseUp);
+            }
+            document.addEventListener('mousemove', onMouseMove);
+            document.addEventListener('mouseup', onMouseUp);
+        });
+
+        // Hue slider interaction
+        strokeHueSlider.addEventListener('mousedown', (e) => {
+            function updateFromMouse(e) {
+                const rect = strokeHueSlider.getBoundingClientRect();
+                let x = Math.max(0, Math.min(e.clientX - rect.left, rect.width));
+                strokeHue = (x / rect.width) * 360;
+                strokeHueCursor.style.left = x + 'px';
+                updateStrokeColorSquare();
+                const rgb = hsvToRgb(strokeHue, strokeSaturation, strokeValue);
+                const hex = rgbToHex(rgb.r, rgb.g, rgb.b);
+                updateStrokeColor(hex);
+            }
+            updateFromMouse(e);
+            function onMouseMove(e) { updateFromMouse(e); }
+            function onMouseUp() {
+                document.removeEventListener('mousemove', onMouseMove);
+                document.removeEventListener('mouseup', onMouseUp);
+            }
+            document.addEventListener('mousemove', onMouseMove);
+            document.addEventListener('mouseup', onMouseUp);
+        });
+
+        // Hex input interaction
+        strokeColorHexInput.addEventListener('input', (e) => {
+            let hex = e.target.value;
+            if (!hex.startsWith('#')) hex = '#' + hex;
+            if (/^#[0-9A-Fa-f]{6}$/.test(hex)) {
+                const hsv = hexToHSV(hex);
+                strokeHue = hsv.h;
+                strokeSaturation = hsv.s;
+                strokeValue = hsv.v;
+                outlineColor.value = hex;
+                strokePreview.style.background = hex;
+                updateStrokeColorSquare();
+                updateStrokeCursors();
+                if (outlinePoints.length > 0) {
+                    drawOutlineStatic();
+                }
+            }
+        });
+
+        // ========== BACKGROUND COLOR PICKER ==========
+        const bgColorSquare = document.getElementById('bgColorSquare');
+        const bgColorCursor = document.getElementById('bgColorCursor');
+        const bgHueSlider = document.getElementById('bgHueSlider');
+        const bgHueCursor = document.getElementById('bgHueCursor');
+        const bgColorHexInput = document.getElementById('bgColorHexInput');
+
+        function updateBgColor(hex) {
+            bgColor.value = hex;
+            bgColorHexInput.value = hex;
+            bgPreview.style.background = hex;
+            bgImageData = null;
+            cachedBgImage = null;
+            document.getElementById('bgImagePreview').style.display = 'none';
+            document.getElementById('bgUploadPlaceholder').style.display = 'flex';
+            drawBackground();
+        }
+
+        function updateBgColorSquare() {
+            bgColorSquare.style.background = `linear-gradient(to top, #000, transparent), linear-gradient(to right, #fff, hsl(${bgHue}, 100%, 50%))`;
+        }
+
+        function updateBgCursors() {
+            const rect = bgColorSquare.getBoundingClientRect();
+            bgColorCursor.style.left = (bgSaturation / 100 * rect.width) + 'px';
+            bgColorCursor.style.top = ((100 - bgValue) / 100 * rect.height) + 'px';
+
+            const hueRect = bgHueSlider.getBoundingClientRect();
+            bgHueCursor.style.left = (bgHue / 360 * hueRect.width) + 'px';
+        }
+
+        // Initialize background color picker
+        updateBgColorSquare();
+
+        // Background color square interaction
+        bgColorSquare.addEventListener('mousedown', (e) => {
+            function updateFromMouse(e) {
+                const rect = bgColorSquare.getBoundingClientRect();
+                let x = Math.max(0, Math.min(e.clientX - rect.left, rect.width));
+                let y = Math.max(0, Math.min(e.clientY - rect.top, rect.height));
+                bgSaturation = (x / rect.width) * 100;
+                bgValue = 100 - (y / rect.height) * 100;
+                bgColorCursor.style.left = x + 'px';
+                bgColorCursor.style.top = y + 'px';
+                const rgb = hsvToRgb(bgHue, bgSaturation, bgValue);
+                const hex = rgbToHex(rgb.r, rgb.g, rgb.b);
+                updateBgColor(hex);
+            }
+            updateFromMouse(e);
+            function onMouseMove(e) { updateFromMouse(e); }
+            function onMouseUp() {
+                document.removeEventListener('mousemove', onMouseMove);
+                document.removeEventListener('mouseup', onMouseUp);
+            }
+            document.addEventListener('mousemove', onMouseMove);
+            document.addEventListener('mouseup', onMouseUp);
+        });
+
+        // Background hue slider interaction
+        bgHueSlider.addEventListener('mousedown', (e) => {
+            function updateFromMouse(e) {
+                const rect = bgHueSlider.getBoundingClientRect();
+                let x = Math.max(0, Math.min(e.clientX - rect.left, rect.width));
+                bgHue = (x / rect.width) * 360;
+                bgHueCursor.style.left = x + 'px';
+                updateBgColorSquare();
+                const rgb = hsvToRgb(bgHue, bgSaturation, bgValue);
+                const hex = rgbToHex(rgb.r, rgb.g, rgb.b);
+                updateBgColor(hex);
+            }
+            updateFromMouse(e);
+            function onMouseMove(e) { updateFromMouse(e); }
+            function onMouseUp() {
+                document.removeEventListener('mousemove', onMouseMove);
+                document.removeEventListener('mouseup', onMouseUp);
+            }
+            document.addEventListener('mousemove', onMouseMove);
+            document.addEventListener('mouseup', onMouseUp);
+        });
+
+        // Background hex input interaction
+        bgColorHexInput.addEventListener('input', (e) => {
+            let hex = e.target.value;
+            if (!hex.startsWith('#')) hex = '#' + hex;
+            if (/^#[0-9A-Fa-f]{6}$/.test(hex)) {
+                const hsv = hexToHSV(hex);
+                bgHue = hsv.h;
+                bgSaturation = hsv.s;
+                bgValue = hsv.v;
+                bgColor.value = hex;
+                bgPreview.style.background = hex;
+                bgImageData = null;
+                cachedBgImage = null;
+                document.getElementById('bgImagePreview').style.display = 'none';
+                document.getElementById('bgUploadPlaceholder').style.display = 'flex';
+                updateBgColorSquare();
+                updateBgCursors();
+                drawBackground();
+            }
+        });
+
+        // Initialize with green background
+        drawBackground();
+    </script>
+</body>
+</html>
