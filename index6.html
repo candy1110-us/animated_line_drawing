@@ -1,0 +1,2690 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shape Morph Animator</title>
+    <style>
+        @font-face {
+            font-family: 'Be Vietnam Pro';
+            src: url('fonts/BeVietnamPro-Regular.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        @font-face {
+            font-family: 'Hmt Regular';
+            src: url('fonts/HmtRegular-WRrv.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background-color: #ecebe4;
+            background-image: url('data:image/svg+xml;utf8,<svg width="28" height="28" xmlns="http://www.w3.org/2000/svg"><circle cx="14" cy="14" r="1" fill="%23d2d1c7"/></svg>');
+            background-size: 28px 28px;
+            min-height: 100vh;
+            padding: 40px 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before,
+        body::after {
+            content: '';
+            position: fixed;
+            border-radius: 50%;
+            opacity: 0.15;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        body::before {
+            background: #a855f7;
+            width: 50vh;
+            height: 50vh;
+            top: 20%;
+            left: -10vh;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        body::after {
+            background: #ec4899;
+            width: 150px;
+            height: 150px;
+            bottom: 15%;
+            right: 8%;
+            animation: float 8s ease-in-out infinite reverse;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(5deg); }
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header {
+            background: transparent;
+            padding: 20px 30px;
+            margin-bottom: 30px;
+            text-align: center;
+            position: relative;
+        }
+
+        .logo-link {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            overflow: hidden;
+            background: white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 100;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .logo-link:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.25);
+        }
+
+        .header-logo {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .header h1 {
+            font-family: 'Hmt Regular', 'Inter', sans-serif;
+            font-size: 3.5rem;
+            color: #2d3436;
+            margin-bottom: 12px;
+            text-shadow: 3px 3px 0px rgba(168, 85, 247, 0.3);
+        }
+
+        .header p {
+            color: #636e72;
+            font-size: 1.1rem;
+        }
+
+        .main-layout {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        @media (min-width: 1024px) {
+            .main-layout {
+                flex-direction: row;
+                align-items: stretch;
+            }
+
+            .sidebar {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                min-width: 0;
+            }
+
+            .preview-section {
+                flex: 2;
+                display: flex;
+                flex-direction: column;
+                min-width: 0;
+            }
+        }
+
+        .sidebar, .preview-section {
+            background: white;
+            border-radius: 20px;
+            padding: 24px;
+            box-shadow:
+                3px 3px 0px rgba(0, 0, 0, 0.05),
+                6px 6px 0px rgba(168, 85, 247, 0.08);
+            border: 1px solid rgba(45, 52, 54, 0.15);
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .numbered-badge {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: white;
+            font-size: 24px;
+            box-shadow: 3px 3px 0px rgba(168, 85, 247, 0.3);
+            flex-shrink: 0;
+        }
+
+        .gradient-text {
+            margin: 0;
+            padding: 0;
+            font-family: 'Hmt Regular', 'Inter', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #2d3436;
+            line-height: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+        }
+
+        .upload-row {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .upload-section {
+            flex: 1;
+            border: 2px dashed rgba(168, 85, 247, 0.4);
+            border-radius: 20px;
+            padding: 20px 15px;
+            text-align: center;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 3px 3px 0px rgba(168, 85, 247, 0.1);
+        }
+
+        .upload-section:hover {
+            border-color: #a855f7;
+            background: #faf5ff;
+            transform: translateY(-3px) rotate(1deg);
+            box-shadow: 5px 5px 0px rgba(168, 85, 247, 0.2);
+        }
+
+        .upload-section.has-image {
+            border-style: solid;
+            border-color: #a855f7;
+        }
+
+        .upload-section.image-a {
+            border-color: rgba(168, 85, 247, 0.4);
+        }
+
+        .upload-section.image-a.has-image {
+            border-color: #a855f7;
+        }
+
+        .upload-section.image-b {
+            border-color: rgba(236, 72, 153, 0.4);
+        }
+
+        .upload-section.image-b:hover {
+            border-color: #ec4899;
+            background: #fdf2f8;
+        }
+
+        .upload-section.image-b.has-image {
+            border-color: #ec4899;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .upload-label {
+            font-size: 14px;
+            color: #a855f7;
+            font-weight: 600;
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .upload-section.image-b .upload-label {
+            color: #ec4899;
+        }
+
+        .helper-text {
+            font-size: 11px;
+            color: #6b7280;
+            margin-top: 4px;
+            line-height: 1.4;
+        }
+
+        .upload-preview {
+            display: none;
+        }
+
+        .upload-preview.visible {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            width: 100%;
+        }
+
+        .upload-preview .label-text {
+            max-width: 150px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .upload-preview img {
+            max-width: 120px;
+            max-height: 120px;
+            object-fit: contain;
+            border-radius: 8px;
+            background: repeating-conic-gradient(#e5e7eb 0% 25%, transparent 0% 50%) 50% / 16px 16px;
+        }
+
+        .upload-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .setting-group {
+            margin-bottom: 18px;
+        }
+
+        .setting-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 8px;
+        }
+
+        .setting-group input[type="range"] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #f3e8ff;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .setting-group input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .value-display {
+            display: inline-block;
+            background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
+            color: white;
+            border: none;
+            padding: 14px 24px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 3px 3px 0px rgba(168, 85, 247, 0.3);
+            width: 100%;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 5px 5px 0px rgba(168, 85, 247, 0.4);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #dd6143;
+            border: 2px solid #dd6143;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 2px 2px 0px rgba(221, 97, 67, 0.2);
+        }
+
+        .btn-secondary:hover {
+            background: #fff5f2;
+            transform: translateY(-2px);
+            box-shadow: 3px 3px 0px rgba(221, 97, 67, 0.3);
+        }
+
+        .preview-content-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 300px;
+        }
+
+        .preview-content {
+            position: relative;
+            background: #f9fafb;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 640px;
+            aspect-ratio: 16 / 9;
+            display: flex;
+            overflow: hidden;
+            background: repeating-conic-gradient(#e5e7eb 0% 25%, #f9fafb 0% 50%) 50% / 20px 20px;
+        }
+
+        .preview-content.ratio-16-9 {
+            aspect-ratio: 16 / 9;
+            max-width: 640px;
+        }
+
+        .preview-content.ratio-9-16 {
+            aspect-ratio: 9 / 16;
+            max-width: 280px;
+        }
+
+        .preview-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .placeholder {
+            text-align: center;
+            color: #9ca3af;
+            margin: auto;
+        }
+
+        .placeholder svg {
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 16px;
+            opacity: 0.3;
+        }
+
+        .controls-row {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: #f9fafb;
+            border-radius: 8px;
+        }
+
+        .label-text {
+            font-size: 12px;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .slider-compact {
+            width: 100px;
+            height: 4px;
+            border-radius: 2px;
+            background: #f3e8ff;
+            outline: none;
+            -webkit-appearance: none;
+            cursor: pointer;
+        }
+
+        .slider-compact::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
+            cursor: pointer;
+        }
+
+        .color-preview-box {
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+            border: 2px solid #e5e7eb;
+            cursor: pointer;
+        }
+
+        .popup-menu {
+            display: none;
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 8px;
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            width: 280px;
+            z-index: 1000;
+        }
+
+        .popup-menu.visible {
+            display: block;
+        }
+
+        .color-square {
+            position: relative;
+            width: 100%;
+            height: 150px;
+            background: linear-gradient(to right, white, red);
+            border-radius: 8px;
+            margin-bottom: 12px;
+            cursor: crosshair;
+            border: 2px solid #e5e7eb;
+        }
+
+        .color-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(to bottom, transparent, black);
+            border-radius: 6px;
+        }
+
+        .color-cursor {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            border: 2px solid white;
+            border-radius: 50%;
+            pointer-events: none;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 3px rgba(0,0,0,0.5);
+        }
+
+        .hue-slider {
+            height: 20px;
+            border-radius: 6px;
+            background: linear-gradient(to right, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000);
+            position: relative;
+            cursor: pointer;
+            border: 2px solid #e5e7eb;
+            margin-bottom: 12px;
+        }
+
+        .hue-cursor {
+            position: absolute;
+            width: 4px;
+            height: 24px;
+            background: white;
+            border: 2px solid #666;
+            border-radius: 2px;
+            top: -2px;
+            transform: translateX(-50%);
+            pointer-events: none;
+        }
+
+        .hex-input {
+            flex: 1;
+            padding: 6px 10px;
+            border: 2px solid #e5e7eb;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 13px;
+        }
+
+        .color-input {
+            width: 40px;
+            height: 32px;
+            border: 2px solid #e5e7eb;
+            border-radius: 6px;
+            cursor: pointer;
+            padding: 0;
+        }
+
+        .mb-12 {
+            margin-bottom: 12px;
+        }
+
+        .settings-controls-row {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .slider-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 10px;
+            background: #f9fafb;
+            border-radius: 8px;
+            height: 36px;
+        }
+
+        .flex-center-gap-8 {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .pos-relative {
+            position: relative;
+        }
+
+        .action-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 24px;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .checkbox-input {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: #a855f7;
+        }
+
+        .export-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 16px;
+            justify-content: center;
+        }
+
+        .export-buttons .btn-primary {
+            width: auto;
+        }
+
+        .bg-upload-area {
+            border: 2px dashed #e5e7eb;
+            border-radius: 8px;
+            padding: 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .bg-upload-area:hover {
+            border-color: #a855f7;
+            background: #faf5ff;
+        }
+
+        .text-tiny-gray {
+            font-size: 11px;
+            color: #9ca3af;
+        }
+
+        .text-tiny-blue {
+            font-size: 11px;
+            color: #a855f7;
+            cursor: pointer;
+        }
+
+        .text-small-blue {
+            font-size: 12px;
+            color: #a855f7;
+        }
+
+        .img-thumb {
+            max-width: 60px;
+            max-height: 40px;
+            object-fit: contain;
+            border-radius: 4px;
+            margin-bottom: 4px;
+        }
+
+        .flex-col-center {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .aspect-ratio-group {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .aspect-ratio-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            padding: 4px 6px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            opacity: 0.4;
+            transition: opacity 0.2s;
+        }
+
+        .aspect-ratio-btn:hover {
+            opacity: 0.7;
+        }
+
+        .aspect-ratio-btn.selected {
+            opacity: 1;
+        }
+
+        .aspect-ratio-btn span {
+            font-size: 9px;
+            font-weight: 500;
+        }
+
+        .morph-direction {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .morph-arrow {
+            font-size: 20px;
+            color: #a855f7;
+        }
+
+        .shape-label {
+            font-size: 11px;
+            font-weight: 600;
+            padding: 4px 8px;
+            border-radius: 6px;
+        }
+
+        .shape-label.shape-a {
+            background: #f3e8ff;
+            color: #a855f7;
+        }
+
+        .shape-label.shape-b {
+            background: #fdf2f8;
+            color: #ec4899;
+        }
+
+        .easing-select {
+            padding: 6px 10px;
+            border: 2px solid #e5e7eb;
+            border-radius: 6px;
+            font-size: 12px;
+            background: white;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <a href="index.html" class="logo-link">
+                <img src="images/mefn.gif" alt="Logo" class="header-logo">
+            </a>
+            <div class="header-content">
+                <h1>Shape Morph Animator</h1>
+            </div>
+        </div>
+
+        <div class="main-layout">
+            <!-- LEFT - Controls -->
+            <div class="sidebar">
+                <div class="section-header">
+                    <div class="numbered-badge">1</div>
+                    <h3 class="gradient-text">Upload Images</h3>
+                </div>
+
+                <div class="upload-row">
+                    <!-- Image A Upload -->
+                    <div class="upload-section image-a" id="uploadSectionA">
+                        <input type="file" id="imageUploadA" accept="image/*">
+                        <div id="uploadPlaceholderA">
+                            <label for="imageUploadA" class="upload-label">
+                                Shape A
+                            </label>
+                            <div class="helper-text">
+                                Click to upload
+                            </div>
+                        </div>
+                        <div id="uploadPreviewA" class="upload-preview">
+                            <img id="previewImgA" />
+                            <div class="label-text" id="imageNameA"></div>
+                            <div class="upload-actions">
+                                <label for="imageUploadA" class="helper-text" style="color: #a855f7; cursor: pointer;">Change</label>
+                                <span class="helper-text" style="color: #9ca3af;">|</span>
+                                <span id="removeImageA" class="helper-text" style="color: #dd6143; cursor: pointer;">Remove</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Image B Upload -->
+                    <div class="upload-section image-b" id="uploadSectionB">
+                        <input type="file" id="imageUploadB" accept="image/*">
+                        <div id="uploadPlaceholderB">
+                            <label for="imageUploadB" class="upload-label">
+                                Shape B
+                            </label>
+                            <div class="helper-text">
+                                Click to upload
+                            </div>
+                        </div>
+                        <div id="uploadPreviewB" class="upload-preview">
+                            <img id="previewImgB" />
+                            <div class="label-text" id="imageNameB"></div>
+                            <div class="upload-actions">
+                                <label for="imageUploadB" class="helper-text" style="color: #ec4899; cursor: pointer;">Change</label>
+                                <span class="helper-text" style="color: #9ca3af;">|</span>
+                                <span id="removeImageB" class="helper-text" style="color: #dd6143; cursor: pointer;">Remove</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="setting-group" style="display: none;" id="thresholdGroupA">
+                    <label>
+                        Shape A - Edge Detection <span class="value-display" id="thresholdDisplayA">128</span>
+                    </label>
+                    <input type="range" id="thresholdA" min="30" max="220" value="128">
+                </div>
+
+                <div class="setting-group" style="display: none;" id="thresholdGroupB">
+                    <label>
+                        Shape B - Edge Detection <span class="value-display" id="thresholdDisplayB">128</span>
+                    </label>
+                    <input type="range" id="thresholdB" min="30" max="220" value="128">
+                </div>
+            </div>
+
+            <!-- RIGHT - Preview -->
+            <div class="preview-section">
+                <div class="section-header">
+                    <div class="numbered-badge">2</div>
+                    <h3 class="gradient-text">Morph</h3>
+                </div>
+
+                <!-- Row 1: Controls -->
+                <div class="controls-row">
+                    <div class="control-group">
+                        <span class="label-text">Direction:</span>
+                        <div class="morph-direction">
+                            <span class="shape-label shape-a">A</span>
+                            <span class="morph-arrow">&#8594;</span>
+                            <span class="shape-label shape-b">B</span>
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <input type="checkbox" id="loopAnimation" class="checkbox-input" checked>
+                        <span class="label-text">Loop (A&#8594;B&#8594;A)</span>
+                    </div>
+                    <div class="pos-relative">
+                        <div class="control-group" id="bgIndicator" style="cursor: pointer;">
+                            <span class="label-text">Background:</span>
+                            <div id="bgPreview" class="color-preview-box" style="background: #1a1a2e;"></div>
+                        </div>
+                        <div id="bgPopup" class="popup-menu">
+                            <div class="color-square" id="bgColorSquare">
+                                <div class="color-overlay"></div>
+                                <div id="bgColorCursor" class="color-cursor"></div>
+                            </div>
+                            <div class="hue-slider" id="bgHueSlider">
+                                <div id="bgHueCursor" class="hue-cursor"></div>
+                            </div>
+                            <div class="flex-center-gap-8 mb-12">
+                                <span class="label-text">Hex:</span>
+                                <input type="text" id="bgColorHexInput" value="#1a1a2e" class="hex-input">
+                                <input type="color" id="bgColor" value="#1a1a2e" class="color-input">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="pos-relative">
+                        <div class="control-group" id="strokeIndicator" style="cursor: pointer;">
+                            <span class="label-text">Stroke:</span>
+                            <div id="strokePreview" class="color-preview-box" style="background: #ffffff;"></div>
+                        </div>
+                        <div id="strokePopup" class="popup-menu">
+                            <div class="color-square" id="strokeColorSquare">
+                                <div class="color-overlay"></div>
+                                <div id="strokeColorCursor" class="color-cursor"></div>
+                            </div>
+                            <div class="hue-slider" id="strokeHueSlider">
+                                <div id="strokeHueCursor" class="hue-cursor"></div>
+                            </div>
+                            <div class="flex-center-gap-8 mb-12">
+                                <span class="label-text">Hex:</span>
+                                <input type="text" id="strokeColorHexInput" value="#ffffff" class="hex-input">
+                                <input type="color" id="outlineColor" value="#ffffff" class="color-input">
+                            </div>
+                            <div style="border-top: 1px solid #e5e7eb; padding-top: 12px;">
+                                <div class="label-text" style="margin-bottom: 8px;">Thickness <span class="value-display" id="thicknessDisplay">3px</span></div>
+                                <input type="range" id="outlineThickness" min="1" max="10" value="3" style="width: 100%;">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <span class="label-text">Ratio:</span>
+                        <div class="aspect-ratio-group">
+                            <button class="aspect-ratio-btn selected" id="ratio16x9" title="16:9 Landscape">
+                                <svg width="20" height="12" viewBox="0 0 20 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <rect x="0.5" y="0.5" width="19" height="11" rx="1" stroke="currentColor" fill="none"/>
+                                </svg>
+                                <span>16:9</span>
+                            </button>
+                            <button class="aspect-ratio-btn" id="ratio9x16" title="9:16 Portrait">
+                                <svg width="12" height="20" viewBox="0 0 12 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <rect x="0.5" y="0.5" width="11" height="19" rx="1" stroke="currentColor" fill="none"/>
+                                </svg>
+                                <span>9:16</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Hidden inputs for gap and wiggle with fixed values -->
+                <input type="hidden" id="outlineGap" value="2">
+                <input type="hidden" id="wiggleAmount" value="0">
+
+                <!-- Row 2: Sliders -->
+                <div class="settings-controls-row">
+                    <div class="slider-item">
+                        <span class="label-text">Duration:</span>
+                        <input type="range" id="duration" min="0.5" max="5" step="0.1" value="2" class="slider-compact">
+                        <span class="value-display" id="durationDisplay">2.0s</span>
+                    </div>
+                    <div class="slider-item">
+                        <span class="label-text">Easing:</span>
+                        <select id="easingSelect" class="easing-select">
+                            <option value="easeInOut">Ease In-Out</option>
+                            <option value="linear">Linear</option>
+                            <option value="easeIn">Ease In</option>
+                            <option value="easeOut">Ease Out</option>
+                            <option value="elastic">Elastic</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="preview-content-wrapper">
+                    <div class="preview-content ratio-16-9" id="previewContent">
+                        <canvas id="bgCanvas" class="preview-canvas"></canvas>
+                        <canvas id="morphCanvas" class="preview-canvas"></canvas>
+                        <div class="placeholder" id="previewPlaceholder">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="17 8 12 3 7 8"></polyline>
+                                <line x1="12" y1="3" x2="12" y2="15"></line>
+                            </svg>
+                            <p>Upload two images to morph between shapes</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="export-buttons">
+                    <button class="btn-primary" id="animateBtn" disabled>Start Morph</button>
+                    <button class="btn-primary" id="exportGifBtn" disabled style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); box-shadow: 3px 3px 0px rgba(245, 158, 11, 0.3);">Export GIF</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/gifshot@0.4.5/dist/gifshot.min.js"></script>
+    <script>
+        // State
+        let imageA = null;
+        let imageB = null;
+        let processedImageA = null;
+        let processedImageB = null;
+        let strokePointsA = []; // All stroke points from image A
+        let strokePointsB = []; // All stroke points from image B
+        let normalizedPointsA = [];
+        let normalizedPointsB = [];
+        let isAnimating = false;
+        let animationId = null;
+        let isNonTransparentA = false;
+        let isNonTransparentB = false;
+
+        // DOM Elements
+        const imageUploadA = document.getElementById('imageUploadA');
+        const imageUploadB = document.getElementById('imageUploadB');
+        const uploadSectionA = document.getElementById('uploadSectionA');
+        const uploadSectionB = document.getElementById('uploadSectionB');
+        const uploadPlaceholderA = document.getElementById('uploadPlaceholderA');
+        const uploadPlaceholderB = document.getElementById('uploadPlaceholderB');
+        const uploadPreviewA = document.getElementById('uploadPreviewA');
+        const uploadPreviewB = document.getElementById('uploadPreviewB');
+        const previewImgA = document.getElementById('previewImgA');
+        const previewImgB = document.getElementById('previewImgB');
+        const imageNameA = document.getElementById('imageNameA');
+        const imageNameB = document.getElementById('imageNameB');
+        const removeImageA = document.getElementById('removeImageA');
+        const removeImageB = document.getElementById('removeImageB');
+        const previewPlaceholder = document.getElementById('previewPlaceholder');
+        const previewContent = document.getElementById('previewContent');
+        const bgCanvas = document.getElementById('bgCanvas');
+        const morphCanvas = document.getElementById('morphCanvas');
+        const animateBtn = document.getElementById('animateBtn');
+        const exportGifBtn = document.getElementById('exportGifBtn');
+        const bgColor = document.getElementById('bgColor');
+        const bgPreview = document.getElementById('bgPreview');
+        const bgPopup = document.getElementById('bgPopup');
+        const bgIndicator = document.getElementById('bgIndicator');
+
+        // Sliders
+        const outlineGap = document.getElementById('outlineGap');
+        const wiggleAmount = document.getElementById('wiggleAmount');
+        const outlineThickness = document.getElementById('outlineThickness');
+        const duration = document.getElementById('duration');
+        const outlineColor = document.getElementById('outlineColor');
+        const thresholdA = document.getElementById('thresholdA');
+        const thresholdB = document.getElementById('thresholdB');
+        const thresholdGroupA = document.getElementById('thresholdGroupA');
+        const thresholdGroupB = document.getElementById('thresholdGroupB');
+        const easingSelect = document.getElementById('easingSelect');
+        const loopAnimation = document.getElementById('loopAnimation');
+
+        // Displays
+        const thicknessDisplay = document.getElementById('thicknessDisplay');
+        const durationDisplay = document.getElementById('durationDisplay');
+        const strokePreview = document.getElementById('strokePreview');
+        const strokePopup = document.getElementById('strokePopup');
+        const strokeIndicator = document.getElementById('strokeIndicator');
+        const thresholdDisplayA = document.getElementById('thresholdDisplayA');
+        const thresholdDisplayB = document.getElementById('thresholdDisplayB');
+
+        // Color picker state
+        let strokeHue = 0;
+        let strokeSaturation = 0;
+        let strokeValue = 100;
+
+        let bgHue = 240;
+        let bgSaturation = 40;
+        let bgValue = 18;
+
+        // Easing functions
+        const easingFunctions = {
+            linear: t => t,
+            easeIn: t => t * t,
+            easeOut: t => t * (2 - t),
+            easeInOut: t => t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t,
+            elastic: t => {
+                const c4 = (2 * Math.PI) / 3;
+                return t === 0 ? 0 : t === 1 ? 1 : Math.pow(2, -10 * t) * Math.sin((t * 10 - 0.75) * c4) + 1;
+            }
+        };
+
+        // Update displays
+        outlineThickness.addEventListener('input', () => {
+            thicknessDisplay.textContent = outlineThickness.value + 'px';
+            drawCurrentState();
+        });
+
+        duration.addEventListener('input', () => {
+            durationDisplay.textContent = parseFloat(duration.value).toFixed(1) + 's';
+        });
+
+        thresholdA.addEventListener('input', async () => {
+            thresholdDisplayA.textContent = thresholdA.value;
+            if (imageA && isNonTransparentA) {
+                await processNonTransparentImage(imageA, 'A');
+                regenerateStrokes();
+            }
+        });
+
+        thresholdB.addEventListener('input', async () => {
+            thresholdDisplayB.textContent = thresholdB.value;
+            if (imageB && isNonTransparentB) {
+                await processNonTransparentImage(imageB, 'B');
+                regenerateStrokes();
+            }
+        });
+
+        outlineColor.addEventListener('input', () => {
+            const hex = outlineColor.value;
+            strokePreview.style.background = hex;
+            document.getElementById('strokeColorHexInput').value = hex;
+            const hsv = hexToHSV(hex);
+            strokeHue = hsv.h;
+            strokeSaturation = hsv.s;
+            strokeValue = hsv.v;
+            updateStrokeColorSquare();
+            updateStrokeCursors();
+            drawCurrentState();
+        });
+
+        // Stroke popup toggle
+        strokeIndicator.addEventListener('click', (e) => {
+            e.stopPropagation();
+            strokePopup.classList.toggle('visible');
+            bgPopup.classList.remove('visible');
+        });
+
+        // Background popup toggle
+        bgIndicator.addEventListener('click', (e) => {
+            e.stopPropagation();
+            bgPopup.classList.toggle('visible');
+            strokePopup.classList.remove('visible');
+        });
+
+        document.addEventListener('click', () => {
+            strokePopup.classList.remove('visible');
+            bgPopup.classList.remove('visible');
+        });
+
+        bgPopup.addEventListener('click', (e) => e.stopPropagation());
+        strokePopup.addEventListener('click', (e) => e.stopPropagation());
+
+        // Background color change
+        bgColor.addEventListener('input', () => {
+            bgPreview.style.background = bgColor.value;
+            drawBackground();
+            drawCurrentState();
+        });
+
+        // Aspect ratio buttons
+        const ratio16x9Btn = document.getElementById('ratio16x9');
+        const ratio9x16Btn = document.getElementById('ratio9x16');
+
+        function selectAspectRatio(ratio) {
+            const isVertical = ratio === '9:16';
+            ratio16x9Btn.classList.toggle('selected', !isVertical);
+            ratio9x16Btn.classList.toggle('selected', isVertical);
+            previewContent.className = 'preview-content';
+            previewContent.classList.add(isVertical ? 'ratio-9-16' : 'ratio-16-9');
+            drawBackground();
+            regenerateStrokes();
+        }
+
+        ratio16x9Btn.addEventListener('click', () => selectAspectRatio('16:9'));
+        ratio9x16Btn.addEventListener('click', () => selectAspectRatio('9:16'));
+
+        // Upload handling for Image A
+        uploadSectionA.addEventListener('click', (e) => {
+            if (e.target.id === 'removeImageA') return;
+            imageUploadA.click();
+        });
+
+        imageUploadA.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) handleImageUpload(file, 'A');
+        });
+
+        // Upload handling for Image B
+        uploadSectionB.addEventListener('click', (e) => {
+            if (e.target.id === 'removeImageB') return;
+            imageUploadB.click();
+        });
+
+        imageUploadB.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) handleImageUpload(file, 'B');
+        });
+
+        async function handleImageUpload(file, which) {
+            const reader = new FileReader();
+            reader.onload = async (event) => {
+                const img = new Image();
+                img.onload = async () => {
+                    if (which === 'A') {
+                        imageA = img;
+                        previewImgA.src = event.target.result;
+                        imageNameA.textContent = file.name;
+                        uploadPlaceholderA.classList.add('hidden');
+                        uploadPreviewA.classList.add('visible');
+                        uploadSectionA.classList.add('has-image');
+
+                        isNonTransparentA = !checkImageHasTransparency(img);
+                        thresholdGroupA.style.display = isNonTransparentA ? 'block' : 'none';
+
+                        if (isNonTransparentA) {
+                            await processNonTransparentImage(img, 'A');
+                        } else {
+                            processedImageA = null;
+                        }
+                    } else {
+                        imageB = img;
+                        previewImgB.src = event.target.result;
+                        imageNameB.textContent = file.name;
+                        uploadPlaceholderB.classList.add('hidden');
+                        uploadPreviewB.classList.add('visible');
+                        uploadSectionB.classList.add('has-image');
+
+                        isNonTransparentB = !checkImageHasTransparency(img);
+                        thresholdGroupB.style.display = isNonTransparentB ? 'block' : 'none';
+
+                        if (isNonTransparentB) {
+                            await processNonTransparentImage(img, 'B');
+                        } else {
+                            processedImageB = null;
+                        }
+                    }
+
+                    checkReadyState();
+                    regenerateStrokes();
+                };
+                img.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function checkReadyState() {
+            const bothImagesLoaded = imageA && imageB;
+            previewPlaceholder.classList.toggle('hidden', bothImagesLoaded);
+            animateBtn.disabled = !bothImagesLoaded;
+            exportGifBtn.disabled = !bothImagesLoaded;
+        }
+
+        // Remove image handlers
+        removeImageA.addEventListener('click', (e) => {
+            e.stopPropagation();
+            clearImage('A');
+        });
+
+        removeImageB.addEventListener('click', (e) => {
+            e.stopPropagation();
+            clearImage('B');
+        });
+
+        function clearImage(which) {
+            if (isAnimating) stopAnimation();
+
+            if (which === 'A') {
+                imageA = null;
+                processedImageA = null;
+                strokePointsA = [];
+                normalizedPointsA = [];
+                isNonTransparentA = false;
+                uploadPlaceholderA.classList.remove('hidden');
+                uploadPreviewA.classList.remove('visible');
+                uploadSectionA.classList.remove('has-image');
+                thresholdGroupA.style.display = 'none';
+                imageUploadA.value = '';
+            } else {
+                imageB = null;
+                processedImageB = null;
+                strokePointsB = [];
+                normalizedPointsB = [];
+                isNonTransparentB = false;
+                uploadPlaceholderB.classList.remove('hidden');
+                uploadPreviewB.classList.remove('visible');
+                uploadSectionB.classList.remove('has-image');
+                thresholdGroupB.style.display = 'none';
+                imageUploadB.value = '';
+            }
+
+            checkReadyState();
+            drawBackground();
+
+            const ctx = morphCanvas.getContext('2d');
+            ctx.clearRect(0, 0, morphCanvas.width, morphCanvas.height);
+        }
+
+        // Check if an image has transparency
+        function checkImageHasTransparency(img) {
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = img.width;
+            tempCanvas.height = img.height;
+            const tempCtx = tempCanvas.getContext('2d');
+            tempCtx.drawImage(img, 0, 0);
+            const data = tempCtx.getImageData(0, 0, img.width, img.height).data;
+
+            for (let i = 3; i < data.length; i += 4) {
+                if (data[i] < 250) return true;
+            }
+            return false;
+        }
+
+        // Process non-transparent image
+        function processNonTransparentImage(img, which) {
+            return new Promise((resolve) => {
+                const thresholdValue = parseInt(which === 'A' ? thresholdA.value : thresholdB.value);
+                const tempCanvas = document.createElement('canvas');
+                tempCanvas.width = img.width;
+                tempCanvas.height = img.height;
+                const tempCtx = tempCanvas.getContext('2d');
+                tempCtx.drawImage(img, 0, 0);
+                const imageData = tempCtx.getImageData(0, 0, img.width, img.height);
+                const data = imageData.data;
+
+                // Sample background color from corners
+                const cornerSamples = [
+                    0,
+                    (img.width - 1) * 4,
+                    (img.height - 1) * img.width * 4,
+                    ((img.height - 1) * img.width + (img.width - 1)) * 4
+                ];
+
+                let bgR = 0, bgG = 0, bgB = 0;
+                for (const idx of cornerSamples) {
+                    bgR += data[idx];
+                    bgG += data[idx + 1];
+                    bgB += data[idx + 2];
+                }
+                bgR = Math.round(bgR / 4);
+                bgG = Math.round(bgG / 4);
+                bgB = Math.round(bgB / 4);
+
+                for (let i = 0; i < data.length; i += 4) {
+                    const r = data[i];
+                    const g = data[i + 1];
+                    const b = data[i + 2];
+                    const colorDist = Math.sqrt(
+                        Math.pow(r - bgR, 2) +
+                        Math.pow(g - bgG, 2) +
+                        Math.pow(b - bgB, 2)
+                    );
+
+                    if (colorDist < thresholdValue) {
+                        data[i + 3] = 0;
+                    } else {
+                        data[i + 3] = 255;
+                    }
+                }
+
+                tempCtx.putImageData(imageData, 0, 0);
+
+                const newImg = new Image();
+                newImg.onload = () => {
+                    if (which === 'A') {
+                        processedImageA = newImg;
+                    } else {
+                        processedImageB = newImg;
+                    }
+                    resolve(newImg);
+                };
+                newImg.src = tempCanvas.toDataURL('image/png');
+            });
+        }
+
+        // Draw background
+        function drawBackground() {
+            const container = previewContent;
+            const containerWidth = container.clientWidth;
+            const containerHeight = container.clientHeight;
+
+            bgCanvas.width = containerWidth;
+            bgCanvas.height = containerHeight;
+            morphCanvas.width = containerWidth;
+            morphCanvas.height = containerHeight;
+
+            const ctx = bgCanvas.getContext('2d');
+            ctx.fillStyle = bgColor.value;
+            ctx.fillRect(0, 0, containerWidth, containerHeight);
+        }
+
+        // Regenerate stroke paths from both images
+        function regenerateStrokes() {
+            if (!imageA || !imageB) return;
+
+            // Ensure canvas has proper dimensions
+            if (morphCanvas.width === 0 || morphCanvas.height === 0) {
+                drawBackground();
+            }
+
+            const containerWidth = morphCanvas.width || previewContent.clientWidth;
+            const containerHeight = morphCanvas.height || previewContent.clientHeight;
+
+            if (containerWidth === 0 || containerHeight === 0) return;
+
+            // Extract strokes as separate paths from each image
+            const gap = Math.max(2, parseInt(outlineGap.value));
+            strokePointsA = extractStrokes(imageA, processedImageA, isNonTransparentA, containerWidth, containerHeight, gap);
+            strokePointsB = extractStrokes(imageB, processedImageB, isNonTransparentB, containerWidth, containerHeight, gap);
+
+            // Normalize for morphing
+            normalizeStrokesForMorphing();
+
+            drawCurrentState();
+        }
+
+        // Extract strokes using tracePaths approach from index1.html
+        function extractStrokes(img, processedImg, isNonTransparent, containerWidth, containerHeight, gap) {
+            if (containerWidth === 0 || containerHeight === 0) return [];
+
+            // Process at higher resolution for better path detection (like index1.html)
+            const maxProcessSize = 500;
+            const sourceImg = (isNonTransparent && processedImg) ? processedImg : img;
+            const processScale = Math.min(1, maxProcessSize / Math.max(sourceImg.width, sourceImg.height));
+            const processWidth = Math.round(sourceImg.width * processScale);
+            const processHeight = Math.round(sourceImg.height * processScale);
+
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = processWidth;
+            tempCanvas.height = processHeight;
+            const tempCtx = tempCanvas.getContext('2d');
+
+            // Fill with white background first (so transparent pixels become white, not black)
+            tempCtx.fillStyle = 'white';
+            tempCtx.fillRect(0, 0, processWidth, processHeight);
+
+            // Draw the image on top
+            tempCtx.drawImage(sourceImg, 0, 0, processWidth, processHeight);
+
+            const imageData = tempCtx.getImageData(0, 0, processWidth, processHeight);
+            const paths = tracePaths(imageData, 128); // Use same threshold as index1.html
+
+            // Scale paths to fit in container (centered at 70% size)
+            const displayScale = Math.min(
+                (containerWidth * 0.7) / processWidth,
+                (containerHeight * 0.7) / processHeight
+            );
+            const offsetX = (containerWidth - processWidth * displayScale) / 2;
+            const offsetY = (containerHeight - processHeight * displayScale) / 2;
+
+            // Convert paths to strokes with sampling and scale to display coordinates
+            // Filter out short paths (artifacts from thinning algorithm)
+            const strokes = [];
+            for (const pathObj of paths) {
+                if (pathObj.points.length >= 10) {
+                    // Scale points to display coordinates
+                    const scaledPoints = pathObj.points.map(p => ({
+                        x: p.x * displayScale + offsetX,
+                        y: p.y * displayScale + offsetY
+                    }));
+                    const sampled = sampleContour(scaledPoints, gap);
+                    if (sampled.length >= 3) {
+                        strokes.push(sampled);
+                    }
+                }
+            }
+
+            return strokes;
+        }
+
+        // Trace paths using thinning approach (exact copy from index1.html)
+        function tracePaths(imgData, threshold) {
+            const width = imgData.width;
+            const height = imgData.height;
+            const data = imgData.data;
+
+            // Create binary image
+            const binary = new Uint8Array(width * height);
+            for (let i = 0; i < data.length; i += 4) {
+                const avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
+                binary[i / 4] = avg < threshold ? 1 : 0;
+            }
+
+            // Measure stroke widths before thinning
+            const widthMap = measureStrokeWidths(binary, width, height);
+
+            // Apply fast thinning to get centerlines
+            const thinned = fastThinning(binary, width, height);
+
+            // Find centerline pixels and build spatial grid
+            const centerlines = [];
+            const cellSize = 10;
+            const grid = new Map();
+
+            for (let y = 1; y < height - 1; y++) {
+                for (let x = 1; x < width - 1; x++) {
+                    const idx = y * width + x;
+                    if (thinned[idx] === 1) {
+                        const strokeWidth = widthMap[idx];
+                        const point = { x, y, width: strokeWidth };
+                        centerlines.push(point);
+
+                        // Add to spatial grid
+                        const gridX = Math.floor(x / cellSize);
+                        const gridY = Math.floor(y / cellSize);
+                        const gridKey = `${gridX},${gridY}`;
+                        if (!grid.has(gridKey)) {
+                            grid.set(gridKey, []);
+                        }
+                        grid.get(gridKey).push(point);
+                    }
+                }
+            }
+
+            // Trace paths along centerlines
+            const paths = [];
+            const visited = new Set();
+            const maxDistance = 8;
+
+            for (const point of centerlines) {
+                const key = `${point.x},${point.y}`;
+                if (visited.has(key)) continue;
+
+                const path = [point];
+                visited.add(key);
+                let totalWidth = point.width;
+
+                let changed = true;
+                let iterations = 0;
+                while (changed && path.length < 2000 && iterations < 1000) {
+                    iterations++;
+                    changed = false;
+                    const last = path[path.length - 1];
+
+                    let closestDist = Infinity;
+                    let closest = null;
+
+                    const gridX = Math.floor(last.x / cellSize);
+                    const gridY = Math.floor(last.y / cellSize);
+
+                    for (let dy = -2; dy <= 2; dy++) {
+                        for (let dx = -2; dx <= 2; dx++) {
+                            const gridKey = `${gridX + dx},${gridY + dy}`;
+                            const cellPoints = grid.get(gridKey);
+                            if (!cellPoints) continue;
+
+                            for (const candidate of cellPoints) {
+                                const candKey = `${candidate.x},${candidate.y}`;
+                                if (visited.has(candKey)) continue;
+
+                                const dist = Math.sqrt(
+                                    Math.pow(candidate.x - last.x, 2) +
+                                    Math.pow(candidate.y - last.y, 2)
+                                );
+
+                                if (dist < maxDistance && dist < closestDist) {
+                                    closestDist = dist;
+                                    closest = { point: candidate, key: candKey };
+                                }
+                            }
+                        }
+                    }
+
+                    if (closest) {
+                        path.push(closest.point);
+                        totalWidth += closest.point.width;
+                        visited.add(closest.key);
+                        changed = true;
+                    }
+                }
+
+                if (path.length > 1) {
+                    // Average width along the path
+                    const avgWidth = totalWidth / path.length;
+                    const strokeWidth = Math.max(0.5, Math.min(20, avgWidth));
+
+                    const smoothedPath = smoothPath(path.map(p => ({ x: p.x, y: p.y })));
+                    paths.push({ points: smoothedPath, strokeWidth });
+                }
+            }
+
+            return orderPathsNaturally(paths);
+        }
+
+        function orderPathsNaturally(paths) {
+            if (paths.length === 0) return paths;
+
+            // Calculate position for each path (top-leftmost point)
+            const pathsWithPos = paths.map(pathObj => {
+                const path = pathObj.points;
+                let minY = Infinity;
+                let minX = Infinity;
+                let maxY = -Infinity;
+                let maxX = -Infinity;
+
+                path.forEach(point => {
+                    if (point.y < minY || (point.y === minY && point.x < minX)) {
+                        minY = point.y;
+                        minX = point.x;
+                    }
+                    maxY = Math.max(maxY, point.y);
+                    maxX = Math.max(maxX, point.x);
+                });
+
+                const centerY = (minY + maxY) / 2;
+                const centerX = (minX + maxX) / 2;
+
+                return { pathObj, path, y: minY, x: minX, centerY, centerX };
+            });
+
+            // Start with the topmost-leftmost path
+            pathsWithPos.sort((a, b) => {
+                if (Math.abs(a.y - b.y) < 15) {
+                    return a.x - b.x;
+                }
+                return a.y - b.y;
+            });
+
+            const ordered = [];
+            const remaining = [...pathsWithPos];
+
+            let current = remaining.shift();
+            ordered.push(current.pathObj);
+
+            while (remaining.length > 0) {
+                const lastPath = ordered[ordered.length - 1].points;
+                const lastPoint = lastPath[lastPath.length - 1];
+
+                let bestPath = null;
+                let bestScore = Infinity;
+
+                remaining.forEach((pathData, idx) => {
+                    const path = pathData.path;
+
+                    // Calculate distances to both ends of the path
+                    const startDist = Math.sqrt(
+                        Math.pow(path[0].x - lastPoint.x, 2) +
+                        Math.pow(path[0].y - lastPoint.y, 2)
+                    );
+                    const endDist = Math.sqrt(
+                        Math.pow(path[path.length - 1].x - lastPoint.x, 2) +
+                        Math.pow(path[path.length - 1].y - lastPoint.y, 2)
+                    );
+
+                    const minDist = Math.min(startDist, endDist);
+                    const shouldReverse = endDist < startDist;
+
+                    // Directional differences
+                    const deltaY = pathData.y - current.y;
+                    const deltaX = pathData.x - current.x;
+
+                    // Base score: prioritize left-to-right, top-to-bottom
+                    // Create a reading-order score (row by row)
+                    let score;
+
+                    // Very close paths - finish the object first (INCREASED RANGE)
+                    if (minDist < 80) {
+                        score = minDist * 0.1;  // Highest priority - finish nearby strokes
+                    }
+                    // Close paths in same object (INCREASED RANGE)
+                    else if (minDist < 200) {
+                        score = minDist * 0.3;  // High priority - complete object
+                    }
+                    // Medium distance - still prioritize nearby (NEW TIER)
+                    else if (minDist < 350) {
+                        score = minDist * 0.6;  // Medium priority - nearby objects
+                    }
+                    // Natural reading order: similar Y level, moving right
+                    else if (Math.abs(deltaY) < 40 && deltaX > 0) {
+                        score = 500 + Math.abs(deltaY) * 2 + deltaX * 0.5;  // Favor left-to-right on same row
+                    }
+                    // Moving down (next row), prefer leftmost
+                    else if (deltaY > 40) {
+                        score = 600 + deltaY * 0.8 + Math.abs(deltaX) * 0.3;  // Go to next row, start from left
+                    }
+                    // Going backwards (up or left significantly) - heavy penalty
+                    else if (deltaY < -30 || (Math.abs(deltaY) < 40 && deltaX < -100)) {
+                        score = 10000 + minDist;  // Avoid going backwards
+                    }
+                    // Default - use distance with position bias
+                    else {
+                        score = minDist * 0.8 + Math.abs(deltaY) * 0.5 + Math.max(0, -deltaX) * 2;
+                    }
+
+                    if (score < bestScore) {
+                        bestScore = score;
+                        bestPath = { data: pathData, idx, shouldReverse };
+                    }
+                });
+
+                ordered.push(bestPath.data.pathObj);
+                current = bestPath.data;
+                remaining.splice(bestPath.idx, 1);
+            }
+
+            return ordered;
+        }
+
+        function measureStrokeWidths(binary, width, height) {
+            const widthMap = new Float32Array(width * height);
+
+            for (let y = 1; y < height - 1; y++) {
+                for (let x = 1; x < width - 1; x++) {
+                    const idx = y * width + x;
+                    if (binary[idx] === 0) continue;
+
+                    // Measure horizontal width
+                    let leftDist = 0, rightDist = 0;
+                    for (let dx = 1; dx < 30 && x - dx >= 0; dx++) {
+                        if (binary[y * width + (x - dx)] === 1) leftDist = dx;
+                        else break;
+                    }
+                    for (let dx = 1; dx < 30 && x + dx < width; dx++) {
+                        if (binary[y * width + (x + dx)] === 1) rightDist = dx;
+                        else break;
+                    }
+
+                    // Measure vertical width
+                    let upDist = 0, downDist = 0;
+                    for (let dy = 1; dy < 30 && y - dy >= 0; dy++) {
+                        if (binary[(y - dy) * width + x] === 1) upDist = dy;
+                        else break;
+                    }
+                    for (let dy = 1; dy < 30 && y + dy < height; dy++) {
+                        if (binary[(y + dy) * width + x] === 1) downDist = dy;
+                        else break;
+                    }
+
+                    const hWidth = leftDist + rightDist + 1;
+                    const vWidth = upDist + downDist + 1;
+                    widthMap[idx] = Math.min(hWidth, vWidth);
+                }
+            }
+
+            return widthMap;
+        }
+
+        // Fast thinning algorithm to get centerlines (same as index1.html)
+        function fastThinning(binary, width, height) {
+            const thinned = new Uint8Array(binary);
+            let hasChanged = true;
+            let iterations = 0;
+            const maxIterations = 15;
+
+            while (hasChanged && iterations < maxIterations) {
+                hasChanged = false;
+                iterations++;
+                const toDelete = [];
+
+                // Sub-iteration 1
+                for (let y = 1; y < height - 1; y++) {
+                    for (let x = 1; x < width - 1; x++) {
+                        const idx = y * width + x;
+                        if (thinned[idx] === 0) continue;
+
+                        const p2 = thinned[idx - width];
+                        const p3 = thinned[idx - width + 1];
+                        const p4 = thinned[idx + 1];
+                        const p5 = thinned[idx + width + 1];
+                        const p6 = thinned[idx + width];
+                        const p7 = thinned[idx + width - 1];
+                        const p8 = thinned[idx - 1];
+                        const p9 = thinned[idx - width - 1];
+
+                        const neighbors = [p2, p3, p4, p5, p6, p7, p8, p9];
+                        const b = neighbors.reduce((sum, val) => sum + val, 0);
+
+                        if (b < 2 || b > 6) continue;
+
+                        let a = 0;
+                        for (let i = 0; i < 8; i++) {
+                            if (neighbors[i] === 0 && neighbors[(i + 1) % 8] === 1) a++;
+                        }
+
+                        if (a !== 1) continue;
+
+                        if (p2 * p4 * p6 === 0 && p4 * p6 * p8 === 0) {
+                            toDelete.push(idx);
+                            hasChanged = true;
+                        }
+                    }
+                }
+
+                toDelete.forEach(idx => thinned[idx] = 0);
+                toDelete.length = 0;
+
+                // Sub-iteration 2
+                for (let y = 1; y < height - 1; y++) {
+                    for (let x = 1; x < width - 1; x++) {
+                        const idx = y * width + x;
+                        if (thinned[idx] === 0) continue;
+
+                        const p2 = thinned[idx - width];
+                        const p3 = thinned[idx - width + 1];
+                        const p4 = thinned[idx + 1];
+                        const p5 = thinned[idx + width + 1];
+                        const p6 = thinned[idx + width];
+                        const p7 = thinned[idx + width - 1];
+                        const p8 = thinned[idx - 1];
+                        const p9 = thinned[idx - width - 1];
+
+                        const neighbors = [p2, p3, p4, p5, p6, p7, p8, p9];
+                        const b = neighbors.reduce((sum, val) => sum + val, 0);
+
+                        if (b < 2 || b > 6) continue;
+
+                        let a = 0;
+                        for (let i = 0; i < 8; i++) {
+                            if (neighbors[i] === 0 && neighbors[(i + 1) % 8] === 1) a++;
+                        }
+
+                        if (a !== 1) continue;
+
+                        if (p2 * p4 * p8 === 0 && p2 * p6 * p8 === 0) {
+                            toDelete.push(idx);
+                            hasChanged = true;
+                        }
+                    }
+                }
+
+                toDelete.forEach(idx => thinned[idx] = 0);
+            }
+
+            return thinned;
+        }
+
+        // Smooth path using weighted averaging
+        function smoothPath(path, iterations = 5) {
+            if (path.length < 3) return path;
+
+            let smoothed = [...path];
+
+            for (let iter = 0; iter < iterations; iter++) {
+                const temp = [smoothed[0]];
+
+                for (let i = 1; i < smoothed.length - 1; i++) {
+                    const prev3 = i >= 3 ? smoothed[i - 3] : smoothed[Math.max(0, i - 1)];
+                    const prev2 = i >= 2 ? smoothed[i - 2] : smoothed[i - 1];
+                    const prev = smoothed[i - 1];
+                    const curr = smoothed[i];
+                    const next = smoothed[i + 1];
+                    const next2 = i < smoothed.length - 2 ? smoothed[i + 2] : smoothed[i + 1];
+                    const next3 = i < smoothed.length - 3 ? smoothed[i + 3] : smoothed[Math.min(smoothed.length - 1, i + 1)];
+
+                    temp.push({
+                        x: (prev3.x + prev2.x * 2 + prev.x * 3 + curr.x * 6 + next.x * 3 + next2.x * 2 + next3.x) / 18,
+                        y: (prev3.y + prev2.y * 2 + prev.y * 3 + curr.y * 6 + next.y * 3 + next2.y * 2 + next3.y) / 18
+                    });
+                }
+
+                temp.push(smoothed[smoothed.length - 1]);
+                smoothed = temp;
+            }
+
+            return smoothed;
+        }
+
+        // Sample contour points with minimum gap
+        function sampleContour(contour, gap) {
+            if (contour.length < 2) return contour;
+
+            const sampled = [contour[0]];
+
+            for (let i = 1; i < contour.length; i++) {
+                const last = sampled[sampled.length - 1];
+                const dx = contour[i].x - last.x;
+                const dy = contour[i].y - last.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+
+                if (dist >= gap) {
+                    sampled.push(contour[i]);
+                }
+            }
+
+            return sampled;
+        }
+
+        // Normalize strokes for morphing - keep strokes intact, match by centroid
+        function normalizeStrokesForMorphing() {
+            if (strokePointsA.length === 0 || strokePointsB.length === 0) return;
+
+            const wiggle = parseInt(wiggleAmount.value);
+
+            // Match strokes by centroid proximity
+            const centroidsA = strokePointsA.map(s => getStrokeCentroid(s));
+            const centroidsB = strokePointsB.map(s => getStrokeCentroid(s));
+
+            const usedB = new Set();
+            const pairs = [];
+
+            // For each stroke in A, find closest stroke in B
+            for (let i = 0; i < strokePointsA.length; i++) {
+                let bestDist = Infinity;
+                let bestJ = -1;
+
+                for (let j = 0; j < strokePointsB.length; j++) {
+                    if (usedB.has(j)) continue;
+                    const dx = centroidsA[i].x - centroidsB[j].x;
+                    const dy = centroidsA[i].y - centroidsB[j].y;
+                    const dist = dx * dx + dy * dy;
+                    if (dist < bestDist) {
+                        bestDist = dist;
+                        bestJ = j;
+                    }
+                }
+
+                if (bestJ >= 0) {
+                    pairs.push({ strokeA: strokePointsA[i], strokeB: strokePointsB[bestJ] });
+                    usedB.add(bestJ);
+                } else {
+                    // No match - collapse to centroid
+                    const c = centroidsA[i];
+                    pairs.push({
+                        strokeA: strokePointsA[i],
+                        strokeB: strokePointsA[i].map(() => ({ x: c.x, y: c.y }))
+                    });
+                }
+            }
+
+            // Add any unmatched B strokes - grow from nearest point on nearest A stroke
+            for (let j = 0; j < strokePointsB.length; j++) {
+                if (!usedB.has(j)) {
+                    const cB = centroidsB[j];
+                    // Find nearest point on any A stroke
+                    let nearestPoint = cB;
+                    let nearestDist = Infinity;
+                    for (const strokeA of strokePointsA) {
+                        for (const pt of strokeA) {
+                            const dx = pt.x - cB.x;
+                            const dy = pt.y - cB.y;
+                            const dist = dx * dx + dy * dy;
+                            if (dist < nearestDist) {
+                                nearestDist = dist;
+                                nearestPoint = pt;
+                            }
+                        }
+                    }
+                    pairs.push({
+                        strokeA: strokePointsB[j].map(() => ({ x: nearestPoint.x, y: nearestPoint.y })),
+                        strokeB: strokePointsB[j]
+                    });
+                }
+            }
+
+            // Build normalized arrays
+            normalizedPointsA = [];
+            normalizedPointsB = [];
+
+            for (let i = 0; i < pairs.length; i++) {
+                let { strokeA, strokeB } = pairs[i];
+
+                // Align direction and rotation
+                strokeB = alignStrokeDirection(strokeB, strokeA);
+                strokeB = findBestStrokeAlignment(strokeA, strokeB);
+
+                // Resample to same count
+                const targetCount = Math.max(strokeA.length, strokeB.length, 30);
+                const resampledA = resampleStroke(strokeA, targetCount);
+                const resampledB = resampleStroke(strokeB, targetCount);
+
+                for (let j = 0; j < resampledA.length; j++) {
+                    normalizedPointsA.push({ ...resampledA[j], isBreak: false });
+                    normalizedPointsB.push({ ...resampledB[j], isBreak: false });
+                }
+
+                // Break between strokes
+                if (i < pairs.length - 1) {
+                    normalizedPointsA.push({ ...resampledA[resampledA.length - 1], isBreak: true });
+                    normalizedPointsB.push({ ...resampledB[resampledB.length - 1], isBreak: true });
+                }
+            }
+
+            // Add wiggle if enabled
+            if (wiggle > 0) {
+                normalizedPointsA = addWiggleToPoints(normalizedPointsA, wiggle);
+                normalizedPointsB = addWiggleToPoints(normalizedPointsB, wiggle);
+            }
+        }
+
+        // Find best rotation/shift of strokeB to minimize distance to strokeA
+        function findBestStrokeAlignment(strokeA, strokeB) {
+            if (strokeA.length < 10 || strokeB.length < 10) return strokeB;
+
+            // Resample to same length for comparison
+            const n = Math.min(strokeA.length, strokeB.length, 50);
+            const sampledA = resampleStroke(strokeA, n);
+            const sampledB = resampleStroke(strokeB, n);
+
+            let bestOffset = 0;
+            let bestDist = Infinity;
+
+            // Try different rotation offsets
+            const step = Math.max(1, Math.floor(n / 10));
+            for (let offset = 0; offset < n; offset += step) {
+                let totalDist = 0;
+                for (let i = 0; i < n; i++) {
+                    const j = (i + offset) % n;
+                    const dx = sampledA[i].x - sampledB[j].x;
+                    const dy = sampledA[i].y - sampledB[j].y;
+                    totalDist += dx * dx + dy * dy;
+                }
+                if (totalDist < bestDist) {
+                    bestDist = totalDist;
+                    bestOffset = offset;
+                }
+            }
+
+            // Apply the best offset to original strokeB
+            if (bestOffset === 0) return strokeB;
+
+            const result = [];
+            const origN = strokeB.length;
+            const offsetRatio = bestOffset / n;
+            const actualOffset = Math.round(offsetRatio * origN);
+
+            for (let i = 0; i < origN; i++) {
+                const j = (i + actualOffset) % origN;
+                result.push({ ...strokeB[j] });
+            }
+            return result;
+        }
+
+        // Match strokes between two images based on centroid proximity
+        function matchStrokes(strokesA, strokesB) {
+            const pairs = [];
+
+            // Calculate centroids for all strokes
+            const centroidsA = strokesA.map(s => getStrokeCentroid(s));
+            const centroidsB = strokesB.map(s => getStrokeCentroid(s));
+
+            // Track which strokes have been matched
+            const usedA = new Set();
+            const usedB = new Set();
+
+            // Match strokes greedily by closest centroids
+            const maxStrokes = Math.max(strokesA.length, strokesB.length);
+
+            for (let round = 0; round < maxStrokes; round++) {
+                let bestDist = Infinity;
+                let bestI = -1;
+                let bestJ = -1;
+
+                // Find closest unmatched pair
+                for (let i = 0; i < strokesA.length; i++) {
+                    if (usedA.has(i)) continue;
+                    for (let j = 0; j < strokesB.length; j++) {
+                        if (usedB.has(j)) continue;
+                        const dist = Math.sqrt(
+                            Math.pow(centroidsA[i].x - centroidsB[j].x, 2) +
+                            Math.pow(centroidsA[i].y - centroidsB[j].y, 2)
+                        );
+                        if (dist < bestDist) {
+                            bestDist = dist;
+                            bestI = i;
+                            bestJ = j;
+                        }
+                    }
+                }
+
+                if (bestI >= 0 && bestJ >= 0) {
+                    // Match found - align stroke directions
+                    const strokeA = strokesA[bestI];
+                    const strokeB = alignStrokeDirection(strokesB[bestJ], strokeA);
+                    pairs.push({ strokeA, strokeB });
+                    usedA.add(bestI);
+                    usedB.add(bestJ);
+                } else if (usedA.size < strokesA.length) {
+                    // Unmatched stroke in A - create a collapsed version from nearest B centroid
+                    for (let i = 0; i < strokesA.length; i++) {
+                        if (usedA.has(i)) continue;
+                        const strokeA = strokesA[i];
+                        const centroidA = centroidsA[i];
+                        // Create collapsed stroke at centroid
+                        const collapsed = strokeA.map(() => ({ x: centroidA.x, y: centroidA.y }));
+                        pairs.push({ strokeA, strokeB: collapsed });
+                        usedA.add(i);
+                        break;
+                    }
+                } else if (usedB.size < strokesB.length) {
+                    // Unmatched stroke in B - create a collapsed version from nearest A centroid
+                    for (let j = 0; j < strokesB.length; j++) {
+                        if (usedB.has(j)) continue;
+                        const strokeB = strokesB[j];
+                        const centroidB = centroidsB[j];
+                        // Create collapsed stroke at centroid
+                        const collapsed = strokeB.map(() => ({ x: centroidB.x, y: centroidB.y }));
+                        pairs.push({ strokeA: collapsed, strokeB });
+                        usedB.add(j);
+                        break;
+                    }
+                }
+            }
+
+            return pairs;
+        }
+
+        // Get centroid of a stroke
+        function getStrokeCentroid(stroke) {
+            if (stroke.length === 0) return { x: 0, y: 0 };
+            let sumX = 0, sumY = 0;
+            for (const p of stroke) {
+                sumX += p.x;
+                sumY += p.y;
+            }
+            return { x: sumX / stroke.length, y: sumY / stroke.length };
+        }
+
+        // Align stroke direction to minimize travel distance
+        function alignStrokeDirection(strokeB, strokeA) {
+            if (strokeA.length < 2 || strokeB.length < 2) return strokeB;
+
+            const startA = strokeA[0];
+            const endA = strokeA[strokeA.length - 1];
+            const startB = strokeB[0];
+            const endB = strokeB[strokeB.length - 1];
+
+            // Calculate distances for both orientations
+            const forwardDist = Math.sqrt(
+                Math.pow(startA.x - startB.x, 2) + Math.pow(startA.y - startB.y, 2)
+            ) + Math.sqrt(
+                Math.pow(endA.x - endB.x, 2) + Math.pow(endA.y - endB.y, 2)
+            );
+
+            const reverseDist = Math.sqrt(
+                Math.pow(startA.x - endB.x, 2) + Math.pow(startA.y - endB.y, 2)
+            ) + Math.sqrt(
+                Math.pow(endA.x - startB.x, 2) + Math.pow(endA.y - startB.y, 2)
+            );
+
+            // Reverse if it results in less travel
+            if (reverseDist < forwardDist) {
+                return [...strokeB].reverse();
+            }
+            return strokeB;
+        }
+
+        // Resample a single stroke to target point count
+        function resampleStroke(stroke, targetCount) {
+            if (stroke.length === 0) return [];
+            if (stroke.length === 1 || targetCount <= 1) {
+                return Array(targetCount).fill(null).map(() => ({ ...stroke[0] }));
+            }
+
+            // Calculate total length
+            let totalLength = 0;
+            for (let i = 1; i < stroke.length; i++) {
+                const dx = stroke[i].x - stroke[i - 1].x;
+                const dy = stroke[i].y - stroke[i - 1].y;
+                totalLength += Math.sqrt(dx * dx + dy * dy);
+            }
+
+            if (totalLength === 0) {
+                return Array(targetCount).fill(null).map(() => ({ ...stroke[0] }));
+            }
+
+            const result = [{ ...stroke[0] }];
+            const stepLength = totalLength / (targetCount - 1);
+            let accDist = 0;
+            let segIdx = 0;
+
+            for (let i = 1; i < targetCount - 1; i++) {
+                const targetDist = i * stepLength;
+
+                while (segIdx < stroke.length - 1) {
+                    const dx = stroke[segIdx + 1].x - stroke[segIdx].x;
+                    const dy = stroke[segIdx + 1].y - stroke[segIdx].y;
+                    const d = Math.sqrt(dx * dx + dy * dy);
+
+                    if (accDist + d >= targetDist) {
+                        const t = (targetDist - accDist) / d;
+                        result.push({
+                            x: stroke[segIdx].x + t * dx,
+                            y: stroke[segIdx].y + t * dy
+                        });
+                        break;
+                    }
+
+                    accDist += d;
+                    segIdx++;
+                }
+
+                if (result.length <= i) {
+                    result.push({ ...stroke[stroke.length - 1] });
+                }
+            }
+
+            result.push({ ...stroke[stroke.length - 1] });
+            return result;
+        }
+
+        // Add wiggle effect to points
+        function addWiggleToPoints(points, wiggleAmount) {
+            if (wiggleAmount === 0) return points;
+
+            return points.map((point, i) => {
+                if (point.isBreak) return point;
+
+                const noise1 = Math.sin(i * 0.3) * Math.cos(i * 0.7);
+                const noise2 = Math.cos(i * 0.4) * Math.sin(i * 0.5);
+
+                return {
+                    ...point,
+                    x: point.x + noise1 * wiggleAmount,
+                    y: point.y + noise2 * wiggleAmount
+                };
+            });
+        }
+
+        // Interpolate between two point sets
+        function interpolatePointClouds(t) {
+            if (normalizedPointsA.length === 0 || normalizedPointsB.length === 0) return [];
+
+            const result = [];
+            const count = Math.min(normalizedPointsA.length, normalizedPointsB.length);
+
+            for (let i = 0; i < count; i++) {
+                const a = normalizedPointsA[i];
+                const b = normalizedPointsB[i];
+                result.push({
+                    x: a.x + t * (b.x - a.x),
+                    y: a.y + t * (b.y - a.y),
+                    isBreak: a.isBreak || b.isBreak
+                });
+            }
+            return result;
+        }
+
+        // Draw the current state (shape A by default)
+        function drawCurrentState() {
+            if (normalizedPointsA.length === 0) return;
+
+            const ctx = morphCanvas.getContext('2d');
+            ctx.clearRect(0, 0, morphCanvas.width, morphCanvas.height);
+
+            drawPath(ctx, normalizedPointsA);
+        }
+
+        // Draw path with break handling
+        function drawPath(ctx, points) {
+            if (points.length < 2) return;
+
+            const thickness = parseInt(outlineThickness.value);
+            ctx.strokeStyle = outlineColor.value;
+            ctx.lineWidth = thickness;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+
+            // Calculate average point spacing to detect large gaps
+            let totalDist = 0;
+            let distCount = 0;
+            for (let i = 1; i < points.length; i++) {
+                if (!points[i].isBreak && !points[i-1].isBreak) {
+                    const dx = points[i].x - points[i-1].x;
+                    const dy = points[i].y - points[i-1].y;
+                    totalDist += Math.sqrt(dx*dx + dy*dy);
+                    distCount++;
+                }
+            }
+            const avgDist = distCount > 0 ? totalDist / distCount : 10;
+            const maxJump = Math.max(avgDist * 5, 30); // Large gaps are implicit breaks
+
+            ctx.beginPath();
+            let needsMoveTo = true;
+            let lastX = 0, lastY = 0;
+
+            for (let i = 0; i < points.length; i++) {
+                if (points[i].isBreak) {
+                    needsMoveTo = true;
+                    continue;
+                }
+
+                // Check for large gap (implicit break)
+                if (!needsMoveTo) {
+                    const dx = points[i].x - lastX;
+                    const dy = points[i].y - lastY;
+                    const dist = Math.sqrt(dx*dx + dy*dy);
+                    if (dist > maxJump) {
+                        needsMoveTo = true;
+                    }
+                }
+
+                if (needsMoveTo) {
+                    ctx.moveTo(points[i].x, points[i].y);
+                    needsMoveTo = false;
+                } else {
+                    ctx.lineTo(points[i].x, points[i].y);
+                }
+                lastX = points[i].x;
+                lastY = points[i].y;
+            }
+
+            ctx.stroke();
+        }
+
+        // Animation
+        animateBtn.addEventListener('click', () => {
+            if (normalizedPointsA.length < 1 || normalizedPointsB.length < 1) return;
+
+            if (isAnimating) {
+                stopAnimation();
+            } else {
+                animateMorph();
+            }
+        });
+
+        function stopAnimation() {
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+                animationId = null;
+            }
+            isAnimating = false;
+            animateBtn.textContent = 'Start Morph';
+            animateBtn.style.background = '';
+            drawCurrentState();
+        }
+
+        function animateMorph() {
+            isAnimating = true;
+            animateBtn.textContent = 'Stop Morph';
+            animateBtn.style.background = 'linear-gradient(135deg, #dd6143 0%, #c4533a 100%)';
+
+            const ctx = morphCanvas.getContext('2d');
+            const durationMs = parseFloat(duration.value) * 1000;
+            const loop = loopAnimation.checked;
+            const easingFn = easingFunctions[easingSelect.value] || easingFunctions.easeInOut;
+
+            let startTime = null;
+
+            function animate(timestamp) {
+                if (!isAnimating) return;
+
+                if (!startTime) startTime = timestamp;
+                const elapsed = timestamp - startTime;
+
+                let progress;
+                if (loop) {
+                    // A -> B -> A loop
+                    const cycleTime = durationMs * 2;
+                    const cycleProgress = (elapsed % cycleTime) / durationMs;
+                    if (cycleProgress <= 1) {
+                        progress = easingFn(cycleProgress);
+                    } else {
+                        progress = easingFn(2 - cycleProgress);
+                    }
+                } else {
+                    progress = Math.min(elapsed / durationMs, 1);
+                    progress = easingFn(progress);
+                }
+
+                ctx.clearRect(0, 0, morphCanvas.width, morphCanvas.height);
+                const interpolatedPoints = interpolatePointClouds(progress);
+                drawPath(ctx, interpolatedPoints);
+
+                if (!loop && elapsed >= durationMs) {
+                    stopAnimation();
+                    return;
+                }
+
+                animationId = requestAnimationFrame(animate);
+            }
+
+            animationId = requestAnimationFrame(animate);
+        }
+
+        // Export GIF
+        exportGifBtn.addEventListener('click', () => {
+            if (normalizedPointsA.length < 1 || normalizedPointsB.length < 1) return;
+            exportAsGif();
+        });
+
+        function exportAsGif() {
+            const frames = [];
+            const durationMs = parseFloat(duration.value) * 1000;
+            const fps = 20;
+            const loop = loopAnimation.checked;
+            const easingFn = easingFunctions[easingSelect.value] || easingFunctions.easeInOut;
+            const width = morphCanvas.width;
+            const height = morphCanvas.height;
+
+            const totalDuration = loop ? durationMs * 2 : durationMs;
+            const numFrames = Math.ceil((totalDuration / 1000) * fps);
+
+            const thickness = parseInt(outlineThickness.value);
+            const color = outlineColor.value;
+
+            for (let frame = 0; frame < numFrames; frame++) {
+                const tempCanvas = document.createElement('canvas');
+                tempCanvas.width = width;
+                tempCanvas.height = height;
+                const tempCtx = tempCanvas.getContext('2d');
+
+                // Draw background
+                tempCtx.fillStyle = bgColor.value;
+                tempCtx.fillRect(0, 0, width, height);
+
+                // Calculate progress
+                let progress;
+                if (loop) {
+                    const cycleProgress = (frame / numFrames) * 2;
+                    if (cycleProgress <= 1) {
+                        progress = easingFn(cycleProgress);
+                    } else {
+                        progress = easingFn(2 - cycleProgress);
+                    }
+                } else {
+                    progress = easingFn(frame / numFrames);
+                }
+
+                // Draw interpolated path
+                const interpolatedPoints = interpolatePointClouds(progress);
+                if (interpolatedPoints.length >= 2) {
+                    tempCtx.strokeStyle = color;
+                    tempCtx.lineWidth = thickness;
+                    tempCtx.lineCap = 'round';
+                    tempCtx.lineJoin = 'round';
+
+                    tempCtx.beginPath();
+                    let needsMoveTo = true;
+
+                    for (let i = 0; i < interpolatedPoints.length; i++) {
+                        if (interpolatedPoints[i].isBreak) {
+                            needsMoveTo = true;
+                            continue;
+                        }
+
+                        if (needsMoveTo) {
+                            tempCtx.moveTo(interpolatedPoints[i].x, interpolatedPoints[i].y);
+                            needsMoveTo = false;
+                        } else {
+                            tempCtx.lineTo(interpolatedPoints[i].x, interpolatedPoints[i].y);
+                        }
+                    }
+                    tempCtx.stroke();
+                }
+
+                frames.push(tempCanvas.toDataURL('image/png'));
+            }
+
+            gifshot.createGIF({
+                images: frames,
+                gifWidth: width,
+                gifHeight: height,
+                interval: 1 / fps,
+                numFrames: frames.length,
+                frameDuration: 1,
+                sampleInterval: 10
+            }, function(obj) {
+                if (!obj.error) {
+                    const link = document.createElement('a');
+                    link.href = obj.image;
+                    link.download = 'shape-morph.gif';
+                    link.click();
+                }
+            });
+        }
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            if (imageA && imageB) {
+                drawBackground();
+                regenerateStrokes();
+            }
+        });
+
+        // ========== COLOR PICKER FUNCTIONS ==========
+        function hsvToRgb(h, s, v) {
+            s /= 100;
+            v /= 100;
+            const c = v * s;
+            const x = c * (1 - Math.abs((h / 60) % 2 - 1));
+            const m = v - c;
+            let r, g, b;
+            if (h < 60) { r = c; g = x; b = 0; }
+            else if (h < 120) { r = x; g = c; b = 0; }
+            else if (h < 180) { r = 0; g = c; b = x; }
+            else if (h < 240) { r = 0; g = x; b = c; }
+            else if (h < 300) { r = x; g = 0; b = c; }
+            else { r = c; g = 0; b = x; }
+            return {
+                r: Math.round((r + m) * 255),
+                g: Math.round((g + m) * 255),
+                b: Math.round((b + m) * 255)
+            };
+        }
+
+        function rgbToHex(r, g, b) {
+            return '#' + [r, g, b].map(x => x.toString(16).padStart(2, '0')).join('');
+        }
+
+        function hexToRgb(hex) {
+            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? {
+                r: parseInt(result[1], 16),
+                g: parseInt(result[2], 16),
+                b: parseInt(result[3], 16)
+            } : null;
+        }
+
+        function rgbToHsv(r, g, b) {
+            r /= 255; g /= 255; b /= 255;
+            const max = Math.max(r, g, b), min = Math.min(r, g, b);
+            const d = max - min;
+            let h, s, v = max;
+            s = max === 0 ? 0 : d / max;
+            if (max === min) {
+                h = 0;
+            } else {
+                switch (max) {
+                    case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+                    case g: h = (b - r) / d + 2; break;
+                    case b: h = (r - g) / d + 4; break;
+                }
+                h /= 6;
+            }
+            return { h: h * 360, s: s * 100, v: v * 100 };
+        }
+
+        function hexToHSV(hex) {
+            const rgb = hexToRgb(hex);
+            return rgb ? rgbToHsv(rgb.r, rgb.g, rgb.b) : { h: 0, s: 0, v: 0 };
+        }
+
+        function updateStrokeColor(hex) {
+            outlineColor.value = hex;
+            document.getElementById('strokeColorHexInput').value = hex;
+            strokePreview.style.background = hex;
+            drawCurrentState();
+        }
+
+        function updateStrokeColorSquare() {
+            const strokeColorSquare = document.getElementById('strokeColorSquare');
+            strokeColorSquare.style.background = `linear-gradient(to top, #000, transparent), linear-gradient(to right, #fff, hsl(${strokeHue}, 100%, 50%))`;
+        }
+
+        function updateStrokeCursors() {
+            const strokeColorSquare = document.getElementById('strokeColorSquare');
+            const strokeColorCursor = document.getElementById('strokeColorCursor');
+            const strokeHueCursor = document.getElementById('strokeHueCursor');
+            const strokeHueSlider = document.getElementById('strokeHueSlider');
+
+            const rect = strokeColorSquare.getBoundingClientRect();
+            strokeColorCursor.style.left = (strokeSaturation / 100 * rect.width) + 'px';
+            strokeColorCursor.style.top = ((100 - strokeValue) / 100 * rect.height) + 'px';
+
+            const hueRect = strokeHueSlider.getBoundingClientRect();
+            strokeHueCursor.style.left = (strokeHue / 360 * hueRect.width) + 'px';
+        }
+
+        // Initialize stroke color picker
+        const strokeColorSquare = document.getElementById('strokeColorSquare');
+        const strokeColorCursor = document.getElementById('strokeColorCursor');
+        const strokeHueSlider = document.getElementById('strokeHueSlider');
+        const strokeHueCursor = document.getElementById('strokeHueCursor');
+        const strokeColorHexInput = document.getElementById('strokeColorHexInput');
+
+        const initialHsv = hexToHSV('#ffffff');
+        strokeHue = initialHsv.h;
+        strokeSaturation = initialHsv.s;
+        strokeValue = initialHsv.v;
+        updateStrokeColorSquare();
+
+        strokeColorSquare.addEventListener('mousedown', (e) => {
+            function updateFromMouse(e) {
+                const rect = strokeColorSquare.getBoundingClientRect();
+                let x = Math.max(0, Math.min(e.clientX - rect.left, rect.width));
+                let y = Math.max(0, Math.min(e.clientY - rect.top, rect.height));
+                strokeSaturation = (x / rect.width) * 100;
+                strokeValue = 100 - (y / rect.height) * 100;
+                strokeColorCursor.style.left = x + 'px';
+                strokeColorCursor.style.top = y + 'px';
+                const rgb = hsvToRgb(strokeHue, strokeSaturation, strokeValue);
+                const hex = rgbToHex(rgb.r, rgb.g, rgb.b);
+                updateStrokeColor(hex);
+            }
+            updateFromMouse(e);
+            function onMouseMove(e) { updateFromMouse(e); }
+            function onMouseUp() {
+                document.removeEventListener('mousemove', onMouseMove);
+                document.removeEventListener('mouseup', onMouseUp);
+            }
+            document.addEventListener('mousemove', onMouseMove);
+            document.addEventListener('mouseup', onMouseUp);
+        });
+
+        strokeHueSlider.addEventListener('mousedown', (e) => {
+            function updateFromMouse(e) {
+                const rect = strokeHueSlider.getBoundingClientRect();
+                let x = Math.max(0, Math.min(e.clientX - rect.left, rect.width));
+                strokeHue = (x / rect.width) * 360;
+                strokeHueCursor.style.left = x + 'px';
+                updateStrokeColorSquare();
+                const rgb = hsvToRgb(strokeHue, strokeSaturation, strokeValue);
+                const hex = rgbToHex(rgb.r, rgb.g, rgb.b);
+                updateStrokeColor(hex);
+            }
+            updateFromMouse(e);
+            function onMouseMove(e) { updateFromMouse(e); }
+            function onMouseUp() {
+                document.removeEventListener('mousemove', onMouseMove);
+                document.removeEventListener('mouseup', onMouseUp);
+            }
+            document.addEventListener('mousemove', onMouseMove);
+            document.addEventListener('mouseup', onMouseUp);
+        });
+
+        strokeColorHexInput.addEventListener('input', (e) => {
+            let hex = e.target.value;
+            if (!hex.startsWith('#')) hex = '#' + hex;
+            if (/^#[0-9A-Fa-f]{6}$/.test(hex)) {
+                const hsv = hexToHSV(hex);
+                strokeHue = hsv.h;
+                strokeSaturation = hsv.s;
+                strokeValue = hsv.v;
+                outlineColor.value = hex;
+                strokePreview.style.background = hex;
+                updateStrokeColorSquare();
+                updateStrokeCursors();
+                drawCurrentState();
+            }
+        });
+
+        // ========== BACKGROUND COLOR PICKER ==========
+        const bgColorSquare = document.getElementById('bgColorSquare');
+        const bgColorCursor = document.getElementById('bgColorCursor');
+        const bgHueSlider = document.getElementById('bgHueSlider');
+        const bgHueCursor = document.getElementById('bgHueCursor');
+        const bgColorHexInput = document.getElementById('bgColorHexInput');
+
+        function updateBgColor(hex) {
+            bgColor.value = hex;
+            bgColorHexInput.value = hex;
+            bgPreview.style.background = hex;
+            drawBackground();
+            drawCurrentState();
+        }
+
+        function updateBgColorSquare() {
+            bgColorSquare.style.background = `linear-gradient(to top, #000, transparent), linear-gradient(to right, #fff, hsl(${bgHue}, 100%, 50%))`;
+        }
+
+        function updateBgCursors() {
+            const rect = bgColorSquare.getBoundingClientRect();
+            bgColorCursor.style.left = (bgSaturation / 100 * rect.width) + 'px';
+            bgColorCursor.style.top = ((100 - bgValue) / 100 * rect.height) + 'px';
+
+            const hueRect = bgHueSlider.getBoundingClientRect();
+            bgHueCursor.style.left = (bgHue / 360 * hueRect.width) + 'px';
+        }
+
+        // Initialize background color picker
+        const initialBgHsv = hexToHSV('#1a1a2e');
+        bgHue = initialBgHsv.h;
+        bgSaturation = initialBgHsv.s;
+        bgValue = initialBgHsv.v;
+        updateBgColorSquare();
+
+        bgColorSquare.addEventListener('mousedown', (e) => {
+            function updateFromMouse(e) {
+                const rect = bgColorSquare.getBoundingClientRect();
+                let x = Math.max(0, Math.min(e.clientX - rect.left, rect.width));
+                let y = Math.max(0, Math.min(e.clientY - rect.top, rect.height));
+                bgSaturation = (x / rect.width) * 100;
+                bgValue = 100 - (y / rect.height) * 100;
+                bgColorCursor.style.left = x + 'px';
+                bgColorCursor.style.top = y + 'px';
+                const rgb = hsvToRgb(bgHue, bgSaturation, bgValue);
+                const hex = rgbToHex(rgb.r, rgb.g, rgb.b);
+                updateBgColor(hex);
+            }
+            updateFromMouse(e);
+            function onMouseMove(e) { updateFromMouse(e); }
+            function onMouseUp() {
+                document.removeEventListener('mousemove', onMouseMove);
+                document.removeEventListener('mouseup', onMouseUp);
+            }
+            document.addEventListener('mousemove', onMouseMove);
+            document.addEventListener('mouseup', onMouseUp);
+        });
+
+        bgHueSlider.addEventListener('mousedown', (e) => {
+            function updateFromMouse(e) {
+                const rect = bgHueSlider.getBoundingClientRect();
+                let x = Math.max(0, Math.min(e.clientX - rect.left, rect.width));
+                bgHue = (x / rect.width) * 360;
+                bgHueCursor.style.left = x + 'px';
+                updateBgColorSquare();
+                const rgb = hsvToRgb(bgHue, bgSaturation, bgValue);
+                const hex = rgbToHex(rgb.r, rgb.g, rgb.b);
+                updateBgColor(hex);
+            }
+            updateFromMouse(e);
+            function onMouseMove(e) { updateFromMouse(e); }
+            function onMouseUp() {
+                document.removeEventListener('mousemove', onMouseMove);
+                document.removeEventListener('mouseup', onMouseUp);
+            }
+            document.addEventListener('mousemove', onMouseMove);
+            document.addEventListener('mouseup', onMouseUp);
+        });
+
+        bgColorHexInput.addEventListener('input', (e) => {
+            let hex = e.target.value;
+            if (!hex.startsWith('#')) hex = '#' + hex;
+            if (/^#[0-9A-Fa-f]{6}$/.test(hex)) {
+                const hsv = hexToHSV(hex);
+                bgHue = hsv.h;
+                bgSaturation = hsv.s;
+                bgValue = hsv.v;
+                bgColor.value = hex;
+                bgPreview.style.background = hex;
+                updateBgColorSquare();
+                updateBgCursors();
+                drawBackground();
+                drawCurrentState();
+            }
+        });
+
+        // Initialize
+        drawBackground();
+    </script>
+</body>
+</html>
