@@ -867,7 +867,7 @@
                     <div class="pos-relative">
                         <div class="control-group" id="bgIndicator" style="cursor: pointer;">
                             <span class="label-text">Background:</span>
-                            <div id="bgPreview" class="color-preview-box" style="background: #1a1a2e;"></div>
+                            <div id="bgPreview" class="color-preview-box" style="background: #00ff00;"></div>
                         </div>
                         <div id="bgPopup" class="popup-menu">
                             <div class="color-square" id="bgColorSquare">
@@ -879,15 +879,32 @@
                             </div>
                             <div class="flex-center-gap-8 mb-12">
                                 <span class="label-text">Hex:</span>
-                                <input type="text" id="bgColorHexInput" value="#1a1a2e" class="hex-input">
-                                <input type="color" id="bgColor" value="#1a1a2e" class="color-input">
+                                <input type="text" id="bgColorHexInput" value="#00ff00" class="hex-input">
+                                <input type="color" id="bgColor" value="#00ff00" class="color-input">
+                            </div>
+                            <div style="border-top: 1px solid #e5e7eb; padding-top: 12px;">
+                                <div class="text-tiny-gray" style="margin-bottom: 6px;">Or use background image:</div>
+                                <div class="bg-upload-area" id="bgImageUploadArea">
+                                    <input type="file" id="bgImageUpload" accept="image/*" style="display: none;">
+                                    <div id="bgUploadPlaceholder" class="flex-col-center">
+                                        <span class="text-small-blue">Click to upload</span>
+                                    </div>
+                                    <div id="bgImagePreview" class="flex-col-center" style="display: none;">
+                                        <img id="bgPreviewImg" class="img-thumb" />
+                                        <span class="text-tiny-gray" id="bgImageName"></span>
+                                        <div class="flex-center-gap-8">
+                                            <span class="text-tiny-blue" id="changeBgImage">Change</span>
+                                            <span class="text-tiny-blue" id="removeBgImage" style="color: #dd6143;">Remove</span>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
                     <div class="pos-relative">
                         <div class="control-group" id="strokeIndicator" style="cursor: pointer;">
                             <span class="label-text">Stroke:</span>
-                            <div id="strokePreview" class="color-preview-box" style="background: #ffffff;"></div>
+                            <div id="strokePreview" class="color-preview-box" style="background: #000000;"></div>
                         </div>
                         <div id="strokePopup" class="popup-menu">
                             <div class="color-square" id="strokeColorSquare">
@@ -899,8 +916,8 @@
                             </div>
                             <div class="flex-center-gap-8 mb-12">
                                 <span class="label-text">Hex:</span>
-                                <input type="text" id="strokeColorHexInput" value="#ffffff" class="hex-input">
-                                <input type="color" id="outlineColor" value="#ffffff" class="color-input">
+                                <input type="text" id="strokeColorHexInput" value="#000000" class="hex-input">
+                                <input type="color" id="outlineColor" value="#000000" class="color-input">
                             </div>
                             <div style="border-top: 1px solid #e5e7eb; padding-top: 12px;">
                                 <div class="label-text" style="margin-bottom: 8px;">Thickness <span class="value-display" id="thicknessDisplay">3px</span></div>
@@ -942,10 +959,8 @@
                         <span class="label-text">Easing:</span>
                         <select id="easingSelect" class="easing-select">
                             <option value="easeInOut">Ease In-Out</option>
-                            <option value="linear">Linear</option>
-                            <option value="easeIn">Ease In</option>
-                            <option value="easeOut">Ease Out</option>
                             <option value="elastic">Elastic</option>
+                            <option value="linear">Linear</option>
                         </select>
                     </div>
                 </div>
@@ -988,6 +1003,8 @@
         let animationId = null;
         let isNonTransparentA = false;
         let isNonTransparentB = false;
+        let bgImageData = null;
+        let cachedBgImage = null;
 
         // DOM Elements
         const imageUploadA = document.getElementById('imageUploadA');
@@ -1040,11 +1057,11 @@
         // Color picker state
         let strokeHue = 0;
         let strokeSaturation = 0;
-        let strokeValue = 100;
+        let strokeValue = 0;
 
-        let bgHue = 240;
-        let bgSaturation = 40;
-        let bgValue = 18;
+        let bgHue = 120;
+        let bgSaturation = 100;
+        let bgValue = 100;
 
         // Easing functions
         const easingFunctions = {
@@ -1122,9 +1139,62 @@
         // Background color change
         bgColor.addEventListener('input', () => {
             bgPreview.style.background = bgColor.value;
+            bgImageData = null;
+            cachedBgImage = null;
+            const bgImagePreviewEl = document.getElementById('bgImagePreview');
+            const bgUploadPlaceholderEl = document.getElementById('bgUploadPlaceholder');
+            if (bgImagePreviewEl) bgImagePreviewEl.style.display = 'none';
+            if (bgUploadPlaceholderEl) bgUploadPlaceholderEl.style.display = 'flex';
             drawBackground();
             drawCurrentState();
         });
+
+        // Background image upload
+        const bgImageUploadArea = document.getElementById('bgImageUploadArea');
+        const bgImageUpload = document.getElementById('bgImageUpload');
+        const bgUploadPlaceholder = document.getElementById('bgUploadPlaceholder');
+        const bgImagePreviewEl = document.getElementById('bgImagePreview');
+        const bgPreviewImg = document.getElementById('bgPreviewImg');
+        const bgImageName = document.getElementById('bgImageName');
+
+        if (bgImageUploadArea && bgImageUpload) {
+            bgImageUploadArea.addEventListener('click', (e) => {
+                if (e.target.id === 'changeBgImage') {
+                    bgImageUpload.click();
+                } else if (e.target.id === 'removeBgImage') {
+                    bgImageData = null;
+                    cachedBgImage = null;
+                    bgImagePreviewEl.style.display = 'none';
+                    bgUploadPlaceholder.style.display = 'flex';
+                    drawBackground();
+                    drawCurrentState();
+                } else if (!e.target.closest('#bgImagePreview') || e.target.id === 'changeBgImage') {
+                    bgImageUpload.click();
+                }
+            });
+
+            bgImageUpload.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        bgImageData = event.target.result;
+                        bgPreviewImg.src = bgImageData;
+                        bgImageName.textContent = file.name;
+                        bgUploadPlaceholder.style.display = 'none';
+                        bgImagePreviewEl.style.display = 'flex';
+
+                        cachedBgImage = new Image();
+                        cachedBgImage.onload = () => {
+                            drawBackground();
+                            drawCurrentState();
+                        };
+                        cachedBgImage.src = bgImageData;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        }
 
         // Aspect ratio buttons
         const ratio16x9Btn = document.getElementById('ratio16x9');
@@ -1353,8 +1423,12 @@
             morphCanvas.height = containerHeight;
 
             const ctx = bgCanvas.getContext('2d');
-            ctx.fillStyle = bgColor.value;
-            ctx.fillRect(0, 0, containerWidth, containerHeight);
+            if (bgImageData && cachedBgImage) {
+                ctx.drawImage(cachedBgImage, 0, 0, containerWidth, containerHeight);
+            } else {
+                ctx.fillStyle = bgColor.value;
+                ctx.fillRect(0, 0, containerWidth, containerHeight);
+            }
         }
 
         // Regenerate stroke paths from both images
@@ -2381,8 +2455,12 @@
                 const tempCtx = tempCanvas.getContext('2d');
 
                 // Draw background
-                tempCtx.fillStyle = bgColor.value;
-                tempCtx.fillRect(0, 0, width, height);
+                if (bgImageData && cachedBgImage) {
+                    tempCtx.drawImage(cachedBgImage, 0, 0, width, height);
+                } else {
+                    tempCtx.fillStyle = bgColor.value;
+                    tempCtx.fillRect(0, 0, width, height);
+                }
 
                 // Calculate progress
                 let progress;
@@ -2621,6 +2699,13 @@
             bgColor.value = hex;
             bgColorHexInput.value = hex;
             bgPreview.style.background = hex;
+            // Clear background image when color is changed
+            bgImageData = null;
+            cachedBgImage = null;
+            const bgImgPreview = document.getElementById('bgImagePreview');
+            const bgUploadPh = document.getElementById('bgUploadPlaceholder');
+            if (bgImgPreview) bgImgPreview.style.display = 'none';
+            if (bgUploadPh) bgUploadPh.style.display = 'flex';
             drawBackground();
             drawCurrentState();
         }
@@ -2638,8 +2723,8 @@
             bgHueCursor.style.left = (bgHue / 360 * hueRect.width) + 'px';
         }
 
-        // Initialize background color picker
-        const initialBgHsv = hexToHSV('#1a1a2e');
+        // Initialize background color picker (greenscreen)
+        const initialBgHsv = hexToHSV('#00ff00');
         bgHue = initialBgHsv.h;
         bgSaturation = initialBgHsv.s;
         bgValue = initialBgHsv.v;
@@ -2701,6 +2786,13 @@
                 bgPreview.style.background = hex;
                 updateBgColorSquare();
                 updateBgCursors();
+                // Clear background image when color is changed
+                bgImageData = null;
+                cachedBgImage = null;
+                const bgImgPreview = document.getElementById('bgImagePreview');
+                const bgUploadPh = document.getElementById('bgUploadPlaceholder');
+                if (bgImgPreview) bgImgPreview.style.display = 'none';
+                if (bgUploadPh) bgUploadPh.style.display = 'flex';
                 drawBackground();
                 drawCurrentState();
             }

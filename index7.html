@@ -260,8 +260,8 @@
 
         .document-preview {
             display: block;
-            max-width: 100%;
-            height: auto;
+            image-rendering: -webkit-optimize-contrast;
+            image-rendering: crisp-edges;
         }
 
         .drawing-canvas {
@@ -269,6 +269,8 @@
             top: 0;
             left: 0;
             cursor: crosshair;
+            image-rendering: -webkit-optimize-contrast;
+            image-rendering: crisp-edges;
         }
 
         .upload-actions {
@@ -870,7 +872,7 @@
                     <div class="pos-relative">
                         <div class="control-group" id="bgIndicator" style="cursor: pointer;">
                             <span class="label-text">Background:</span>
-                            <div id="bgPreview" class="color-preview-box" style="background: #ffffff;"></div>
+                            <div id="bgPreview" class="color-preview-box" style="background: #00ff00;"></div>
                         </div>
                         <div id="bgPopup" class="popup-menu">
                             <div class="color-square" id="bgColorSquare">
@@ -882,8 +884,25 @@
                             </div>
                             <div class="flex-center-gap-8 mb-12">
                                 <span class="label-text">Hex:</span>
-                                <input type="text" id="bgColorHexInput" value="#ffffff" class="hex-input">
-                                <input type="color" id="bgColor" value="#ffffff" class="color-input">
+                                <input type="text" id="bgColorHexInput" value="#00ff00" class="hex-input">
+                                <input type="color" id="bgColor" value="#00ff00" class="color-input">
+                            </div>
+                            <div style="border-top: 1px solid #e5e7eb; padding-top: 12px;">
+                                <div class="label-text" style="margin-bottom: 6px; font-size: 11px; color: #6b7280;">Or use background image:</div>
+                                <div class="bg-upload-area" id="bgImageUploadArea" style="border: 2px dashed #e5e7eb; border-radius: 8px; padding: 12px; cursor: pointer; text-align: center;">
+                                    <input type="file" id="bgImageUpload" accept="image/*" style="display: none;">
+                                    <div id="bgUploadPlaceholder" style="display: flex; flex-direction: column; align-items: center;">
+                                        <span style="font-size: 12px; color: #f59e0b;">Click to upload</span>
+                                    </div>
+                                    <div id="bgImagePreview" style="display: none; flex-direction: column; align-items: center; gap: 4px;">
+                                        <img id="bgPreviewImg" style="max-width: 60px; max-height: 40px; border-radius: 4px;" />
+                                        <span style="font-size: 10px; color: #6b7280;" id="bgImageName"></span>
+                                        <div style="display: flex; gap: 8px;">
+                                            <span style="font-size: 10px; color: #f59e0b; cursor: pointer;" id="changeBgImage">Change</span>
+                                            <span style="font-size: 10px; color: #dd6143; cursor: pointer;" id="removeBgImage">Remove</span>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -972,6 +991,8 @@
         let currentRect = null;
         let isAnimating = false;
         let animationId = null;
+        let bgImageData = null;
+        let cachedBgImage = null;
 
         // DOM Elements
         const fileUpload = document.getElementById('fileUpload');
@@ -1057,6 +1078,12 @@
         bgColor.addEventListener('input', () => {
             bgPreview.style.background = bgColor.value;
             document.getElementById('bgColorHexInput').value = bgColor.value;
+            bgImageData = null;
+            cachedBgImage = null;
+            const bgImagePreviewEl = document.getElementById('bgImagePreview');
+            const bgUploadPlaceholderEl = document.getElementById('bgUploadPlaceholder');
+            if (bgImagePreviewEl) bgImagePreviewEl.style.display = 'none';
+            if (bgUploadPlaceholderEl) bgUploadPlaceholderEl.style.display = 'flex';
             drawBackground();
             drawCurrentState();
         });
@@ -1121,6 +1148,13 @@
             bgColor.value = hex;
             bgPreview.style.background = hex;
             bgColorHexInput.value = hex;
+            // Clear background image when color is changed
+            bgImageData = null;
+            cachedBgImage = null;
+            const bgImagePreviewEl = document.getElementById('bgImagePreview');
+            const bgUploadPlaceholder = document.getElementById('bgUploadPlaceholder');
+            if (bgImagePreviewEl) bgImagePreviewEl.style.display = 'none';
+            if (bgUploadPlaceholder) bgUploadPlaceholder.style.display = 'flex';
             drawBackground();
             drawCurrentState();
         }
@@ -1193,9 +1227,62 @@
             }
         });
 
-        // Initialize background color picker
+        // Initialize background color picker - set to greenscreen
+        bgHue = 120;
+        bgSaturation = 100;
+        bgValue = 100;
         updateBgColorSquare();
         updateBgCursors();
+
+        // Background image upload elements
+        const bgImageUploadArea = document.getElementById('bgImageUploadArea');
+        const bgImageUpload = document.getElementById('bgImageUpload');
+        const bgUploadPlaceholder = document.getElementById('bgUploadPlaceholder');
+        const bgImagePreviewEl = document.getElementById('bgImagePreview');
+        const bgPreviewImg = document.getElementById('bgPreviewImg');
+        const bgImageName = document.getElementById('bgImageName');
+        const changeBgImage = document.getElementById('changeBgImage');
+        const removeBgImage = document.getElementById('removeBgImage');
+
+        // Background image upload handlers
+        if (bgImageUploadArea && bgImageUpload) {
+            bgImageUploadArea.addEventListener('click', (e) => {
+                if (e.target.id === 'changeBgImage') {
+                    bgImageUpload.click();
+                } else if (e.target.id === 'removeBgImage') {
+                    bgImageData = null;
+                    cachedBgImage = null;
+                    bgImagePreviewEl.style.display = 'none';
+                    bgUploadPlaceholder.style.display = 'flex';
+                    drawBackground();
+                    drawCurrentState();
+                } else if (!e.target.closest('#bgImagePreview') || e.target.id === 'changeBgImage') {
+                    bgImageUpload.click();
+                }
+            });
+
+            bgImageUpload.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        bgImageData = event.target.result;
+                        bgPreviewImg.src = bgImageData;
+                        bgImageName.textContent = file.name;
+                        bgUploadPlaceholder.style.display = 'none';
+                        bgImagePreviewEl.style.display = 'flex';
+
+                        cachedBgImage = new Image();
+                        cachedBgImage.onload = () => {
+                            drawBackground();
+                            drawCurrentState();
+                        };
+                        cachedBgImage.src = bgImageData;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        }
 
         // Aspect ratio buttons
         const ratio16x9Btn = document.getElementById('ratio16x9');
@@ -1263,13 +1350,32 @@
 
         async function renderPdfPage(pageNum) {
             const page = await pdfDocument.getPage(pageNum);
-            const scale = 1.5;
-            const viewport = page.getViewport({ scale });
 
+            // Get the base viewport to determine natural page size
+            const baseViewport = page.getViewport({ scale: 1 });
+
+            // Calculate display size to fit within container (max ~450px wide for sidebar)
+            const maxDisplayWidth = 420;
+            const displayScale = Math.min(1, maxDisplayWidth / baseViewport.width);
+            const displayWidth = baseViewport.width * displayScale;
+            const displayHeight = baseViewport.height * displayScale;
+
+            // Use higher internal scale for sharp text (3x the display size)
+            const dpr = window.devicePixelRatio || 1;
+            const internalScale = displayScale * 3 * dpr;
+            const viewport = page.getViewport({ scale: internalScale });
+
+            // Set canvas internal resolution (high res for sharp text)
             documentCanvas.width = viewport.width;
             documentCanvas.height = viewport.height;
             drawingCanvas.width = viewport.width;
             drawingCanvas.height = viewport.height;
+
+            // Set display size (CSS pixels) - fits in sidebar
+            documentCanvas.style.width = displayWidth + 'px';
+            documentCanvas.style.height = displayHeight + 'px';
+            drawingCanvas.style.width = displayWidth + 'px';
+            drawingCanvas.style.height = displayHeight + 'px';
 
             const ctx = documentCanvas.getContext('2d');
             await page.render({
@@ -1313,12 +1419,31 @@
                     const img = new Image();
                     img.onload = () => {
                         documentImage = img;
-                        documentCanvas.width = img.width;
-                        documentCanvas.height = img.height;
-                        drawingCanvas.width = img.width;
-                        drawingCanvas.height = img.height;
+
+                        // Calculate display size to fit within container (max ~450px wide for sidebar)
+                        const maxDisplayWidth = 420;
+                        const displayScale = Math.min(1, maxDisplayWidth / img.width);
+                        const displayWidth = img.width * displayScale;
+                        const displayHeight = img.height * displayScale;
+
+                        // Use higher internal resolution for sharp display (3x display size)
+                        const dpr = window.devicePixelRatio || 1;
+                        const internalScale = displayScale * 3 * dpr;
+
+                        // Set canvas internal resolution
+                        documentCanvas.width = img.width * internalScale;
+                        documentCanvas.height = img.height * internalScale;
+                        drawingCanvas.width = img.width * internalScale;
+                        drawingCanvas.height = img.height * internalScale;
+
+                        // Set display size (CSS pixels) - fits in sidebar
+                        documentCanvas.style.width = displayWidth + 'px';
+                        documentCanvas.style.height = displayHeight + 'px';
+                        drawingCanvas.style.width = displayWidth + 'px';
+                        drawingCanvas.style.height = displayHeight + 'px';
 
                         const ctx = documentCanvas.getContext('2d');
+                        ctx.scale(internalScale, internalScale);
                         ctx.drawImage(img, 0, 0);
 
                         pageNavigation.classList.add('hidden');
@@ -1390,6 +1515,7 @@
 
             const color = highlightColor.value;
             const opacity = parseInt(highlightOpacity.value) / 100;
+            const dpr = window.devicePixelRatio || 1;
 
             // Draw existing regions for current page
             highlightRegions.forEach((region, index) => {
@@ -1397,10 +1523,10 @@
                     ctx.fillStyle = hexToRgba(color, opacity);
                     ctx.fillRect(region.x, region.y, region.width, region.height);
 
-                    // Draw region number
+                    // Draw region number (scale font for high DPI)
                     ctx.fillStyle = '#000';
-                    ctx.font = 'bold 14px sans-serif';
-                    ctx.fillText((index + 1).toString(), region.x + 5, region.y + 18);
+                    ctx.font = `bold ${14 * dpr}px sans-serif`;
+                    ctx.fillText((index + 1).toString(), region.x + 5 * dpr, region.y + 18 * dpr);
                 }
             });
 
@@ -1408,8 +1534,8 @@
             if (currentRect) {
                 ctx.fillStyle = hexToRgba(color, opacity * 0.5);
                 ctx.strokeStyle = color;
-                ctx.lineWidth = 2;
-                ctx.setLineDash([5, 5]);
+                ctx.lineWidth = 2 * dpr;
+                ctx.setLineDash([5 * dpr, 5 * dpr]);
                 ctx.fillRect(currentRect.x, currentRect.y, currentRect.width, currentRect.height);
                 ctx.strokeRect(currentRect.x, currentRect.y, currentRect.width, currentRect.height);
                 ctx.setLineDash([]);
@@ -1499,17 +1625,30 @@
         function setupCanvases() {
             const container = previewContent;
             const rect = container.getBoundingClientRect();
-            bgCanvas.width = rect.width;
-            bgCanvas.height = rect.height;
-            animCanvas.width = rect.width;
-            animCanvas.height = rect.height;
+            const dpr = window.devicePixelRatio || 1;
+
+            // Set high-res internal size
+            bgCanvas.width = rect.width * dpr;
+            bgCanvas.height = rect.height * dpr;
+            animCanvas.width = rect.width * dpr;
+            animCanvas.height = rect.height * dpr;
+
+            // Set display size
+            bgCanvas.style.width = rect.width + 'px';
+            bgCanvas.style.height = rect.height + 'px';
+            animCanvas.style.width = rect.width + 'px';
+            animCanvas.style.height = rect.height + 'px';
         }
 
         function drawBackground() {
             setupCanvases();
             const ctx = bgCanvas.getContext('2d');
-            ctx.fillStyle = bgColor.value;
-            ctx.fillRect(0, 0, bgCanvas.width, bgCanvas.height);
+            if (bgImageData && cachedBgImage) {
+                ctx.drawImage(cachedBgImage, 0, 0, bgCanvas.width, bgCanvas.height);
+            } else {
+                ctx.fillStyle = bgColor.value;
+                ctx.fillRect(0, 0, bgCanvas.width, bgCanvas.height);
+            }
         }
 
         function drawCurrentState() {
@@ -1519,19 +1658,34 @@
             const ctx = animCanvas.getContext('2d');
             ctx.clearRect(0, 0, animCanvas.width, animCanvas.height);
 
-            // Calculate scaling to fit the document in the canvas
-            const scale = Math.min(
-                animCanvas.width / documentCanvas.width,
-                animCanvas.height / documentCanvas.height
+            // Get the display size of the document canvas (CSS pixels)
+            const docDisplayWidth = parseFloat(documentCanvas.style.width) || documentCanvas.width;
+            const docDisplayHeight = parseFloat(documentCanvas.style.height) || documentCanvas.height;
+
+            // Get the display size of the animation canvas (CSS pixels)
+            const animDisplayWidth = parseFloat(animCanvas.style.width) || animCanvas.width;
+            const animDisplayHeight = parseFloat(animCanvas.style.height) || animCanvas.height;
+
+            // Calculate scale to fit document in animation canvas (in display pixels)
+            const displayScale = Math.min(
+                animDisplayWidth / docDisplayWidth,
+                animDisplayHeight / docDisplayHeight
             ) * 0.9;
 
-            const scaledWidth = documentCanvas.width * scale;
-            const scaledHeight = documentCanvas.height * scale;
+            // Calculate the actual canvas pixel scale (account for DPR)
+            const dpr = window.devicePixelRatio || 1;
+            const canvasScale = displayScale * dpr;
+
+            const scaledWidth = docDisplayWidth * displayScale * dpr;
+            const scaledHeight = docDisplayHeight * displayScale * dpr;
             const offsetX = (animCanvas.width - scaledWidth) / 2;
             const offsetY = (animCanvas.height - scaledHeight) / 2;
 
-            // Draw document
+            // Draw document at high quality
             ctx.drawImage(documentCanvas, offsetX, offsetY, scaledWidth, scaledHeight);
+
+            // Scale factor for highlight regions (they're stored in internal canvas coords)
+            const regionScale = scaledWidth / documentCanvas.width;
 
             // Draw all highlight regions (fully highlighted state)
             const color = highlightColor.value;
@@ -1541,10 +1695,10 @@
                 if (!pdfDocument || region.page === currentPdfPage) {
                     ctx.fillStyle = hexToRgba(color, opacity);
                     ctx.fillRect(
-                        offsetX + region.x * scale,
-                        offsetY + region.y * scale,
-                        region.width * scale,
-                        region.height * scale
+                        offsetX + region.x * regionScale,
+                        offsetY + region.y * regionScale,
+                        region.width * regionScale,
+                        region.height * regionScale
                     );
                 }
             });
@@ -1573,16 +1727,30 @@
             setupCanvases();
             const ctx = animCanvas.getContext('2d');
 
-            // Calculate scaling
-            const scale = Math.min(
-                animCanvas.width / documentCanvas.width,
-                animCanvas.height / documentCanvas.height
+            // Get the display size of the document canvas (CSS pixels)
+            const docDisplayWidth = parseFloat(documentCanvas.style.width) || documentCanvas.width;
+            const docDisplayHeight = parseFloat(documentCanvas.style.height) || documentCanvas.height;
+
+            // Get the display size of the animation canvas (CSS pixels)
+            const animDisplayWidth = parseFloat(animCanvas.style.width) || animCanvas.width;
+            const animDisplayHeight = parseFloat(animCanvas.style.height) || animCanvas.height;
+
+            // Calculate scale to fit document in animation canvas (in display pixels)
+            const displayScale = Math.min(
+                animDisplayWidth / docDisplayWidth,
+                animDisplayHeight / docDisplayHeight
             ) * 0.9;
 
-            const scaledWidth = documentCanvas.width * scale;
-            const scaledHeight = documentCanvas.height * scale;
+            // Calculate the actual canvas pixel scale (account for DPR)
+            const dpr = window.devicePixelRatio || 1;
+
+            const scaledWidth = docDisplayWidth * displayScale * dpr;
+            const scaledHeight = docDisplayHeight * displayScale * dpr;
             const offsetX = (animCanvas.width - scaledWidth) / 2;
             const offsetY = (animCanvas.height - scaledHeight) / 2;
+
+            // Scale factor for highlight regions (they're stored in internal canvas coords)
+            const regionScale = scaledWidth / documentCanvas.width;
 
             const color = highlightColor.value;
             const opacity = parseInt(highlightOpacity.value) / 100;
@@ -1622,14 +1790,14 @@
                         progress = easingFn(progress);
 
                         // Animate from left to right (like a highlighter)
-                        const highlightWidth = region.width * scale * progress;
+                        const highlightWidth = region.width * regionScale * progress;
 
                         ctx.fillStyle = hexToRgba(color, opacity);
                         ctx.fillRect(
-                            offsetX + region.x * scale,
-                            offsetY + region.y * scale,
+                            offsetX + region.x * regionScale,
+                            offsetY + region.y * regionScale,
                             highlightWidth,
-                            region.height * scale
+                            region.height * regionScale
                         );
                     }
                 });
@@ -1678,20 +1846,30 @@
 
             const frames = [];
             const tempCanvas = document.createElement('canvas');
-            tempCanvas.width = animCanvas.width;
-            tempCanvas.height = animCanvas.height;
+            // Use CSS pixel size for GIF (not high-DPI internal size)
+            const gifWidth = parseFloat(animCanvas.style.width) || 640;
+            const gifHeight = parseFloat(animCanvas.style.height) || 360;
+            tempCanvas.width = gifWidth;
+            tempCanvas.height = gifHeight;
             const tempCtx = tempCanvas.getContext('2d');
 
-            // Calculate scaling
-            const scale = Math.min(
-                tempCanvas.width / documentCanvas.width,
-                tempCanvas.height / documentCanvas.height
+            // Get the display size of the document canvas (CSS pixels)
+            const docDisplayWidth = parseFloat(documentCanvas.style.width) || documentCanvas.width;
+            const docDisplayHeight = parseFloat(documentCanvas.style.height) || documentCanvas.height;
+
+            // Calculate scale to fit document in GIF canvas
+            const displayScale = Math.min(
+                gifWidth / docDisplayWidth,
+                gifHeight / docDisplayHeight
             ) * 0.9;
 
-            const scaledWidth = documentCanvas.width * scale;
-            const scaledHeight = documentCanvas.height * scale;
-            const offsetX = (tempCanvas.width - scaledWidth) / 2;
-            const offsetY = (tempCanvas.height - scaledHeight) / 2;
+            const scaledWidth = docDisplayWidth * displayScale;
+            const scaledHeight = docDisplayHeight * displayScale;
+            const offsetX = (gifWidth - scaledWidth) / 2;
+            const offsetY = (gifHeight - scaledHeight) / 2;
+
+            // Scale factor for highlight regions (they're stored in internal canvas coords)
+            const regionScale = scaledWidth / documentCanvas.width;
 
             const color = highlightColor.value;
             const opacity = parseInt(highlightOpacity.value) / 100;
@@ -1700,8 +1878,12 @@
                 const elapsed = i * frameInterval;
 
                 // Draw background
-                tempCtx.fillStyle = bgColor.value;
-                tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+                if (bgImageData && cachedBgImage) {
+                    tempCtx.drawImage(cachedBgImage, 0, 0, gifWidth, gifHeight);
+                } else {
+                    tempCtx.fillStyle = bgColor.value;
+                    tempCtx.fillRect(0, 0, gifWidth, gifHeight);
+                }
 
                 // Draw document
                 tempCtx.drawImage(documentCanvas, offsetX, offsetY, scaledWidth, scaledHeight);
@@ -1715,14 +1897,14 @@
                         let progress = Math.min(regionElapsed / durationMs, 1);
                         progress = easingFn(progress);
 
-                        const highlightWidth = region.width * scale * progress;
+                        const highlightWidth = region.width * regionScale * progress;
 
                         tempCtx.fillStyle = hexToRgba(color, opacity);
                         tempCtx.fillRect(
-                            offsetX + region.x * scale,
-                            offsetY + region.y * scale,
+                            offsetX + region.x * regionScale,
+                            offsetY + region.y * regionScale,
                             highlightWidth,
-                            region.height * scale
+                            region.height * regionScale
                         );
                     }
                 });
