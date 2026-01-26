@@ -1420,7 +1420,7 @@
             // Filter out short paths (artifacts from thinning algorithm)
             const strokes = [];
             for (const pathObj of paths) {
-                if (pathObj.points.length >= 10) {
+                if (pathObj.points.length >= 20) {
                     // Scale points to display coordinates
                     const scaledPoints = pathObj.points.map(p => ({
                         x: p.x * displayScale + offsetX,
@@ -1926,15 +1926,15 @@
                 const resampledA = resampleStroke(strokeA, targetCount);
                 const resampledB = resampleStroke(strokeB, targetCount);
 
+                // Add break BEFORE this stroke (except first)
+                if (i > 0) {
+                    normalizedPointsA.push({ x: resampledA[0].x, y: resampledA[0].y, isBreak: true });
+                    normalizedPointsB.push({ x: resampledB[0].x, y: resampledB[0].y, isBreak: true });
+                }
+
                 for (let j = 0; j < resampledA.length; j++) {
                     normalizedPointsA.push({ ...resampledA[j], isBreak: false });
                     normalizedPointsB.push({ ...resampledB[j], isBreak: false });
-                }
-
-                // Break between strokes
-                if (i < pairs.length - 1) {
-                    normalizedPointsA.push({ ...resampledA[resampledA.length - 1], isBreak: true });
-                    normalizedPointsB.push({ ...resampledB[resampledB.length - 1], isBreak: true });
                 }
             }
 
@@ -1946,7 +1946,9 @@
         }
 
         // Find best rotation/shift of strokeB to minimize distance to strokeA
+        // Only use for closed loops - disabled for now as it causes diagonal lines
         function findBestStrokeAlignment(strokeA, strokeB) {
+            return strokeB; // Disabled - causes diagonal artifacts
             if (strokeA.length < 10 || strokeB.length < 10) return strokeB;
 
             // Resample to same length for comparison
@@ -2184,10 +2186,43 @@
             for (let i = 0; i < count; i++) {
                 const a = normalizedPointsA[i];
                 const b = normalizedPointsB[i];
+
+                let isBreak = a.isBreak || b.isBreak;
+
+                // Check if this point and the previous point have very different travel vectors
+                // This indicates they belong to different strokes and shouldn't be connected
+                if (i > 0 && !isBreak) {
+                    const prevA = normalizedPointsA[i - 1];
+                    const prevB = normalizedPointsB[i - 1];
+
+                    // Travel vector for previous point
+                    const travelPrevX = prevB.x - prevA.x;
+                    const travelPrevY = prevB.y - prevA.y;
+
+                    // Travel vector for current point
+                    const travelCurrX = b.x - a.x;
+                    const travelCurrY = b.y - a.y;
+
+                    // Distance between travel endpoints (where they end up in B)
+                    const distInB = Math.sqrt(
+                        Math.pow(b.x - prevB.x, 2) + Math.pow(b.y - prevB.y, 2)
+                    );
+
+                    // Distance between start points (where they are in A)
+                    const distInA = Math.sqrt(
+                        Math.pow(a.x - prevA.x, 2) + Math.pow(a.y - prevA.y, 2)
+                    );
+
+                    // If points are close in A but far in B (or vice versa), they shouldn't connect
+                    if ((distInA < 10 && distInB > 50) || (distInB < 10 && distInA > 50)) {
+                        isBreak = true;
+                    }
+                }
+
                 result.push({
                     x: a.x + t * (b.x - a.x),
                     y: a.y + t * (b.y - a.y),
-                    isBreak: a.isBreak || b.isBreak
+                    isBreak: isBreak
                 });
             }
             return result;
@@ -2213,20 +2248,6 @@
             ctx.lineCap = 'round';
             ctx.lineJoin = 'round';
 
-            // Calculate average point spacing to detect large gaps
-            let totalDist = 0;
-            let distCount = 0;
-            for (let i = 1; i < points.length; i++) {
-                if (!points[i].isBreak && !points[i-1].isBreak) {
-                    const dx = points[i].x - points[i-1].x;
-                    const dy = points[i].y - points[i-1].y;
-                    totalDist += Math.sqrt(dx*dx + dy*dy);
-                    distCount++;
-                }
-            }
-            const avgDist = distCount > 0 ? totalDist / distCount : 10;
-            const maxJump = Math.max(avgDist * 5, 30); // Large gaps are implicit breaks
-
             ctx.beginPath();
             let needsMoveTo = true;
             let lastX = 0, lastY = 0;
@@ -2237,12 +2258,14 @@
                     continue;
                 }
 
-                // Check for large gap (implicit break)
+                // Check for large gap - use fixed threshold based on canvas size
                 if (!needsMoveTo) {
                     const dx = points[i].x - lastX;
                     const dy = points[i].y - lastY;
                     const dist = Math.sqrt(dx*dx + dy*dy);
-                    if (dist > maxJump) {
+                    // If gap is larger than 1.5% of canvas diagonal, treat as break
+                    const canvasDiag = Math.sqrt(ctx.canvas.width * ctx.canvas.width + ctx.canvas.height * ctx.canvas.height);
+                    if (dist > canvasDiag * 0.015) {
                         needsMoveTo = true;
                     }
                 }

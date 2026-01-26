@@ -20,6 +20,8 @@ export default defineConfig({
         text: resolve(__dirname, 'index3.html'),
         outline: resolve(__dirname, 'index4.html'),
         jiggle: resolve(__dirname, 'index5.html'),
+        morph: resolve(__dirname, 'index6.html'),
+        highlighter: resolve(__dirname, 'index7.html'),
       },
     },
     minify: 'terser',
