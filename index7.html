@@ -143,7 +143,7 @@
             }
 
             .preview-section {
-                flex: 2;
+                flex: 1;
                 display: flex;
                 flex-direction: column;
                 min-width: 0;
@@ -223,6 +223,12 @@
             border-style: solid;
             border-color: #fbbf24;
             padding: 15px;
+            cursor: default;
+        }
+
+        .upload-section.has-file:hover {
+            transform: none;
+            box-shadow: 3px 3px 0px rgba(251, 191, 36, 0.1);
         }
 
         input[type="file"] {
@@ -247,10 +253,11 @@
         .document-preview-container {
             position: relative;
             width: 100%;
-            max-height: 500px;
+            max-height: 600px;
             overflow: auto;
             background: #f9fafb;
             border-radius: 12px;
+            padding: 12px;
         }
 
         .document-preview-wrapper {
@@ -702,6 +709,34 @@
             flex-shrink: 0;
         }
 
+        .speed-buttons {
+            display: flex;
+            gap: 4px;
+        }
+
+        .speed-btn {
+            padding: 4px 10px;
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 500;
+            color: #6b7280;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .speed-btn:hover {
+            border-color: #fbbf24;
+            color: #f59e0b;
+        }
+
+        .speed-btn.selected {
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            border-color: #f59e0b;
+            color: white;
+        }
+
         .style-settings-toggle {
             display: flex;
             align-items: center;
@@ -1019,6 +1054,28 @@
                     </div>
                 </div>
 
+                <!-- Row 3: Jiggle and Paper Edges -->
+                <div class="controls-row">
+                    <div class="slider-item">
+                        <span class="label-text">Jiggle:</span>
+                        <input type="range" id="jiggleAmount" min="0" max="10" step="1" value="0" class="slider-compact">
+                        <span class="value-display" id="jiggleDisplay">0</span>
+                    </div>
+                    <div class="control-group" id="jiggleSpeedGroup" style="display: none;">
+                        <span class="label-text">Speed:</span>
+                        <div class="speed-buttons">
+                            <button type="button" class="speed-btn" id="speedSlow" data-speed="160">Slow</button>
+                            <button type="button" class="speed-btn selected" id="speedMedium" data-speed="80">Medium</button>
+                            <button type="button" class="speed-btn" id="speedFast" data-speed="40">Fast</button>
+                        </div>
+                    </div>
+                    <div class="slider-item">
+                        <span class="label-text">Paper Edges:</span>
+                        <input type="range" id="paperEdges" min="0" max="6" step="1" value="0" class="slider-compact">
+                        <span class="value-display" id="paperEdgesDisplay">0</span>
+                    </div>
+                </div>
+
                 <div class="preview-content-wrapper">
                     <div class="preview-content ratio-16-9" id="previewContent">
                         <canvas id="bgCanvas" class="preview-canvas"></canvas>
@@ -1034,7 +1091,6 @@
                 </div>
 
                 <div class="export-buttons">
-                    <button class="btn-primary" id="animateBtn" disabled>Animate Highlight</button>
                     <button class="btn-primary" id="exportGifBtn" disabled style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); box-shadow: 3px 3px 0px rgba(16, 185, 129, 0.3);">Export GIF</button>
                 </div>
             </div>
@@ -1081,7 +1137,6 @@
         const previewContent = document.getElementById('previewContent');
         const bgCanvas = document.getElementById('bgCanvas');
         const animCanvas = document.getElementById('animCanvas');
-        const animateBtn = document.getElementById('animateBtn');
         const exportGifBtn = document.getElementById('exportGifBtn');
 
         // Controls
@@ -1109,6 +1164,14 @@
         const timingSequential = document.getElementById('timingSequential');
         const timingSimultaneous = document.getElementById('timingSimultaneous');
         const delayGroup = document.getElementById('delayGroup');
+        const jiggleAmount = document.getElementById('jiggleAmount');
+        const jiggleDisplay = document.getElementById('jiggleDisplay');
+        const jiggleSpeedGroup = document.getElementById('jiggleSpeedGroup');
+        const speedSlow = document.getElementById('speedSlow');
+        const speedMedium = document.getElementById('speedMedium');
+        const speedFast = document.getElementById('speedFast');
+        const paperEdges = document.getElementById('paperEdges');
+        const paperEdgesDisplay = document.getElementById('paperEdgesDisplay');
 
         // Color picker state
         let bgHue = 0;
@@ -1117,6 +1180,9 @@
 
         // Current style state
         let currentStyle = 'highlight';
+
+        // Jiggle speed state (in ms)
+        let currentJiggleSpeed = 80;
 
         // Get current style
         function getCurrentStyle() {
@@ -1135,19 +1201,23 @@
         highlightOpacity.addEventListener('input', () => {
             opacityDisplay.textContent = highlightOpacity.value + '%';
             redrawRegions();
+            restartAnimation();
         });
 
         duration.addEventListener('input', () => {
             durationDisplay.textContent = parseFloat(duration.value).toFixed(1) + 's';
+            restartAnimation();
         });
 
         delay.addEventListener('input', () => {
             delayDisplay.textContent = parseFloat(delay.value).toFixed(1) + 's';
+            restartAnimation();
         });
 
         highlightColor.addEventListener('input', () => {
             highlightColorPreview.style.background = highlightColor.value;
             redrawRegions();
+            restartAnimation();
         });
 
         // Style button listeners
@@ -1166,6 +1236,7 @@
                 colorHint.textContent = 'Any color works for underlines';
             }
             redrawRegions();
+            restartAnimation();
         }
 
         styleBtnHighlight.addEventListener('click', () => selectStyle('highlight'));
@@ -1174,6 +1245,7 @@
         underlineThickness.addEventListener('input', () => {
             underlineThicknessDisplay.textContent = underlineThickness.value + 'px';
             redrawRegions();
+            restartAnimation();
         });
 
         // Style settings popup toggle
@@ -1186,10 +1258,44 @@
         // Timing mode listeners
         timingSequential.addEventListener('change', () => {
             delayGroup.style.display = 'flex';
+            restartAnimation();
         });
 
         timingSimultaneous.addEventListener('change', () => {
             delayGroup.style.display = 'none';
+            restartAnimation();
+        });
+
+        // Jiggle amount listener
+        jiggleAmount.addEventListener('input', () => {
+            jiggleDisplay.textContent = jiggleAmount.value;
+            // Show/hide speed control based on jiggle amount
+            jiggleSpeedGroup.style.display = parseInt(jiggleAmount.value) > 0 ? 'flex' : 'none';
+            restartAnimation();
+        });
+
+        // Jiggle speed button listeners
+        function selectJiggleSpeed(speed, btn) {
+            currentJiggleSpeed = speed;
+            speedSlow.classList.remove('selected');
+            speedMedium.classList.remove('selected');
+            speedFast.classList.remove('selected');
+            btn.classList.add('selected');
+            restartAnimation();
+        }
+
+        speedSlow.addEventListener('click', () => selectJiggleSpeed(160, speedSlow));
+        speedMedium.addEventListener('click', () => selectJiggleSpeed(80, speedMedium));
+        speedFast.addEventListener('click', () => selectJiggleSpeed(40, speedFast));
+
+        // Paper edges listener
+        paperEdges.addEventListener('input', () => {
+            paperEdgesDisplay.textContent = paperEdges.value;
+            // Reset paper edge seed when value changes to regenerate edges
+            if (parseInt(paperEdges.value) > 0) {
+                paperEdgeSeed = Math.floor(Math.random() * 100000);
+            }
+            restartAnimation();
         });
 
         // Background popup toggle
@@ -1217,7 +1323,7 @@
             if (bgImagePreviewEl) bgImagePreviewEl.style.display = 'none';
             if (bgUploadPlaceholderEl) bgUploadPlaceholderEl.style.display = 'flex';
             drawBackground();
-            drawCurrentState();
+            restartAnimation();
         });
 
         // Background color picker
@@ -1288,7 +1394,7 @@
             if (bgImagePreviewEl) bgImagePreviewEl.style.display = 'none';
             if (bgUploadPlaceholder) bgUploadPlaceholder.style.display = 'flex';
             drawBackground();
-            drawCurrentState();
+            restartAnimation();
         }
 
         // Background color square interaction
@@ -1355,7 +1461,7 @@
                 updateBgColorSquare();
                 updateBgCursors();
                 drawBackground();
-                drawCurrentState();
+                restartAnimation();
             }
         });
 
@@ -1387,7 +1493,7 @@
                     bgImagePreviewEl.style.display = 'none';
                     bgUploadPlaceholder.style.display = 'flex';
                     drawBackground();
-                    drawCurrentState();
+                    restartAnimation();
                 } else if (!e.target.closest('#bgImagePreview') || e.target.id === 'changeBgImage') {
                     bgImageUpload.click();
                 }
@@ -1407,7 +1513,7 @@
                         cachedBgImage = new Image();
                         cachedBgImage.onload = () => {
                             drawBackground();
-                            drawCurrentState();
+                            restartAnimation();
                         };
                         cachedBgImage.src = bgImageData;
                     };
@@ -1427,7 +1533,7 @@
             previewContent.className = 'preview-content';
             previewContent.classList.add(isVertical ? 'ratio-9-16' : 'ratio-16-9');
             drawBackground();
-            drawCurrentState();
+            restartAnimation();
         }
 
         ratio16x9Btn.addEventListener('click', () => selectAspectRatio('16:9'));
@@ -1486,15 +1592,20 @@
             // Get the base viewport to determine natural page size
             const baseViewport = page.getViewport({ scale: 1 });
 
-            // Calculate display size to fit within container (max ~450px wide for sidebar)
-            const maxDisplayWidth = 420;
-            const displayScale = Math.min(1, maxDisplayWidth / baseViewport.width);
+            // Calculate display size to fill available space (account for padding)
+            const sidebar = document.querySelector('.sidebar');
+            const sidebarWidth = sidebar ? sidebar.clientWidth - 80 : 500; // 50 + 24 padding + buffer
+            const maxDisplayWidth = Math.max(sidebarWidth, 300);
+            const maxDisplayHeight = 500; // reduced to account for container padding
+            const scaleW = maxDisplayWidth / baseViewport.width;
+            const scaleH = maxDisplayHeight / baseViewport.height;
+            const displayScale = Math.min(scaleW, scaleH);
             const displayWidth = baseViewport.width * displayScale;
             const displayHeight = baseViewport.height * displayScale;
 
-            // Use higher internal scale for sharp text (3x the display size)
+            // Use higher internal scale for sharp text (2x the display size)
             const dpr = window.devicePixelRatio || 1;
-            const internalScale = displayScale * 3 * dpr;
+            const internalScale = displayScale * 2 * dpr;
             const viewport = page.getViewport({ scale: internalScale });
 
             // Set canvas internal resolution (high res for sharp text)
@@ -1503,7 +1614,7 @@
             drawingCanvas.width = viewport.width;
             drawingCanvas.height = viewport.height;
 
-            // Set display size (CSS pixels) - fits in sidebar
+            // Set display size (CSS pixels) - use calculated size
             documentCanvas.style.width = displayWidth + 'px';
             documentCanvas.style.height = displayHeight + 'px';
             drawingCanvas.style.width = displayWidth + 'px';
@@ -1552,15 +1663,20 @@
                     img.onload = () => {
                         documentImage = img;
 
-                        // Calculate display size to fit within container (max ~450px wide for sidebar)
-                        const maxDisplayWidth = 420;
-                        const displayScale = Math.min(1, maxDisplayWidth / img.width);
+                        // Calculate display size to fill available space (account for padding)
+                        const sidebar = document.querySelector('.sidebar');
+                        const sidebarWidth = sidebar ? sidebar.clientWidth - 80 : 500; // 50 + 24 padding + buffer
+                        const maxDisplayWidth = Math.max(sidebarWidth, 300);
+                        const maxDisplayHeight = 500; // reduced to account for container padding
+                        const scaleW = maxDisplayWidth / img.width;
+                        const scaleH = maxDisplayHeight / img.height;
+                        const displayScale = Math.min(scaleW, scaleH);
                         const displayWidth = img.width * displayScale;
                         const displayHeight = img.height * displayScale;
 
-                        // Use higher internal resolution for sharp display (3x display size)
+                        // Use higher internal resolution for sharp display (2x display size)
                         const dpr = window.devicePixelRatio || 1;
-                        const internalScale = displayScale * 3 * dpr;
+                        const internalScale = displayScale * 2 * dpr;
 
                         // Set canvas internal resolution
                         documentCanvas.width = img.width * internalScale;
@@ -1568,7 +1684,7 @@
                         drawingCanvas.width = img.width * internalScale;
                         drawingCanvas.height = img.height * internalScale;
 
-                        // Set display size (CSS pixels) - fits in sidebar
+                        // Set display size (CSS pixels) - use calculated size
                         documentCanvas.style.width = displayWidth + 'px';
                         documentCanvas.style.height = displayHeight + 'px';
                         drawingCanvas.style.width = displayWidth + 'px';
@@ -1759,12 +1875,21 @@
         function checkReadyState() {
             const isReady = documentImage && highlightRegions.length > 0;
             previewPlaceholder.classList.toggle('hidden', isReady);
-            animateBtn.disabled = !isReady;
             exportGifBtn.disabled = !isReady;
 
             if (isReady) {
-                drawCurrentState();
+                // Auto-start animation when ready
+                restartAnimation();
+            } else {
+                stopAnimation();
             }
+        }
+
+        // Restart animation (used when settings change)
+        function restartAnimation() {
+            if (!documentImage || highlightRegions.length === 0) return;
+            stopAnimation();
+            startAnimation();
         }
 
         // Canvas setup
@@ -1795,6 +1920,118 @@
                 ctx.fillStyle = bgColor.value;
                 ctx.fillRect(0, 0, bgCanvas.width, bgCanvas.height);
             }
+        }
+
+        // Generate paper edge path with torn/rough edges
+        // seed allows consistent edges between frames
+        let paperEdgeSeed = null;
+        function generatePaperEdgePath(ctx, x, y, width, height, intensity, seed) {
+            // Use seeded random for consistent edges
+            const seededRandom = (function() {
+                let s = seed || 12345;
+                return function() {
+                    s = (s * 1103515245 + 12345) & 0x7fffffff;
+                    return s / 0x7fffffff;
+                };
+            })();
+
+            const segments = Math.ceil((width + height) * 2 / 8); // More segments for detailed edges
+            const points = [];
+
+            // Helper to add noise to a point
+            const addNoise = (baseX, baseY, maxOffset) => {
+                const angle = seededRandom() * Math.PI * 2;
+                const dist = seededRandom() * maxOffset;
+                return {
+                    x: baseX + Math.cos(angle) * dist,
+                    y: baseY + Math.sin(angle) * dist
+                };
+            };
+
+            // Top edge (left to right)
+            const topSegments = Math.ceil(width / 8);
+            for (let i = 0; i <= topSegments; i++) {
+                const baseX = x + (width * i / topSegments);
+                const baseY = y;
+                const noise = addNoise(baseX, baseY, intensity);
+                // Keep within bounds but allow inward tears
+                noise.y = Math.max(y - intensity * 0.3, Math.min(y + intensity, noise.y));
+                points.push(noise);
+            }
+
+            // Right edge (top to bottom)
+            const rightSegments = Math.ceil(height / 8);
+            for (let i = 1; i <= rightSegments; i++) {
+                const baseX = x + width;
+                const baseY = y + (height * i / rightSegments);
+                const noise = addNoise(baseX, baseY, intensity);
+                noise.x = Math.max(x + width - intensity, Math.min(x + width + intensity * 0.3, noise.x));
+                points.push(noise);
+            }
+
+            // Bottom edge (right to left)
+            const bottomSegments = Math.ceil(width / 8);
+            for (let i = 1; i <= bottomSegments; i++) {
+                const baseX = x + width - (width * i / bottomSegments);
+                const baseY = y + height;
+                const noise = addNoise(baseX, baseY, intensity);
+                noise.y = Math.max(y + height - intensity, Math.min(y + height + intensity * 0.3, noise.y));
+                points.push(noise);
+            }
+
+            // Left edge (bottom to top)
+            const leftSegments = Math.ceil(height / 8);
+            for (let i = 1; i < leftSegments; i++) {
+                const baseX = x;
+                const baseY = y + height - (height * i / leftSegments);
+                const noise = addNoise(baseX, baseY, intensity);
+                noise.x = Math.max(x - intensity * 0.3, Math.min(x + intensity, noise.x));
+                points.push(noise);
+            }
+
+            // Draw the path
+            ctx.beginPath();
+            ctx.moveTo(points[0].x, points[0].y);
+
+            for (let i = 1; i < points.length; i++) {
+                // Use quadratic curves for smoother torn edges
+                const prev = points[i - 1];
+                const curr = points[i];
+                const midX = (prev.x + curr.x) / 2;
+                const midY = (prev.y + curr.y) / 2;
+                ctx.quadraticCurveTo(prev.x, prev.y, midX, midY);
+            }
+
+            // Close the path
+            const last = points[points.length - 1];
+            const first = points[0];
+            const midX = (last.x + first.x) / 2;
+            const midY = (last.y + first.y) / 2;
+            ctx.quadraticCurveTo(last.x, last.y, midX, midY);
+            ctx.quadraticCurveTo(first.x, first.y, first.x, first.y);
+            ctx.closePath();
+        }
+
+        // Apply paper edge clipping to a canvas context
+        function applyPaperEdgeClip(ctx, x, y, width, height, intensity) {
+            if (!paperEdgeSeed) {
+                paperEdgeSeed = Math.floor(Math.random() * 100000);
+            }
+            generatePaperEdgePath(ctx, x, y, width, height, intensity, paperEdgeSeed);
+            ctx.clip();
+        }
+
+        // Draw paper edge shadow/border effect
+        function drawPaperEdgeShadow(ctx, x, y, width, height, intensity) {
+            ctx.save();
+            generatePaperEdgePath(ctx, x, y, width, height, intensity, paperEdgeSeed);
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+            ctx.shadowBlur = intensity * 0.8;
+            ctx.shadowOffsetX = 2;
+            ctx.shadowOffsetY = 2;
+            ctx.fillStyle = 'rgba(255, 255, 255, 0)';
+            ctx.fill();
+            ctx.restore();
         }
 
         function drawCurrentState() {
@@ -1832,6 +2069,9 @@
             const color = highlightColor.value;
             const style = getCurrentStyle();
             const uThickness = parseInt(underlineThickness.value) * dpr;
+            const paperEdgeValue = parseInt(paperEdges.value);
+            const usePaperEdges = paperEdgeValue > 0;
+            const paperEdgeIntensity = paperEdgeValue * 4 * dpr; // Scale 0-6 to appropriate pixel values
 
             // Draw background first
             if (bgImageData && cachedBgImage) {
@@ -1841,6 +2081,11 @@
                 ctx.fillRect(0, 0, animCanvas.width, animCanvas.height);
             }
 
+            // Draw paper edge shadow if enabled
+            if (usePaperEdges) {
+                drawPaperEdgeShadow(ctx, offsetX, offsetY, scaledWidth, scaledHeight, paperEdgeIntensity);
+            }
+
             if (style === 'highlight') {
                 // For highlight: use an offscreen canvas to composite document + highlights
                 // This prevents the background from being affected by multiply blend mode
@@ -1848,6 +2093,12 @@
                 offscreen.width = animCanvas.width;
                 offscreen.height = animCanvas.height;
                 const offCtx = offscreen.getContext('2d');
+
+                // Apply paper edge clipping if enabled
+                if (usePaperEdges) {
+                    offCtx.save();
+                    applyPaperEdgeClip(offCtx, offsetX, offsetY, scaledWidth, scaledHeight, paperEdgeIntensity);
+                }
 
                 // Draw highlight regions first on offscreen canvas
                 highlightRegions.forEach(region => {
@@ -1872,10 +2123,19 @@
                 offCtx.drawImage(documentCanvas, offsetX, offsetY, scaledWidth, scaledHeight);
                 offCtx.globalCompositeOperation = 'source-over';
 
+                if (usePaperEdges) {
+                    offCtx.restore();
+                }
+
                 // Now draw the composited result onto the main canvas (which already has background)
                 ctx.drawImage(offscreen, 0, 0);
             } else {
                 // For underline: draw document first, then underlines on top
+                if (usePaperEdges) {
+                    ctx.save();
+                    applyPaperEdgeClip(ctx, offsetX, offsetY, scaledWidth, scaledHeight, paperEdgeIntensity);
+                }
+
                 ctx.drawImage(documentCanvas, offsetX, offsetY, scaledWidth, scaledHeight);
 
                 // Draw underlines
@@ -1891,23 +2151,18 @@
                         );
                     }
                 });
+
+                if (usePaperEdges) {
+                    ctx.restore();
+                }
             }
         }
 
         // Animation
-        animateBtn.addEventListener('click', () => {
-            if (isAnimating) {
-                stopAnimation();
-            } else {
-                startAnimation();
-            }
-        });
-
         function startAnimation() {
             if (!documentImage || highlightRegions.length === 0) return;
 
             isAnimating = true;
-            animateBtn.textContent = 'Stop';
 
             const durationMs = parseFloat(duration.value) * 1000;
             const isSimultaneous = timingSimultaneous.checked;
@@ -1937,8 +2192,8 @@
 
             const scaledWidth = docDisplayWidth * displayScale * dpr;
             const scaledHeight = docDisplayHeight * displayScale * dpr;
-            const offsetX = (animCanvas.width - scaledWidth) / 2;
-            const offsetY = (animCanvas.height - scaledHeight) / 2;
+            const baseOffsetX = (animCanvas.width - scaledWidth) / 2;
+            const baseOffsetY = (animCanvas.height - scaledHeight) / 2;
 
             // Scale factor for highlight regions (they're stored in internal canvas coords)
             const regionScale = scaledWidth / documentCanvas.width;
@@ -1946,6 +2201,11 @@
             const color = highlightColor.value;
             const style = getCurrentStyle();
             const uThickness = parseInt(underlineThickness.value) * dpr;
+            const jiggle = parseInt(jiggleAmount.value) * dpr;
+            const jiggleInterval = currentJiggleSpeed;
+            const paperEdgeValue = parseInt(paperEdges.value);
+            const usePaperEdges = paperEdgeValue > 0;
+            const paperEdgeIntensity = paperEdgeValue * 4 * dpr;
 
             // Filter regions for current page
             const currentRegions = pdfDocument
@@ -1974,6 +2234,24 @@
                     elapsed = 0;
                 }
 
+                // Calculate stop-motion style jiggle offset
+                // Changes position at discrete intervals like hand-drawn animation
+                let jiggleX = 0, jiggleY = 0, jiggleRotation = 0;
+                if (jiggle > 0) {
+                    // Change jiggle position at user-defined interval for stop-motion feel
+                    const jiggleFrame = Math.floor(timestamp / jiggleInterval);
+                    // Use frame number as seed for deterministic but random-looking positions
+                    const seed1 = Math.sin(jiggleFrame * 12.9898) * 43758.5453;
+                    const seed2 = Math.sin(jiggleFrame * 78.233) * 43758.5453;
+                    const seed3 = Math.sin(jiggleFrame * 45.164) * 43758.5453;
+                    jiggleX = ((seed1 - Math.floor(seed1)) - 0.5) * 2 * jiggle;
+                    jiggleY = ((seed2 - Math.floor(seed2)) - 0.5) * 2 * jiggle;
+                    jiggleRotation = ((seed3 - Math.floor(seed3)) - 0.5) * 0.02 * jiggle; // Slight rotation
+                }
+
+                const offsetX = baseOffsetX + jiggleX;
+                const offsetY = baseOffsetY + jiggleY;
+
                 ctx.clearRect(0, 0, animCanvas.width, animCanvas.height);
 
                 // Draw background first
@@ -1984,10 +2262,36 @@
                     ctx.fillRect(0, 0, animCanvas.width, animCanvas.height);
                 }
 
+                // Calculate center point for rotation
+                const centerX = offsetX + scaledWidth / 2;
+                const centerY = offsetY + scaledHeight / 2;
+
+                // Draw paper edge shadow if enabled (with rotation)
+                if (usePaperEdges) {
+                    ctx.save();
+                    ctx.translate(centerX, centerY);
+                    ctx.rotate(jiggleRotation);
+                    ctx.translate(-centerX, -centerY);
+                    drawPaperEdgeShadow(ctx, offsetX, offsetY, scaledWidth, scaledHeight, paperEdgeIntensity);
+                    ctx.restore();
+                }
+
                 if (style === 'highlight') {
                     // Use offscreen canvas to composite highlights with document
                     // This prevents background from being affected by multiply blend
                     offCtx.clearRect(0, 0, offscreen.width, offscreen.height);
+
+                    // Apply rotation transform for jiggle
+                    offCtx.save();
+                    offCtx.translate(centerX, centerY);
+                    offCtx.rotate(jiggleRotation);
+                    offCtx.translate(-centerX, -centerY);
+
+                    // Apply paper edge clipping if enabled
+                    if (usePaperEdges) {
+                        offCtx.save();
+                        applyPaperEdgeClip(offCtx, offsetX, offsetY, scaledWidth, scaledHeight, paperEdgeIntensity);
+                    }
 
                     // Draw animated highlights first on offscreen canvas
                     currentRegions.forEach((region, index) => {
@@ -2021,10 +2325,25 @@
                     offCtx.drawImage(documentCanvas, offsetX, offsetY, scaledWidth, scaledHeight);
                     offCtx.globalCompositeOperation = 'source-over';
 
+                    if (usePaperEdges) {
+                        offCtx.restore();
+                    }
+                    offCtx.restore(); // Restore rotation transform
+
                     // Draw composited result onto main canvas (which already has background)
                     ctx.drawImage(offscreen, 0, 0);
                 } else {
                     // Underline style: draw document first, then animated underlines
+                    ctx.save();
+                    ctx.translate(centerX, centerY);
+                    ctx.rotate(jiggleRotation);
+                    ctx.translate(-centerX, -centerY);
+
+                    if (usePaperEdges) {
+                        ctx.save();
+                        applyPaperEdgeClip(ctx, offsetX, offsetY, scaledWidth, scaledHeight, paperEdgeIntensity);
+                    }
+
                     ctx.drawImage(documentCanvas, offsetX, offsetY, scaledWidth, scaledHeight);
 
                     currentRegions.forEach((region, index) => {
@@ -2047,6 +2366,11 @@
                             );
                         }
                     });
+
+                    if (usePaperEdges) {
+                        ctx.restore();
+                    }
+                    ctx.restore(); // Restore rotation transform
                 }
 
                 animationId = requestAnimationFrame(animate);
@@ -2061,8 +2385,6 @@
                 cancelAnimationFrame(animationId);
                 animationId = null;
             }
-            animateBtn.textContent = 'Animate Highlight';
-            drawCurrentState();
         }
 
         // Export GIF
@@ -2113,8 +2435,8 @@
 
             const scaledWidth = docDisplayWidth * displayScale;
             const scaledHeight = docDisplayHeight * displayScale;
-            const offsetX = (gifWidth - scaledWidth) / 2;
-            const offsetY = (gifHeight - scaledHeight) / 2;
+            const baseOffsetX = (gifWidth - scaledWidth) / 2;
+            const baseOffsetY = (gifHeight - scaledHeight) / 2;
 
             // Scale factor for highlight regions (they're stored in internal canvas coords)
             const regionScale = scaledWidth / documentCanvas.width;
@@ -2122,6 +2444,11 @@
             const color = highlightColor.value;
             const style = getCurrentStyle();
             const uThickness = parseInt(underlineThickness.value);
+            const jiggle = parseInt(jiggleAmount.value);
+            const jiggleInterval = currentJiggleSpeed;
+            const paperEdgeValue = parseInt(paperEdges.value);
+            const usePaperEdges = paperEdgeValue > 0;
+            const paperEdgeIntensity = paperEdgeValue * 4;
 
             // Create offscreen canvas for highlight compositing
             const offscreenGif = document.createElement('canvas');
@@ -2129,8 +2456,30 @@
             offscreenGif.height = gifHeight;
             const offGifCtx = offscreenGif.getContext('2d');
 
+            // Calculate how many GIF frames per jiggle frame based on speed
+            const msPerGifFrame = frameInterval;
+            const gifFramesPerJiggle = Math.max(1, Math.round(jiggleInterval / msPerGifFrame));
+
             for (let i = 0; i <= frameCount; i++) {
                 const elapsed = i * frameInterval;
+
+                // Calculate stop-motion style jiggle offset (same as animation)
+                let jiggleX = 0, jiggleY = 0, jiggleRotation = 0;
+                if (jiggle > 0) {
+                    // Group GIF frames into jiggle frames based on speed setting
+                    const jiggleFrame = Math.floor(i / gifFramesPerJiggle);
+                    const seed1 = Math.sin(jiggleFrame * 12.9898) * 43758.5453;
+                    const seed2 = Math.sin(jiggleFrame * 78.233) * 43758.5453;
+                    const seed3 = Math.sin(jiggleFrame * 45.164) * 43758.5453;
+                    jiggleX = ((seed1 - Math.floor(seed1)) - 0.5) * 2 * jiggle;
+                    jiggleY = ((seed2 - Math.floor(seed2)) - 0.5) * 2 * jiggle;
+                    jiggleRotation = ((seed3 - Math.floor(seed3)) - 0.5) * 0.02 * jiggle;
+                }
+
+                const offsetX = baseOffsetX + jiggleX;
+                const offsetY = baseOffsetY + jiggleY;
+                const centerX = offsetX + scaledWidth / 2;
+                const centerY = offsetY + scaledHeight / 2;
 
                 // Draw background
                 if (bgImageData && cachedBgImage) {
@@ -2140,9 +2489,31 @@
                     tempCtx.fillRect(0, 0, gifWidth, gifHeight);
                 }
 
+                // Draw paper edge shadow if enabled (with rotation)
+                if (usePaperEdges) {
+                    tempCtx.save();
+                    tempCtx.translate(centerX, centerY);
+                    tempCtx.rotate(jiggleRotation);
+                    tempCtx.translate(-centerX, -centerY);
+                    drawPaperEdgeShadow(tempCtx, offsetX, offsetY, scaledWidth, scaledHeight, paperEdgeIntensity);
+                    tempCtx.restore();
+                }
+
                 if (style === 'highlight') {
                     // Use offscreen canvas for highlight compositing
                     offGifCtx.clearRect(0, 0, gifWidth, gifHeight);
+
+                    // Apply rotation transform
+                    offGifCtx.save();
+                    offGifCtx.translate(centerX, centerY);
+                    offGifCtx.rotate(jiggleRotation);
+                    offGifCtx.translate(-centerX, -centerY);
+
+                    // Apply paper edge clipping if enabled
+                    if (usePaperEdges) {
+                        offGifCtx.save();
+                        applyPaperEdgeClip(offGifCtx, offsetX, offsetY, scaledWidth, scaledHeight, paperEdgeIntensity);
+                    }
 
                     // Draw highlights first on offscreen
                     currentRegions.forEach((region, index) => {
@@ -2175,10 +2546,25 @@
                     offGifCtx.drawImage(documentCanvas, offsetX, offsetY, scaledWidth, scaledHeight);
                     offGifCtx.globalCompositeOperation = 'source-over';
 
+                    if (usePaperEdges) {
+                        offGifCtx.restore();
+                    }
+                    offGifCtx.restore(); // Restore rotation
+
                     // Draw composited result onto main canvas (which already has background)
                     tempCtx.drawImage(offscreenGif, 0, 0);
                 } else {
                     // Underline style: draw document first, then underlines
+                    tempCtx.save();
+                    tempCtx.translate(centerX, centerY);
+                    tempCtx.rotate(jiggleRotation);
+                    tempCtx.translate(-centerX, -centerY);
+
+                    if (usePaperEdges) {
+                        tempCtx.save();
+                        applyPaperEdgeClip(tempCtx, offsetX, offsetY, scaledWidth, scaledHeight, paperEdgeIntensity);
+                    }
+
                     tempCtx.drawImage(documentCanvas, offsetX, offsetY, scaledWidth, scaledHeight);
 
                     currentRegions.forEach((region, index) => {
@@ -2201,6 +2587,11 @@
                             );
                         }
                     });
+
+                    if (usePaperEdges) {
+                        tempCtx.restore();
+                    }
+                    tempCtx.restore(); // Restore rotation
                 }
 
                 frames.push(tempCanvas.toDataURL('image/png'));
@@ -2236,7 +2627,7 @@
         window.addEventListener('resize', () => {
             drawBackground();
             if (documentImage && highlightRegions.length > 0) {
-                drawCurrentState();
+                restartAnimation();
             }
         });
     </script>
