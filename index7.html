@@ -843,20 +843,41 @@
                 <div class="highlight-regions-list" id="regionsList"></div>
 
                 <div class="setting-group">
-                    <label>
-                        Highlight Color
-                    </label>
-                    <div class="flex-center-gap-8">
-                        <input type="color" id="highlightColor" value="#ffeb3b" style="width: 50px; height: 36px; border: 2px solid #e5e7eb; border-radius: 8px; cursor: pointer;">
-                        <span class="helper-text">Yellow works best for highlighting</span>
+                    <label>Style</label>
+                    <div class="flex-center-gap-8" style="gap: 16px;">
+                        <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                            <input type="radio" name="highlightStyle" id="styleHighlight" value="highlight" checked style="accent-color: #f59e0b;">
+                            <span class="helper-text" style="color: #374151;">Highlight</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                            <input type="radio" name="highlightStyle" id="styleUnderline" value="underline" style="accent-color: #f59e0b;">
+                            <span class="helper-text" style="color: #374151;">Underline</span>
+                        </label>
                     </div>
                 </div>
 
                 <div class="setting-group">
                     <label>
-                        Highlight Opacity <span class="value-display" id="opacityDisplay">50%</span>
+                        Color
                     </label>
-                    <input type="range" id="highlightOpacity" min="20" max="80" value="50">
+                    <div class="flex-center-gap-8">
+                        <input type="color" id="highlightColor" value="#ffeb3b" style="width: 50px; height: 36px; border: 2px solid #e5e7eb; border-radius: 8px; cursor: pointer;">
+                        <span class="helper-text" id="colorHint">Yellow works best for highlighting</span>
+                    </div>
+                </div>
+
+                <div class="setting-group" id="opacityGroup">
+                    <label>
+                        Highlight Intensity <span class="value-display" id="opacityDisplay">50%</span>
+                    </label>
+                    <input type="range" id="highlightOpacity" min="30" max="90" value="50">
+                </div>
+
+                <div class="setting-group hidden" id="underlineThicknessGroup">
+                    <label>
+                        Underline Thickness <span class="value-display" id="underlineThicknessDisplay">3px</span>
+                    </label>
+                    <input type="range" id="underlineThickness" min="2" max="8" value="3">
                 </div>
             </div>
 
@@ -937,11 +958,6 @@
                         <span class="value-display" id="durationDisplay">0.8s</span>
                     </div>
                     <div class="slider-item">
-                        <span class="label-text">Delay:</span>
-                        <input type="range" id="delay" min="0" max="1" step="0.1" value="0.2" class="slider-compact">
-                        <span class="value-display" id="delayDisplay">0.2s</span>
-                    </div>
-                    <div class="slider-item">
                         <span class="label-text">Easing:</span>
                         <select id="easingSelect" class="easing-select">
                             <option value="easeOut">Ease Out</option>
@@ -949,6 +965,26 @@
                             <option value="easeIn">Ease In</option>
                             <option value="easeInOut">Ease In-Out</option>
                         </select>
+                    </div>
+                </div>
+
+                <!-- Timing Mode -->
+                <div class="settings-controls-row">
+                    <div class="control-group" style="flex: 1;">
+                        <span class="label-text">Timing:</span>
+                        <label style="display: flex; align-items: center; gap: 4px; cursor: pointer;">
+                            <input type="radio" name="timingMode" id="timingSequential" value="sequential" checked style="accent-color: #f59e0b;">
+                            <span style="font-size: 12px;">Sequential</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 4px; cursor: pointer;">
+                            <input type="radio" name="timingMode" id="timingSimultaneous" value="simultaneous" style="accent-color: #f59e0b;">
+                            <span style="font-size: 12px;">Simultaneous</span>
+                        </label>
+                    </div>
+                    <div class="slider-item" id="delayGroup">
+                        <span class="label-text">Delay:</span>
+                        <input type="range" id="delay" min="0" max="1" step="0.1" value="0.2" class="slider-compact">
+                        <span class="value-display" id="delayDisplay">0.2s</span>
                     </div>
                 </div>
 
@@ -1031,11 +1067,26 @@
         const delayDisplay = document.getElementById('delayDisplay');
         const easingSelect = document.getElementById('easingSelect');
         const loopAnimation = document.getElementById('loopAnimation');
+        const styleHighlight = document.getElementById('styleHighlight');
+        const styleUnderline = document.getElementById('styleUnderline');
+        const opacityGroup = document.getElementById('opacityGroup');
+        const underlineThicknessGroup = document.getElementById('underlineThicknessGroup');
+        const underlineThickness = document.getElementById('underlineThickness');
+        const underlineThicknessDisplay = document.getElementById('underlineThicknessDisplay');
+        const colorHint = document.getElementById('colorHint');
+        const timingSequential = document.getElementById('timingSequential');
+        const timingSimultaneous = document.getElementById('timingSimultaneous');
+        const delayGroup = document.getElementById('delayGroup');
 
         // Color picker state
         let bgHue = 0;
         let bgSaturation = 0;
         let bgValue = 100;
+
+        // Get current style
+        function getCurrentStyle() {
+            return styleUnderline.checked ? 'underline' : 'highlight';
+        }
 
         // Easing functions
         const easingFunctions = {
@@ -1061,6 +1112,35 @@
 
         highlightColor.addEventListener('input', () => {
             redrawRegions();
+        });
+
+        // Style radio button listeners
+        styleHighlight.addEventListener('change', () => {
+            opacityGroup.classList.remove('hidden');
+            underlineThicknessGroup.classList.add('hidden');
+            colorHint.textContent = 'Yellow works best for highlighting';
+            redrawRegions();
+        });
+
+        styleUnderline.addEventListener('change', () => {
+            opacityGroup.classList.add('hidden');
+            underlineThicknessGroup.classList.remove('hidden');
+            colorHint.textContent = 'Any color works for underlines';
+            redrawRegions();
+        });
+
+        underlineThickness.addEventListener('input', () => {
+            underlineThicknessDisplay.textContent = underlineThickness.value + 'px';
+            redrawRegions();
+        });
+
+        // Timing mode listeners
+        timingSequential.addEventListener('change', () => {
+            delayGroup.style.display = 'flex';
+        });
+
+        timingSimultaneous.addEventListener('change', () => {
+            delayGroup.style.display = 'none';
         });
 
         // Background popup toggle
@@ -1516,12 +1596,21 @@
             const color = highlightColor.value;
             const opacity = parseInt(highlightOpacity.value) / 100;
             const dpr = window.devicePixelRatio || 1;
+            const style = getCurrentStyle();
+            const uThickness = parseInt(underlineThickness.value) * dpr * 3; // Scale for internal resolution
 
             // Draw existing regions for current page
             highlightRegions.forEach((region, index) => {
                 if (!pdfDocument || region.page === currentPdfPage) {
-                    ctx.fillStyle = hexToRgba(color, opacity);
-                    ctx.fillRect(region.x, region.y, region.width, region.height);
+                    if (style === 'underline') {
+                        // Draw underline at bottom of region
+                        ctx.fillStyle = color;
+                        ctx.fillRect(region.x, region.y + region.height - uThickness, region.width, uThickness);
+                    } else {
+                        // Draw highlight
+                        ctx.fillStyle = hexToRgba(color, opacity);
+                        ctx.fillRect(region.x, region.y, region.width, region.height);
+                    }
 
                     // Draw region number (scale font for high DPI)
                     ctx.fillStyle = '#000';
@@ -1532,11 +1621,16 @@
 
             // Draw current rectangle being drawn
             if (currentRect) {
-                ctx.fillStyle = hexToRgba(color, opacity * 0.5);
+                if (style === 'underline') {
+                    ctx.fillStyle = hexToRgba(color, 0.5);
+                    ctx.fillRect(currentRect.x, currentRect.y + currentRect.height - uThickness, currentRect.width, uThickness);
+                } else {
+                    ctx.fillStyle = hexToRgba(color, opacity * 0.5);
+                    ctx.fillRect(currentRect.x, currentRect.y, currentRect.width, currentRect.height);
+                }
                 ctx.strokeStyle = color;
                 ctx.lineWidth = 2 * dpr;
                 ctx.setLineDash([5 * dpr, 5 * dpr]);
-                ctx.fillRect(currentRect.x, currentRect.y, currentRect.width, currentRect.height);
                 ctx.strokeRect(currentRect.x, currentRect.y, currentRect.width, currentRect.height);
                 ctx.setLineDash([]);
             }
@@ -1674,34 +1768,78 @@
 
             // Calculate the actual canvas pixel scale (account for DPR)
             const dpr = window.devicePixelRatio || 1;
-            const canvasScale = displayScale * dpr;
 
             const scaledWidth = docDisplayWidth * displayScale * dpr;
             const scaledHeight = docDisplayHeight * displayScale * dpr;
             const offsetX = (animCanvas.width - scaledWidth) / 2;
             const offsetY = (animCanvas.height - scaledHeight) / 2;
 
-            // Draw document at high quality
-            ctx.drawImage(documentCanvas, offsetX, offsetY, scaledWidth, scaledHeight);
-
             // Scale factor for highlight regions (they're stored in internal canvas coords)
             const regionScale = scaledWidth / documentCanvas.width;
 
-            // Draw all highlight regions (fully highlighted state)
             const color = highlightColor.value;
-            const opacity = parseInt(highlightOpacity.value) / 100;
+            const style = getCurrentStyle();
+            const uThickness = parseInt(underlineThickness.value) * dpr;
 
-            highlightRegions.forEach(region => {
-                if (!pdfDocument || region.page === currentPdfPage) {
-                    ctx.fillStyle = hexToRgba(color, opacity);
-                    ctx.fillRect(
-                        offsetX + region.x * regionScale,
-                        offsetY + region.y * regionScale,
-                        region.width * regionScale,
-                        region.height * regionScale
-                    );
-                }
-            });
+            // Draw background first
+            if (bgImageData && cachedBgImage) {
+                ctx.drawImage(cachedBgImage, 0, 0, animCanvas.width, animCanvas.height);
+            } else {
+                ctx.fillStyle = bgColor.value;
+                ctx.fillRect(0, 0, animCanvas.width, animCanvas.height);
+            }
+
+            if (style === 'highlight') {
+                // For highlight: use an offscreen canvas to composite document + highlights
+                // This prevents the background from being affected by multiply blend mode
+                const offscreen = document.createElement('canvas');
+                offscreen.width = animCanvas.width;
+                offscreen.height = animCanvas.height;
+                const offCtx = offscreen.getContext('2d');
+
+                // Draw highlight regions first on offscreen canvas
+                highlightRegions.forEach(region => {
+                    if (!pdfDocument || region.page === currentPdfPage) {
+                        offCtx.fillStyle = color;
+                        offCtx.fillRect(
+                            offsetX + region.x * regionScale,
+                            offsetY + region.y * regionScale,
+                            region.width * regionScale,
+                            region.height * regionScale
+                        );
+                    }
+                });
+
+                // Draw document with multiply blend mode on offscreen canvas
+                offCtx.globalCompositeOperation = 'multiply';
+                offCtx.drawImage(documentCanvas, offsetX, offsetY, scaledWidth, scaledHeight);
+                offCtx.globalCompositeOperation = 'source-over';
+
+                // Restore non-highlighted document areas on offscreen canvas
+                offCtx.globalCompositeOperation = 'destination-over';
+                offCtx.drawImage(documentCanvas, offsetX, offsetY, scaledWidth, scaledHeight);
+                offCtx.globalCompositeOperation = 'source-over';
+
+                // Now draw the composited result onto the main canvas (which already has background)
+                ctx.drawImage(offscreen, 0, 0);
+            } else {
+                // For underline: draw document first, then underlines on top
+                ctx.drawImage(documentCanvas, offsetX, offsetY, scaledWidth, scaledHeight);
+
+                // Draw underlines
+                highlightRegions.forEach(region => {
+                    if (!pdfDocument || region.page === currentPdfPage) {
+                        ctx.fillStyle = color;
+                        const underlineY = offsetY + (region.y + region.height) * regionScale - uThickness;
+                        ctx.fillRect(
+                            offsetX + region.x * regionScale,
+                            underlineY,
+                            region.width * regionScale,
+                            uThickness
+                        );
+                    }
+                });
+            }
         }
 
         // Animation
@@ -1720,7 +1858,8 @@
             animateBtn.textContent = 'Stop';
 
             const durationMs = parseFloat(duration.value) * 1000;
-            const delayMs = parseFloat(delay.value) * 1000;
+            const isSimultaneous = timingSimultaneous.checked;
+            const delayMs = isSimultaneous ? 0 : parseFloat(delay.value) * 1000;
             const easingFn = easingFunctions[easingSelect.value];
             const loop = loopAnimation.checked;
 
@@ -1753,15 +1892,23 @@
             const regionScale = scaledWidth / documentCanvas.width;
 
             const color = highlightColor.value;
-            const opacity = parseInt(highlightOpacity.value) / 100;
+            const style = getCurrentStyle();
+            const uThickness = parseInt(underlineThickness.value) * dpr;
 
             // Filter regions for current page
             const currentRegions = pdfDocument
                 ? highlightRegions.filter(r => r.page === currentPdfPage)
                 : highlightRegions;
 
-            const totalDuration = currentRegions.length * delayMs + durationMs;
+            // For simultaneous mode, all regions start at time 0, so total duration is just the animation duration
+            const totalDuration = isSimultaneous ? durationMs : (currentRegions.length - 1) * delayMs + durationMs;
             let startTime = null;
+
+            // Create offscreen canvas for highlight compositing (reused each frame)
+            const offscreen = document.createElement('canvas');
+            offscreen.width = animCanvas.width;
+            offscreen.height = animCanvas.height;
+            const offCtx = offscreen.getContext('2d');
 
             function animate(timestamp) {
                 if (!isAnimating) return;
@@ -1777,30 +1924,78 @@
 
                 ctx.clearRect(0, 0, animCanvas.width, animCanvas.height);
 
-                // Draw document
-                ctx.drawImage(documentCanvas, offsetX, offsetY, scaledWidth, scaledHeight);
+                // Draw background first
+                if (bgImageData && cachedBgImage) {
+                    ctx.drawImage(cachedBgImage, 0, 0, animCanvas.width, animCanvas.height);
+                } else {
+                    ctx.fillStyle = bgColor.value;
+                    ctx.fillRect(0, 0, animCanvas.width, animCanvas.height);
+                }
 
-                // Draw each highlight region with staggered animation
-                currentRegions.forEach((region, index) => {
-                    const regionStartTime = index * delayMs;
-                    const regionElapsed = elapsed - regionStartTime;
+                if (style === 'highlight') {
+                    // Use offscreen canvas to composite highlights with document
+                    // This prevents background from being affected by multiply blend
+                    offCtx.clearRect(0, 0, offscreen.width, offscreen.height);
 
-                    if (regionElapsed > 0) {
-                        let progress = Math.min(regionElapsed / durationMs, 1);
-                        progress = easingFn(progress);
+                    // Draw animated highlights first on offscreen canvas
+                    currentRegions.forEach((region, index) => {
+                        // In simultaneous mode, all regions start at time 0
+                        const regionStartTime = isSimultaneous ? 0 : index * delayMs;
+                        const regionElapsed = elapsed - regionStartTime;
 
-                        // Animate from left to right (like a highlighter)
-                        const highlightWidth = region.width * regionScale * progress;
+                        if (regionElapsed > 0) {
+                            let progress = Math.min(regionElapsed / durationMs, 1);
+                            progress = easingFn(progress);
 
-                        ctx.fillStyle = hexToRgba(color, opacity);
-                        ctx.fillRect(
-                            offsetX + region.x * regionScale,
-                            offsetY + region.y * regionScale,
-                            highlightWidth,
-                            region.height * regionScale
-                        );
-                    }
-                });
+                            const highlightWidth = region.width * regionScale * progress;
+
+                            offCtx.fillStyle = color;
+                            offCtx.fillRect(
+                                offsetX + region.x * regionScale,
+                                offsetY + region.y * regionScale,
+                                highlightWidth,
+                                region.height * regionScale
+                            );
+                        }
+                    });
+
+                    // Draw document with multiply blend mode on offscreen canvas
+                    offCtx.globalCompositeOperation = 'multiply';
+                    offCtx.drawImage(documentCanvas, offsetX, offsetY, scaledWidth, scaledHeight);
+                    offCtx.globalCompositeOperation = 'source-over';
+
+                    // Restore non-highlighted areas on offscreen canvas
+                    offCtx.globalCompositeOperation = 'destination-over';
+                    offCtx.drawImage(documentCanvas, offsetX, offsetY, scaledWidth, scaledHeight);
+                    offCtx.globalCompositeOperation = 'source-over';
+
+                    // Draw composited result onto main canvas (which already has background)
+                    ctx.drawImage(offscreen, 0, 0);
+                } else {
+                    // Underline style: draw document first, then animated underlines
+                    ctx.drawImage(documentCanvas, offsetX, offsetY, scaledWidth, scaledHeight);
+
+                    currentRegions.forEach((region, index) => {
+                        const regionStartTime = isSimultaneous ? 0 : index * delayMs;
+                        const regionElapsed = elapsed - regionStartTime;
+
+                        if (regionElapsed > 0) {
+                            let progress = Math.min(regionElapsed / durationMs, 1);
+                            progress = easingFn(progress);
+
+                            const underlineWidth = region.width * regionScale * progress;
+                            const underlineY = offsetY + (region.y + region.height) * regionScale - uThickness;
+
+                            ctx.fillStyle = color;
+                            ctx.fillRect(
+                                offsetX + region.x * regionScale,
+                                underlineY,
+                                underlineWidth,
+                                uThickness
+                            );
+                        }
+                    });
+                }
 
                 animationId = requestAnimationFrame(animate);
             }
@@ -1831,7 +2026,8 @@
             exportGifBtn.disabled = true;
 
             const durationMs = parseFloat(duration.value) * 1000;
-            const delayMs = parseFloat(delay.value) * 1000;
+            const isSimultaneous = timingSimultaneous.checked;
+            const delayMs = isSimultaneous ? 0 : parseFloat(delay.value) * 1000;
             const easingFn = easingFunctions[easingSelect.value];
 
             // Filter regions for current page
@@ -1839,7 +2035,7 @@
                 ? highlightRegions.filter(r => r.page === currentPdfPage)
                 : highlightRegions;
 
-            const totalDuration = currentRegions.length * delayMs + durationMs;
+            const totalDuration = isSimultaneous ? durationMs : (currentRegions.length - 1) * delayMs + durationMs;
             const fps = 20;
             const frameCount = Math.ceil(totalDuration / 1000 * fps) + 10;
             const frameInterval = totalDuration / frameCount;
@@ -1872,7 +2068,14 @@
             const regionScale = scaledWidth / documentCanvas.width;
 
             const color = highlightColor.value;
-            const opacity = parseInt(highlightOpacity.value) / 100;
+            const style = getCurrentStyle();
+            const uThickness = parseInt(underlineThickness.value);
+
+            // Create offscreen canvas for highlight compositing
+            const offscreenGif = document.createElement('canvas');
+            offscreenGif.width = gifWidth;
+            offscreenGif.height = gifHeight;
+            const offGifCtx = offscreenGif.getContext('2d');
 
             for (let i = 0; i <= frameCount; i++) {
                 const elapsed = i * frameInterval;
@@ -1885,29 +2088,68 @@
                     tempCtx.fillRect(0, 0, gifWidth, gifHeight);
                 }
 
-                // Draw document
-                tempCtx.drawImage(documentCanvas, offsetX, offsetY, scaledWidth, scaledHeight);
+                if (style === 'highlight') {
+                    // Use offscreen canvas for highlight compositing
+                    offGifCtx.clearRect(0, 0, gifWidth, gifHeight);
 
-                // Draw highlights
-                currentRegions.forEach((region, index) => {
-                    const regionStartTime = index * delayMs;
-                    const regionElapsed = elapsed - regionStartTime;
+                    // Draw highlights first on offscreen
+                    currentRegions.forEach((region, index) => {
+                        const regionStartTime = isSimultaneous ? 0 : index * delayMs;
+                        const regionElapsed = elapsed - regionStartTime;
 
-                    if (regionElapsed > 0) {
-                        let progress = Math.min(regionElapsed / durationMs, 1);
-                        progress = easingFn(progress);
+                        if (regionElapsed > 0) {
+                            let progress = Math.min(regionElapsed / durationMs, 1);
+                            progress = easingFn(progress);
 
-                        const highlightWidth = region.width * regionScale * progress;
+                            const highlightWidth = region.width * regionScale * progress;
 
-                        tempCtx.fillStyle = hexToRgba(color, opacity);
-                        tempCtx.fillRect(
-                            offsetX + region.x * regionScale,
-                            offsetY + region.y * regionScale,
-                            highlightWidth,
-                            region.height * regionScale
-                        );
-                    }
-                });
+                            offGifCtx.fillStyle = color;
+                            offGifCtx.fillRect(
+                                offsetX + region.x * regionScale,
+                                offsetY + region.y * regionScale,
+                                highlightWidth,
+                                region.height * regionScale
+                            );
+                        }
+                    });
+
+                    // Draw document with multiply blend mode on offscreen
+                    offGifCtx.globalCompositeOperation = 'multiply';
+                    offGifCtx.drawImage(documentCanvas, offsetX, offsetY, scaledWidth, scaledHeight);
+                    offGifCtx.globalCompositeOperation = 'source-over';
+
+                    // Restore non-highlighted areas on offscreen
+                    offGifCtx.globalCompositeOperation = 'destination-over';
+                    offGifCtx.drawImage(documentCanvas, offsetX, offsetY, scaledWidth, scaledHeight);
+                    offGifCtx.globalCompositeOperation = 'source-over';
+
+                    // Draw composited result onto main canvas (which already has background)
+                    tempCtx.drawImage(offscreenGif, 0, 0);
+                } else {
+                    // Underline style: draw document first, then underlines
+                    tempCtx.drawImage(documentCanvas, offsetX, offsetY, scaledWidth, scaledHeight);
+
+                    currentRegions.forEach((region, index) => {
+                        const regionStartTime = isSimultaneous ? 0 : index * delayMs;
+                        const regionElapsed = elapsed - regionStartTime;
+
+                        if (regionElapsed > 0) {
+                            let progress = Math.min(regionElapsed / durationMs, 1);
+                            progress = easingFn(progress);
+
+                            const underlineWidth = region.width * regionScale * progress;
+                            const underlineY = offsetY + (region.y + region.height) * regionScale - uThickness;
+
+                            tempCtx.fillStyle = color;
+                            tempCtx.fillRect(
+                                offsetX + region.x * regionScale,
+                                underlineY,
+                                underlineWidth,
+                                uThickness
+                            );
+                        }
+                    });
+                }
 
                 frames.push(tempCanvas.toDataURL('image/png'));
             }

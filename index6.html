@@ -963,6 +963,13 @@
                             <option value="linear">Linear</option>
                         </select>
                     </div>
+                    <div class="slider-item">
+                        <span class="label-text">Algorithm:</span>
+                        <select id="algorithmSelect" class="easing-select">
+                            <option value="stroke">Stroke Matching</option>
+                            <option value="hybrid">Hybrid (Outline + Inner)</option>
+                        </select>
+                    </div>
                 </div>
 
                 <div class="preview-content-wrapper">
@@ -1006,6 +1013,16 @@
         let bgImageData = null;
         let cachedBgImage = null;
 
+        // Hybrid algorithm state
+        let outlinePointsA = [];
+        let outlinePointsB = [];
+        let innerStrokesA = [];
+        let innerStrokesB = [];
+        let normalizedOutlineA = [];
+        let normalizedOutlineB = [];
+        let normalizedInnerA = [];
+        let normalizedInnerB = [];
+
         // DOM Elements
         const imageUploadA = document.getElementById('imageUploadA');
         const imageUploadB = document.getElementById('imageUploadB');
@@ -1044,6 +1061,7 @@
         const thresholdGroupB = document.getElementById('thresholdGroupB');
         const easingSelect = document.getElementById('easingSelect');
         const loopAnimation = document.getElementById('loopAnimation');
+        const algorithmSelect = document.getElementById('algorithmSelect');
 
         // Displays
         const thicknessDisplay = document.getElementById('thicknessDisplay');
@@ -1212,6 +1230,11 @@
 
         ratio16x9Btn.addEventListener('click', () => selectAspectRatio('16:9'));
         ratio9x16Btn.addEventListener('click', () => selectAspectRatio('9:16'));
+
+        // Algorithm change handler
+        algorithmSelect.addEventListener('change', () => {
+            regenerateStrokes();
+        });
 
         // Upload handling for Image A
         uploadSectionA.addEventListener('click', (e) => {
@@ -1445,16 +1468,511 @@
 
             if (containerWidth === 0 || containerHeight === 0) return;
 
-            // Extract strokes as separate paths from each image
+            const algorithm = algorithmSelect.value;
             const gap = Math.max(2, parseInt(outlineGap.value));
-            strokePointsA = extractStrokes(imageA, processedImageA, isNonTransparentA, containerWidth, containerHeight, gap);
-            strokePointsB = extractStrokes(imageB, processedImageB, isNonTransparentB, containerWidth, containerHeight, gap);
 
-            // Normalize for morphing
-            normalizeStrokesForMorphing();
+            if (algorithm === 'hybrid') {
+                // Hybrid algorithm: separate outline and inner paths
+                regenerateHybridStrokes(containerWidth, containerHeight, gap);
+            } else {
+                // Original stroke matching algorithm
+                strokePointsA = extractStrokes(imageA, processedImageA, isNonTransparentA, containerWidth, containerHeight, gap);
+                strokePointsB = extractStrokes(imageB, processedImageB, isNonTransparentB, containerWidth, containerHeight, gap);
+                normalizeStrokesForMorphing();
+            }
 
             drawCurrentState();
         }
+
+        // ===== HYBRID ALGORITHM FUNCTIONS =====
+
+        // Hybrid algorithm: extract outline and inner paths separately
+        function regenerateHybridStrokes(containerWidth, containerHeight, gap) {
+            const resultA = extractOutlineAndInnerPaths(imageA, processedImageA, isNonTransparentA, containerWidth, containerHeight, gap);
+            outlinePointsA = resultA.outline;
+            innerStrokesA = resultA.innerStrokes;
+
+            const resultB = extractOutlineAndInnerPaths(imageB, processedImageB, isNonTransparentB, containerWidth, containerHeight, gap);
+            outlinePointsB = resultB.outline;
+            innerStrokesB = resultB.innerStrokes;
+
+            normalizeOutlinesForMorphing();
+            normalizeInnerStrokesForMorphing();
+        }
+
+        // Extract outer outline using marching squares and inner strokes using thinning
+        function extractOutlineAndInnerPaths(img, processedImg, isNonTransparent, containerWidth, containerHeight, gap) {
+            if (containerWidth === 0 || containerHeight === 0) return { outline: [], innerStrokes: [] };
+
+            const sourceImg = (isNonTransparent && processedImg) ? processedImg : img;
+
+            const maxProcessSize = 500;
+            const processScale = Math.min(1, maxProcessSize / Math.max(sourceImg.width, sourceImg.height));
+            const processWidth = Math.round(sourceImg.width * processScale);
+            const processHeight = Math.round(sourceImg.height * processScale);
+
+            const displayScale = Math.min(
+                (containerWidth * 0.7) / processWidth,
+                (containerHeight * 0.7) / processHeight
+            );
+            const offsetX = (containerWidth - processWidth * displayScale) / 2;
+            const offsetY = (containerHeight - processHeight * displayScale) / 2;
+
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = processWidth;
+            tempCanvas.height = processHeight;
+            const tempCtx = tempCanvas.getContext('2d');
+
+            // Draw with white background for stroke detection
+            tempCtx.fillStyle = 'white';
+            tempCtx.fillRect(0, 0, processWidth, processHeight);
+            tempCtx.drawImage(sourceImg, 0, 0, processWidth, processHeight);
+            const strokeData = tempCtx.getImageData(0, 0, processWidth, processHeight);
+
+            // Create binary mask of dark pixels
+            const darkMask = new Uint8Array(processWidth * processHeight);
+            for (let i = 0; i < strokeData.data.length; i += 4) {
+                const avg = (strokeData.data[i] + strokeData.data[i + 1] + strokeData.data[i + 2]) / 3;
+                darkMask[i / 4] = avg < 128 ? 1 : 0;
+            }
+
+            // Dilate the mask to fill gaps between strokes, creating a solid shape
+            const dilatedMask = dilateMaskForOutline(darkMask, processWidth, processHeight, 10);
+
+            // Erode back by SAME amount so outline sits exactly ON the original strokes
+            const erodedMask = erodeMaskForOutline(dilatedMask, processWidth, processHeight, 10);
+
+            // Extract outer outline using marching squares - this follows the outer edge of strokes
+            const outline = extractMarchingSquaresOutline(erodedMask, processWidth, processHeight, gap, displayScale, offsetX, offsetY);
+
+            // Extract all strokes using thinning
+            const allPaths = tracePaths(strokeData, 128);
+
+            // Filter out boundary strokes - keep only strokes that are INSIDE the outline
+            const innerStrokes = filterInteriorStrokesForHybrid(allPaths, outline, displayScale, offsetX, offsetY, gap);
+
+            return { outline, innerStrokes };
+        }
+
+        // Dilate mask to connect nearby strokes into solid shape
+        function dilateMaskForOutline(mask, width, height, radius) {
+            const result = new Uint8Array(width * height);
+
+            for (let y = 0; y < height; y++) {
+                for (let x = 0; x < width; x++) {
+                    if (mask[y * width + x]) {
+                        for (let dy = -radius; dy <= radius; dy++) {
+                            for (let dx = -radius; dx <= radius; dx++) {
+                                if (dx * dx + dy * dy <= radius * radius) {
+                                    const nx = x + dx;
+                                    const ny = y + dy;
+                                    if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
+                                        result[ny * width + nx] = 1;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            return result;
+        }
+
+        // Erode mask to shrink it back after dilation
+        function erodeMaskForOutline(mask, width, height, radius) {
+            const result = new Uint8Array(width * height);
+
+            for (let y = 0; y < height; y++) {
+                for (let x = 0; x < width; x++) {
+                    if (mask[y * width + x]) {
+                        // Check if all pixels in radius are filled
+                        let allFilled = true;
+                        outer: for (let dy = -radius; dy <= radius && allFilled; dy++) {
+                            for (let dx = -radius; dx <= radius; dx++) {
+                                if (dx * dx + dy * dy <= radius * radius) {
+                                    const nx = x + dx;
+                                    const ny = y + dy;
+                                    if (nx < 0 || nx >= width || ny < 0 || ny >= height || !mask[ny * width + nx]) {
+                                        allFilled = false;
+                                        break outer;
+                                    }
+                                }
+                            }
+                        }
+                        if (allFilled) {
+                            result[y * width + x] = 1;
+                        }
+                    }
+                }
+            }
+
+            return result;
+        }
+
+        // Extract outline using marching squares algorithm
+        function extractMarchingSquaresOutline(mask, width, height, gap, displayScale, offsetX, offsetY) {
+            // Find boundary using marching squares
+            const boundaryPoints = marchingSquaresTrace(mask, width, height);
+
+            if (boundaryPoints.length < 3) return [];
+
+            // Simplify the contour to reduce point count
+            const simplified = simplifyContourForOutline(boundaryPoints, 2);
+
+            // Scale to display coordinates
+            const scaledOutline = simplified.map(p => ({
+                x: p.x * displayScale + offsetX,
+                y: p.y * displayScale + offsetY
+            }));
+
+            return scaledOutline;
+        }
+
+        // Marching squares to trace boundary
+        function marchingSquaresTrace(mask, width, height) {
+            const points = [];
+
+            // Find a starting point on the boundary
+            let startX = -1, startY = -1;
+            outer: for (let y = 0; y < height - 1; y++) {
+                for (let x = 0; x < width - 1; x++) {
+                    if (mask[y * width + x] && !mask[y * width + (x - 1)] && x > 0) {
+                        startX = x;
+                        startY = y;
+                        break outer;
+                    }
+                    if (mask[y * width + x] && y === 0) {
+                        startX = x;
+                        startY = y;
+                        break outer;
+                    }
+                }
+            }
+
+            if (startX === -1) return points;
+
+            // Trace the boundary
+            const visited = new Set();
+            let x = startX, y = startY;
+            let dir = 0; // 0=right, 1=down, 2=left, 3=up
+            const dx = [1, 0, -1, 0];
+            const dy = [0, 1, 0, -1];
+
+            const maxIterations = width * height;
+            let iterations = 0;
+
+            do {
+                const key = `${x},${y}`;
+                if (!visited.has(key)) {
+                    points.push({ x, y });
+                    visited.add(key);
+                }
+
+                // Turn right and try to move
+                let found = false;
+                for (let i = 0; i < 4; i++) {
+                    const newDir = (dir + 3 + i) % 4;
+                    const nx = x + dx[newDir];
+                    const ny = y + dy[newDir];
+
+                    if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
+                        if (mask[ny * width + nx]) {
+                            x = nx;
+                            y = ny;
+                            dir = newDir;
+                            found = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (!found) break;
+                iterations++;
+            } while ((x !== startX || y !== startY) && iterations < maxIterations);
+
+            return points;
+        }
+
+        // Simplify contour by removing points that are too close
+        function simplifyContourForOutline(points, minDist) {
+            if (points.length < 3) return points;
+
+            const result = [points[0]];
+            for (let i = 1; i < points.length; i++) {
+                const last = result[result.length - 1];
+                const curr = points[i];
+                const dist = Math.sqrt((curr.x - last.x) ** 2 + (curr.y - last.y) ** 2);
+                if (dist >= minDist) {
+                    result.push(curr);
+                }
+            }
+
+            return result;
+        }
+
+        // Filter strokes to keep only interior ones (not part of the outline)
+        function filterInteriorStrokesForHybrid(allPaths, outline, displayScale, offsetX, offsetY, gap) {
+            if (outline.length < 3) {
+                // No outline, return all paths
+                const strokes = [];
+                for (const pathObj of allPaths) {
+                    if (pathObj.points.length >= 20) {
+                        const scaledPoints = pathObj.points.map(p => ({
+                            x: p.x * displayScale + offsetX,
+                            y: p.y * displayScale + offsetY
+                        }));
+                        const sampled = sampleContour(scaledPoints, gap);
+                        if (sampled.length >= 3) {
+                            strokes.push(sampled);
+                        }
+                    }
+                }
+                return strokes;
+            }
+
+            // Filter: keep only INTERIOR strokes, exclude boundary strokes
+            // Boundary strokes have points that lie ON the outline (very small distance)
+            // Interior strokes (eyes, nose) have points INSIDE, far from outline
+
+            const innerStrokes = [];
+
+            // Calculate the centroid of the outline to determine "inside"
+            let cx = 0, cy = 0;
+            for (const p of outline) {
+                cx += p.x;
+                cy += p.y;
+            }
+            cx /= outline.length;
+            cy /= outline.length;
+
+            for (const pathObj of allPaths) {
+                if (pathObj.points.length < 20) continue;
+
+                const scaledPoints = pathObj.points.map(p => ({
+                    x: p.x * displayScale + offsetX,
+                    y: p.y * displayScale + offsetY
+                }));
+
+                // Calculate average distance from outline for this stroke
+                let totalDist = 0;
+                let numSamples = 0;
+                const step = Math.max(1, Math.floor(scaledPoints.length / 20));
+
+                for (let i = 0; i < scaledPoints.length; i += step) {
+                    const p = scaledPoints[i];
+                    let minDist = Infinity;
+                    for (const op of outline) {
+                        const dx = p.x - op.x;
+                        const dy = p.y - op.y;
+                        const dist = Math.sqrt(dx * dx + dy * dy);
+                        if (dist < minDist) minDist = dist;
+                    }
+                    totalDist += minDist;
+                    numSamples++;
+                }
+
+                const avgDist = totalDist / numSamples;
+
+                // If average distance is small, this stroke is ON the outline (boundary)
+                // If average distance is large, this stroke is INSIDE (interior detail)
+                // Note: thinning gives center line of stroke, marching squares gives edge
+                // So boundary strokes will be ~half stroke width away from outline
+                // Use larger threshold (20 pixels) to catch boundary strokes
+                const distThreshold = 20 * displayScale;
+
+                if (avgDist > distThreshold) {
+                    // This is an interior stroke - keep it
+                    const sampled = sampleContour(scaledPoints, gap);
+                    if (sampled.length >= 3) {
+                        innerStrokes.push(sampled);
+                    }
+                }
+                // else: this is a boundary stroke - skip it (outline will draw it)
+            }
+
+            return innerStrokes;
+        }
+
+        // Normalize outlines for morphing
+        function normalizeOutlinesForMorphing() {
+            if (outlinePointsA.length < 3 || outlinePointsB.length < 3) {
+                normalizedOutlineA = [];
+                normalizedOutlineB = [];
+                return;
+            }
+
+            const targetCount = Math.max(outlinePointsA.length, outlinePointsB.length, 100);
+            normalizedOutlineA = resampleStroke(outlinePointsA, targetCount);
+
+            let alignedB = alignStrokeDirection(outlinePointsB, outlinePointsA);
+            alignedB = findBestOutlineRotation(normalizedOutlineA, alignedB);
+            normalizedOutlineB = resampleStroke(alignedB, targetCount);
+        }
+
+        // Find best rotation alignment for outline
+        function findBestOutlineRotation(outlineA, outlineB) {
+            if (outlineA.length < 10 || outlineB.length < 10) return outlineB;
+
+            const n = Math.min(outlineA.length, outlineB.length, 50);
+            const sampledA = resampleStroke(outlineA, n);
+            const sampledB = resampleStroke(outlineB, n);
+
+            let bestOffset = 0;
+            let bestDist = Infinity;
+
+            const step = Math.max(1, Math.floor(n / 20));
+            for (let offset = 0; offset < n; offset += step) {
+                let totalDist = 0;
+                for (let i = 0; i < n; i++) {
+                    const j = (i + offset) % n;
+                    const dx = sampledA[i].x - sampledB[j].x;
+                    const dy = sampledA[i].y - sampledB[j].y;
+                    totalDist += dx * dx + dy * dy;
+                }
+                if (totalDist < bestDist) {
+                    bestDist = totalDist;
+                    bestOffset = offset;
+                }
+            }
+
+            if (bestOffset === 0) return outlineB;
+
+            const result = [];
+            const origN = outlineB.length;
+            const actualOffset = Math.round((bestOffset / n) * origN);
+            for (let i = 0; i < origN; i++) {
+                result.push({ ...outlineB[(i + actualOffset) % origN] });
+            }
+            return result;
+        }
+
+        // Normalize inner strokes for morphing
+        function normalizeInnerStrokesForMorphing() {
+            if (innerStrokesA.length === 0 && innerStrokesB.length === 0) {
+                normalizedInnerA = [];
+                normalizedInnerB = [];
+                return;
+            }
+
+            const centroidsA = innerStrokesA.map(s => getStrokeCentroid(s));
+            const centroidsB = innerStrokesB.map(s => getStrokeCentroid(s));
+
+            const usedB = new Set();
+            const pairs = [];
+
+            for (let i = 0; i < innerStrokesA.length; i++) {
+                let bestDist = Infinity;
+                let bestJ = -1;
+
+                for (let j = 0; j < innerStrokesB.length; j++) {
+                    if (usedB.has(j)) continue;
+                    const dx = centroidsA[i].x - centroidsB[j].x;
+                    const dy = centroidsA[i].y - centroidsB[j].y;
+                    const dist = dx * dx + dy * dy;
+                    if (dist < bestDist) {
+                        bestDist = dist;
+                        bestJ = j;
+                    }
+                }
+
+                if (bestJ >= 0) {
+                    pairs.push({ strokeA: innerStrokesA[i], strokeB: innerStrokesB[bestJ] });
+                    usedB.add(bestJ);
+                } else {
+                    const c = centroidsA[i];
+                    pairs.push({
+                        strokeA: innerStrokesA[i],
+                        strokeB: innerStrokesA[i].map(() => ({ x: c.x, y: c.y }))
+                    });
+                }
+            }
+
+            for (let j = 0; j < innerStrokesB.length; j++) {
+                if (!usedB.has(j)) {
+                    const cB = centroidsB[j];
+                    pairs.push({
+                        strokeA: innerStrokesB[j].map(() => ({ x: cB.x, y: cB.y })),
+                        strokeB: innerStrokesB[j]
+                    });
+                }
+            }
+
+            normalizedInnerA = [];
+            normalizedInnerB = [];
+
+            for (let i = 0; i < pairs.length; i++) {
+                let { strokeA, strokeB } = pairs[i];
+                strokeB = alignStrokeDirection(strokeB, strokeA);
+
+                const targetCount = Math.max(strokeA.length, strokeB.length, 30);
+                const resampledA = resampleStroke(strokeA, targetCount);
+                const resampledB = resampleStroke(strokeB, targetCount);
+
+                if (i > 0) {
+                    normalizedInnerA.push({ x: resampledA[0].x, y: resampledA[0].y, isBreak: true });
+                    normalizedInnerB.push({ x: resampledB[0].x, y: resampledB[0].y, isBreak: true });
+                }
+
+                for (let j = 0; j < resampledA.length; j++) {
+                    normalizedInnerA.push({ ...resampledA[j], isBreak: false });
+                    normalizedInnerB.push({ ...resampledB[j], isBreak: false });
+                }
+            }
+        }
+
+        // Interpolate hybrid (outline + inner)
+        function interpolateHybrid(t) {
+            const result = { outline: [], inner: [] };
+
+            if (normalizedOutlineA.length > 0 && normalizedOutlineB.length > 0) {
+                const count = Math.min(normalizedOutlineA.length, normalizedOutlineB.length);
+                for (let i = 0; i < count; i++) {
+                    const a = normalizedOutlineA[i];
+                    const b = normalizedOutlineB[i];
+                    result.outline.push({
+                        x: a.x + t * (b.x - a.x),
+                        y: a.y + t * (b.y - a.y)
+                    });
+                }
+            }
+
+            if (normalizedInnerA.length > 0 && normalizedInnerB.length > 0) {
+                const count = Math.min(normalizedInnerA.length, normalizedInnerB.length);
+                for (let i = 0; i < count; i++) {
+                    const a = normalizedInnerA[i];
+                    const b = normalizedInnerB[i];
+                    result.inner.push({
+                        x: a.x + t * (b.x - a.x),
+                        y: a.y + t * (b.y - a.y),
+                        isBreak: a.isBreak || b.isBreak
+                    });
+                }
+            }
+
+            return result;
+        }
+
+        // Draw closed path (for outline)
+        function drawClosedPath(ctx, points) {
+            if (points.length < 3) return;
+
+            const thickness = parseInt(outlineThickness.value);
+            ctx.strokeStyle = outlineColor.value;
+            ctx.lineWidth = thickness;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+
+            ctx.beginPath();
+            ctx.moveTo(points[0].x, points[0].y);
+            for (let i = 1; i < points.length; i++) {
+                ctx.lineTo(points[i].x, points[i].y);
+            }
+            ctx.closePath();
+            ctx.stroke();
+        }
+
+        // ===== END HYBRID ALGORITHM =====
 
         // Extract strokes using tracePaths approach from index1.html
         function extractStrokes(img, processedImg, isNonTransparent, containerWidth, containerHeight, gap) {
@@ -2304,12 +2822,24 @@
 
         // Draw the current state (shape A by default)
         function drawCurrentState() {
-            if (normalizedPointsA.length === 0) return;
-
             const ctx = morphCanvas.getContext('2d');
             ctx.clearRect(0, 0, morphCanvas.width, morphCanvas.height);
 
-            drawPath(ctx, normalizedPointsA);
+            const algorithm = algorithmSelect.value;
+
+            if (algorithm === 'hybrid') {
+                // Draw outline (sits slightly inside strokes due to erosion)
+                if (normalizedOutlineA.length >= 3) {
+                    drawClosedPath(ctx, normalizedOutlineA);
+                }
+                // Draw all inner strokes
+                if (normalizedInnerA.length >= 2) {
+                    drawPath(ctx, normalizedInnerA);
+                }
+            } else {
+                if (normalizedPointsA.length === 0) return;
+                drawPath(ctx, normalizedPointsA);
+            }
         }
 
         // Draw path with break handling
@@ -2359,7 +2889,12 @@
 
         // Animation
         animateBtn.addEventListener('click', () => {
-            if (normalizedPointsA.length < 1 || normalizedPointsB.length < 1) return;
+            const algorithm = algorithmSelect.value;
+            if (algorithm === 'hybrid') {
+                if (normalizedOutlineA.length < 3 && normalizedInnerA.length < 2) return;
+            } else {
+                if (normalizedPointsA.length < 1 || normalizedPointsB.length < 1) return;
+            }
 
             if (isAnimating) {
                 stopAnimation();
@@ -2388,6 +2923,7 @@
             const durationMs = parseFloat(duration.value) * 1000;
             const loop = loopAnimation.checked;
             const easingFn = easingFunctions[easingSelect.value] || easingFunctions.easeInOut;
+            const algorithm = algorithmSelect.value;
 
             let startTime = null;
 
@@ -2399,7 +2935,6 @@
 
                 let progress;
                 if (loop) {
-                    // A -> B -> A loop
                     const cycleTime = durationMs * 2;
                     const cycleProgress = (elapsed % cycleTime) / durationMs;
                     if (cycleProgress <= 1) {
@@ -2413,8 +2948,21 @@
                 }
 
                 ctx.clearRect(0, 0, morphCanvas.width, morphCanvas.height);
-                const interpolatedPoints = interpolatePointClouds(progress);
-                drawPath(ctx, interpolatedPoints);
+
+                if (algorithm === 'hybrid') {
+                    const interpolated = interpolateHybrid(progress);
+                    // Draw morphing outline
+                    if (interpolated.outline.length >= 3) {
+                        drawClosedPath(ctx, interpolated.outline);
+                    }
+                    // Draw morphing inner strokes
+                    if (interpolated.inner.length >= 2) {
+                        drawPath(ctx, interpolated.inner);
+                    }
+                } else {
+                    const interpolatedPoints = interpolatePointClouds(progress);
+                    drawPath(ctx, interpolatedPoints);
+                }
 
                 if (!loop && elapsed >= durationMs) {
                     stopAnimation();
@@ -2429,7 +2977,12 @@
 
         // Export GIF
         exportGifBtn.addEventListener('click', () => {
-            if (normalizedPointsA.length < 1 || normalizedPointsB.length < 1) return;
+            const algorithm = algorithmSelect.value;
+            if (algorithm === 'hybrid') {
+                if (normalizedOutlineA.length < 3 && normalizedInnerA.length < 2) return;
+            } else {
+                if (normalizedPointsA.length < 1 || normalizedPointsB.length < 1) return;
+            }
             exportAsGif();
         });
 
@@ -2441,6 +2994,7 @@
             const easingFn = easingFunctions[easingSelect.value] || easingFunctions.easeInOut;
             const width = morphCanvas.width;
             const height = morphCanvas.height;
+            const algorithm = algorithmSelect.value;
 
             const totalDuration = loop ? durationMs * 2 : durationMs;
             const numFrames = Math.ceil((totalDuration / 1000) * fps);
@@ -2475,31 +3029,65 @@
                     progress = easingFn(frame / numFrames);
                 }
 
-                // Draw interpolated path
-                const interpolatedPoints = interpolatePointClouds(progress);
-                if (interpolatedPoints.length >= 2) {
-                    tempCtx.strokeStyle = color;
-                    tempCtx.lineWidth = thickness;
-                    tempCtx.lineCap = 'round';
-                    tempCtx.lineJoin = 'round';
+                tempCtx.strokeStyle = color;
+                tempCtx.lineWidth = thickness;
+                tempCtx.lineCap = 'round';
+                tempCtx.lineJoin = 'round';
 
-                    tempCtx.beginPath();
-                    let needsMoveTo = true;
+                if (algorithm === 'hybrid') {
+                    const interpolated = interpolateHybrid(progress);
 
-                    for (let i = 0; i < interpolatedPoints.length; i++) {
-                        if (interpolatedPoints[i].isBreak) {
-                            needsMoveTo = true;
-                            continue;
+                    // Draw morphing outline
+                    if (interpolated.outline.length >= 3) {
+                        tempCtx.beginPath();
+                        tempCtx.moveTo(interpolated.outline[0].x, interpolated.outline[0].y);
+                        for (let i = 1; i < interpolated.outline.length; i++) {
+                            tempCtx.lineTo(interpolated.outline[i].x, interpolated.outline[i].y);
                         }
-
-                        if (needsMoveTo) {
-                            tempCtx.moveTo(interpolatedPoints[i].x, interpolatedPoints[i].y);
-                            needsMoveTo = false;
-                        } else {
-                            tempCtx.lineTo(interpolatedPoints[i].x, interpolatedPoints[i].y);
-                        }
+                        tempCtx.closePath();
+                        tempCtx.stroke();
                     }
-                    tempCtx.stroke();
+
+                    // Draw morphing inner strokes
+                    if (interpolated.inner.length >= 2) {
+                        tempCtx.beginPath();
+                        let needsMoveTo = true;
+                        for (let i = 0; i < interpolated.inner.length; i++) {
+                            if (interpolated.inner[i].isBreak) {
+                                needsMoveTo = true;
+                                continue;
+                            }
+                            if (needsMoveTo) {
+                                tempCtx.moveTo(interpolated.inner[i].x, interpolated.inner[i].y);
+                                needsMoveTo = false;
+                            } else {
+                                tempCtx.lineTo(interpolated.inner[i].x, interpolated.inner[i].y);
+                            }
+                        }
+                        tempCtx.stroke();
+                    }
+                } else {
+                    // Original stroke matching
+                    const interpolatedPoints = interpolatePointClouds(progress);
+                    if (interpolatedPoints.length >= 2) {
+                        tempCtx.beginPath();
+                        let needsMoveTo = true;
+
+                        for (let i = 0; i < interpolatedPoints.length; i++) {
+                            if (interpolatedPoints[i].isBreak) {
+                                needsMoveTo = true;
+                                continue;
+                            }
+
+                            if (needsMoveTo) {
+                                tempCtx.moveTo(interpolatedPoints[i].x, interpolatedPoints[i].y);
+                                needsMoveTo = false;
+                            } else {
+                                tempCtx.lineTo(interpolatedPoints[i].x, interpolatedPoints[i].y);
+                            }
+                        }
+                        tempCtx.stroke();
+                    }
                 }
 
                 frames.push(tempCanvas.toDataURL('image/png'));
