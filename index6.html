@@ -1806,10 +1806,25 @@
                     usedB.add(bestJ);
                 } else {
                     // Stroke only in A - will disappear during morph
-                    const c = centroidsA[i];
+                    // Find the closest point on outline B for more natural collapse
+                    const strokeA = innerStrokesA[i];
+                    let anchorPoint = centroidsA[i]; // fallback to centroid
+
+                    if (outlinePointsB && outlinePointsB.length > 0) {
+                        let minDist = Infinity;
+                        const strokeStart = strokeA[0];
+                        for (const pt of outlinePointsB) {
+                            const d = Math.hypot(pt.x - strokeStart.x, pt.y - strokeStart.y);
+                            if (d < minDist) {
+                                minDist = d;
+                                anchorPoint = { x: pt.x, y: pt.y };
+                            }
+                        }
+                    }
+
                     pairs.push({
-                        strokeA: innerStrokesA[i],
-                        strokeB: innerStrokesA[i].map(() => ({ x: c.x, y: c.y })),
+                        strokeA: strokeA,
+                        strokeB: strokeA.map(() => ({ x: anchorPoint.x, y: anchorPoint.y })),
                         type: 'onlyA'
                     });
                 }
@@ -1817,11 +1832,27 @@
 
             for (let j = 0; j < innerStrokesB.length; j++) {
                 if (!usedB.has(j)) {
-                    // Stroke only in B - will appear during morph (NOT at start)
-                    const cB = centroidsB[j];
+                    // Stroke only in B - will appear during morph
+                    // Find the closest point on the outline to anchor the stroke emergence
+                    const strokeB = innerStrokesB[j];
+                    let anchorPoint = centroidsB[j]; // fallback to centroid
+
+                    // Try to find closest point on outline A for more natural emergence
+                    if (outlinePointsA && outlinePointsA.length > 0) {
+                        let minDist = Infinity;
+                        const strokeStart = strokeB[0];
+                        for (const pt of outlinePointsA) {
+                            const d = Math.hypot(pt.x - strokeStart.x, pt.y - strokeStart.y);
+                            if (d < minDist) {
+                                minDist = d;
+                                anchorPoint = { x: pt.x, y: pt.y };
+                            }
+                        }
+                    }
+
                     pairs.push({
-                        strokeA: innerStrokesB[j].map(() => ({ x: cB.x, y: cB.y })),
-                        strokeB: innerStrokesB[j],
+                        strokeA: strokeB.map(() => ({ x: anchorPoint.x, y: anchorPoint.y })),
+                        strokeB: strokeB,
                         type: 'onlyB'
                     });
                 }
@@ -1879,41 +1910,16 @@
             if (normalizedInnerA.length > 0 && normalizedInnerB.length > 0) {
                 const count = Math.min(normalizedInnerA.length, normalizedInnerB.length);
 
-                // Build a set of indices to skip based on stroke type and t value
-                const skipIndices = new Set();
-                for (const pair of innerStrokePairs) {
-                    // onlyB strokes: don't show until t > 0.5 (halfway through morph)
-                    if (pair.type === 'onlyB' && t < 0.5) {
-                        for (let idx = pair.startIdx; idx < pair.endIdx; idx++) {
-                            skipIndices.add(idx);
-                        }
-                    }
-                    // onlyA strokes: hide after t > 0.5 (halfway through morph)
-                    if (pair.type === 'onlyA' && t > 0.5) {
-                        for (let idx = pair.startIdx; idx < pair.endIdx; idx++) {
-                            skipIndices.add(idx);
-                        }
-                    }
-                }
-
-                let lastWasSkipped = false;
+                // All strokes morph continuously - unmatched strokes grow from/collapse to
+                // their anchor points on the outline for smooth appearance
                 for (let i = 0; i < count; i++) {
-                    if (skipIndices.has(i)) {
-                        lastWasSkipped = true;
-                        continue;
-                    }
-
                     const a = normalizedInnerA[i];
                     const b = normalizedInnerB[i];
-
-                    // If we skipped points and now resuming, add a break
-                    const needsBreak = lastWasSkipped || a.isBreak || b.isBreak;
-                    lastWasSkipped = false;
 
                     result.inner.push({
                         x: a.x + t * (b.x - a.x),
                         y: a.y + t * (b.y - a.y),
-                        isBreak: needsBreak
+                        isBreak: a.isBreak || b.isBreak
                     });
                 }
             }
