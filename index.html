@@ -409,6 +409,24 @@
 
         <p class="product-description">Bring your words to life with dynamic text animations.</p>
       </a>
+
+      <!-- Product 6: Shape Morph -->
+      <a href="index6.html" class="product-card">
+        <span class="card-number">06</span>
+        <h1 class="product-title">Shape Morph</h1>
+        <img src="images/card6.gif" alt="Shape morphing animation" class="product-icon">
+
+        <p class="product-description">Watch your shapes smoothly transform and morph into one another.</p>
+      </a>
+
+      <!-- Product 7: Text Highlighter -->
+      <a href="index7.html" class="product-card">
+        <span class="card-number">07</span>
+        <h1 class="product-title">Highlight it!</h1>
+        <img src="images/card7.gif" alt="Text highlighter animation" class="product-icon">
+
+        <p class="product-description">Add animated highlight effects that sweep across your text.</p>
+      </a>
     </div>
   </div>
 
@@ -416,8 +434,8 @@
     // Handle GIF replay on hover and auto-replay for specific cards
     document.addEventListener('DOMContentLoaded', function() {
       const productCards = document.querySelectorAll('.product-card');
-      // Cards that should auto-replay: index1.html, index2.html, index3.html (positions 1, 4, 5)
-      const autoReplayLinks = ['index1.html', 'index2.html', 'index3.html'];
+      // Cards that should auto-replay: index1.html, index2.html, index3.html, index6.html
+      const autoReplayLinks = ['index1.html', 'index2.html', 'index3.html', 'index6.html'];
 
       productCards.forEach(card => {
         const img = card.querySelector('.product-icon');

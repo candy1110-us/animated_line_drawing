@@ -505,10 +505,12 @@
             box-shadow: 0 4px 12px rgba(0,0,0,0.15);
             width: 280px;
             z-index: 1000;
+            pointer-events: none;
         }
 
         .popup-menu.visible {
             display: block;
+            pointer-events: auto;
         }
 
         .color-square {
@@ -828,18 +830,11 @@
                     </div>
                 </div>
 
-                <div class="setting-group" style="display: none;" id="thresholdGroupA">
-                    <label>
-                        Shape A - Edge Detection <span class="value-display" id="thresholdDisplayA">128</span>
-                    </label>
-                    <input type="range" id="thresholdA" min="30" max="220" value="128">
+                <div id="thresholdGroupA" style="display: none;">
+                    <input type="hidden" id="thresholdA" value="128">
                 </div>
-
-                <div class="setting-group" style="display: none;" id="thresholdGroupB">
-                    <label>
-                        Shape B - Edge Detection <span class="value-display" id="thresholdDisplayB">128</span>
-                    </label>
-                    <input type="range" id="thresholdB" min="30" max="220" value="128">
+                <div id="thresholdGroupB" style="display: none;">
+                    <input type="hidden" id="thresholdB" value="128">
                 </div>
             </div>
 
@@ -852,14 +847,6 @@
 
                 <!-- Row 1: Controls -->
                 <div class="controls-row">
-                    <div class="control-group">
-                        <span class="label-text">Direction:</span>
-                        <div class="morph-direction">
-                            <span class="shape-label shape-a">A</span>
-                            <span class="morph-arrow">&#8594;</span>
-                            <span class="shape-label shape-b">B</span>
-                        </div>
-                    </div>
                     <div class="control-group">
                         <input type="checkbox" id="loopAnimation" class="checkbox-input" checked>
                         <span class="label-text">Loop (A&#8594;B&#8594;A)</span>
@@ -955,14 +942,7 @@
                         <input type="range" id="duration" min="0.5" max="5" step="0.1" value="2" class="slider-compact">
                         <span class="value-display" id="durationDisplay">2.0s</span>
                     </div>
-                    <div class="slider-item">
-                        <span class="label-text">Easing:</span>
-                        <select id="easingSelect" class="easing-select">
-                            <option value="easeInOut">Ease In-Out</option>
-                            <option value="elastic">Elastic</option>
-                            <option value="linear">Linear</option>
-                        </select>
-                    </div>
+                    <input type="hidden" id="easingSelect" value="easeInOut">
                     <div class="slider-item">
                         <span class="label-text">Algorithm:</span>
                         <select id="algorithmSelect" class="easing-select">
@@ -2016,6 +1996,389 @@
             return strokes;
         }
 
+        // Extract colored regions from image - returns array of {outline: [...], fillColor: {r,g,b}, strokeColor: {r,g,b}}
+        // Approach: Find distinct colored regions using flood-fill, then trace boundaries with marching squares
+        function extractColoredRegions(img, processedImg, isNonTransparent, containerWidth, containerHeight, gap) {
+            if (containerWidth === 0 || containerHeight === 0) return [];
+
+            const maxProcessSize = 400;
+            const processScale = Math.min(1, maxProcessSize / Math.max(img.width, img.height));
+            const processWidth = Math.round(img.width * processScale);
+            const processHeight = Math.round(img.height * processScale);
+
+            // Canvas for color sampling
+            const colorCanvas = document.createElement('canvas');
+            colorCanvas.width = processWidth;
+            colorCanvas.height = processHeight;
+            const colorCtx = colorCanvas.getContext('2d');
+            colorCtx.drawImage(img, 0, 0, processWidth, processHeight);
+            const colorData = colorCtx.getImageData(0, 0, processWidth, processHeight);
+            const pixels = colorData.data;
+
+            // Scale to display coordinates
+            const displayScale = Math.min(
+                (containerWidth * 0.7) / processWidth,
+                (containerHeight * 0.7) / processHeight
+            );
+            const offsetX = (containerWidth - processWidth * displayScale) / 2;
+            const offsetY = (containerHeight - processHeight * displayScale) / 2;
+
+            // Group pixels by similar colors
+            const colorTolerance = 25;
+            const colorGroups = new Map();
+
+            for (let y = 0; y < processHeight; y++) {
+                for (let x = 0; x < processWidth; x++) {
+                    const idx = (y * processWidth + x) * 4;
+                    const r = pixels[idx];
+                    const g = pixels[idx + 1];
+                    const b = pixels[idx + 2];
+                    const a = pixels[idx + 3];
+
+                    if (a < 128) continue;
+
+                    // Quantize color
+                    const qr = Math.round(r / colorTolerance) * colorTolerance;
+                    const qg = Math.round(g / colorTolerance) * colorTolerance;
+                    const qb = Math.round(b / colorTolerance) * colorTolerance;
+                    const colorKey = `${qr},${qg},${qb}`;
+
+                    if (!colorGroups.has(colorKey)) {
+                        colorGroups.set(colorKey, {
+                            pixels: [],
+                            totalR: 0, totalG: 0, totalB: 0
+                        });
+                    }
+                    const group = colorGroups.get(colorKey);
+                    group.pixels.push({ x, y });
+                    group.totalR += r;
+                    group.totalG += g;
+                    group.totalB += b;
+                }
+            }
+
+            const regions = [];
+
+            // Process each color group
+            for (const [colorKey, group] of colorGroups) {
+                if (group.pixels.length < 30) continue;
+
+                // Calculate average color
+                const count = group.pixels.length;
+                const fillColor = {
+                    r: Math.round(group.totalR / count),
+                    g: Math.round(group.totalG / count),
+                    b: Math.round(group.totalB / count)
+                };
+
+                // Create binary mask for this color
+                const mask = new Uint8Array(processWidth * processHeight);
+                for (const p of group.pixels) {
+                    mask[p.y * processWidth + p.x] = 1;
+                }
+
+                // Find connected components in this mask
+                const visited = new Uint8Array(processWidth * processHeight);
+
+                for (const startPixel of group.pixels) {
+                    const startIdx = startPixel.y * processWidth + startPixel.x;
+                    if (visited[startIdx]) continue;
+
+                    // Flood fill to find connected component
+                    const component = [];
+                    const stack = [startPixel];
+
+                    while (stack.length > 0) {
+                        const p = stack.pop();
+                        const pIdx = p.y * processWidth + p.x;
+
+                        if (visited[pIdx]) continue;
+                        if (!mask[pIdx]) continue;
+
+                        visited[pIdx] = 1;
+                        component.push(p);
+
+                        // Add neighbors
+                        if (p.x > 0) stack.push({ x: p.x - 1, y: p.y });
+                        if (p.x < processWidth - 1) stack.push({ x: p.x + 1, y: p.y });
+                        if (p.y > 0) stack.push({ x: p.x, y: p.y - 1 });
+                        if (p.y < processHeight - 1) stack.push({ x: p.x, y: p.y + 1 });
+                    }
+
+                    if (component.length < 20) continue;
+
+                    // Create mask for this component
+                    const componentMask = new Uint8Array(processWidth * processHeight);
+                    for (const p of component) {
+                        componentMask[p.y * processWidth + p.x] = 1;
+                    }
+
+                    // Extract boundary using marching squares
+                    const boundary = extractMarchingSquaresOutline(
+                        componentMask, processWidth, processHeight,
+                        gap, displayScale, offsetX, offsetY
+                    );
+
+                    if (boundary.length < 10) continue;
+
+                    // Detect stroke color (look for darker border around this region)
+                    const strokeColor = detectRegionStrokeColor(component, pixels, processWidth, processHeight, fillColor);
+
+                    regions.push({
+                        outline: boundary,
+                        fillColor: fillColor,
+                        strokeColor: strokeColor
+                    });
+                }
+            }
+
+            // Sort by area (larger shapes first for proper layering)
+            regions.sort((a, b) => {
+                const areaA = calculatePolygonArea(a.outline);
+                const areaB = calculatePolygonArea(b.outline);
+                return areaB - areaA;
+            });
+
+            return regions;
+        }
+
+        // Detect stroke color around a region
+        function detectRegionStrokeColor(regionPixels, pixels, width, height, fillColor) {
+            let strokeR = 0, strokeG = 0, strokeB = 0, strokeCount = 0;
+            const checked = new Set();
+
+            // Sample border pixels
+            const sampleStep = Math.max(1, Math.floor(regionPixels.length / 50));
+            for (let i = 0; i < regionPixels.length; i += sampleStep) {
+                const p = regionPixels[i];
+
+                // Check neighbors for darker pixels
+                for (let dy = -2; dy <= 2; dy++) {
+                    for (let dx = -2; dx <= 2; dx++) {
+                        if (dx === 0 && dy === 0) continue;
+
+                        const nx = p.x + dx;
+                        const ny = p.y + dy;
+                        if (nx < 0 || nx >= width || ny < 0 || ny >= height) continue;
+
+                        const key = `${nx},${ny}`;
+                        if (checked.has(key)) continue;
+                        checked.add(key);
+
+                        const idx = (ny * width + nx) * 4;
+                        const r = pixels[idx];
+                        const g = pixels[idx + 1];
+                        const b = pixels[idx + 2];
+                        const a = pixels[idx + 3];
+
+                        if (a < 128) continue;
+
+                        // Check if darker than fill
+                        const brightness = (r + g + b) / 3;
+                        const fillBrightness = (fillColor.r + fillColor.g + fillColor.b) / 3;
+
+                        if (brightness < fillBrightness - 30 && brightness < 150) {
+                            strokeR += r;
+                            strokeG += g;
+                            strokeB += b;
+                            strokeCount++;
+                        }
+                    }
+                }
+            }
+
+            if (strokeCount > 5) {
+                return {
+                    r: Math.round(strokeR / strokeCount),
+                    g: Math.round(strokeG / strokeCount),
+                    b: Math.round(strokeB / strokeCount)
+                };
+            }
+
+            // Default: use fill color for stroke (same color outline)
+            return { ...fillColor };
+        }
+
+        // Calculate polygon area using shoelace formula
+        function calculatePolygonArea(points) {
+            if (points.length < 3) return 0;
+            let area = 0;
+            for (let i = 0; i < points.length; i++) {
+                const j = (i + 1) % points.length;
+                area += points[i].x * points[j].y;
+                area -= points[j].x * points[i].y;
+            }
+            return Math.abs(area / 2);
+        }
+
+        // Sample fill color from inside a shape (around centroid)
+        function sampleInteriorColor(cx, cy, outlinePoints, colorData, width, height) {
+            let totalR = 0, totalG = 0, totalB = 0;
+            let validSamples = 0;
+
+            // Sample in a grid around the centroid
+            for (let dy = -10; dy <= 10; dy += 2) {
+                for (let dx = -10; dx <= 10; dx += 2) {
+                    const x = cx + dx;
+                    const y = cy + dy;
+
+                    if (x < 0 || x >= width || y < 0 || y >= height) continue;
+
+                    const idx = (y * width + x) * 4;
+                    const r = colorData[idx];
+                    const g = colorData[idx + 1];
+                    const b = colorData[idx + 2];
+                    const a = colorData[idx + 3];
+
+                    if (a < 128) continue;
+
+                    // Skip very dark pixels (likely outline/stroke)
+                    const brightness = (r + g + b) / 3;
+                    if (brightness < 40) continue;
+
+                    totalR += r;
+                    totalG += g;
+                    totalB += b;
+                    validSamples++;
+                }
+            }
+
+            // If centroid sampling failed, try rays from centroid
+            if (validSamples < 3) {
+                for (let ray = 0; ray < 8; ray++) {
+                    const angle = (ray / 8) * Math.PI * 2;
+                    for (let dist = 5; dist < 25; dist += 4) {
+                        const x = Math.round(cx + Math.cos(angle) * dist);
+                        const y = Math.round(cy + Math.sin(angle) * dist);
+
+                        if (x < 0 || x >= width || y < 0 || y >= height) continue;
+
+                        const idx = (y * width + x) * 4;
+                        const r = colorData[idx];
+                        const g = colorData[idx + 1];
+                        const b = colorData[idx + 2];
+                        const a = colorData[idx + 3];
+
+                        if (a < 128) continue;
+
+                        const brightness = (r + g + b) / 3;
+                        if (brightness < 40) continue;
+
+                        totalR += r;
+                        totalG += g;
+                        totalB += b;
+                        validSamples++;
+                    }
+                }
+            }
+
+            if (validSamples > 0) {
+                return {
+                    r: Math.round(totalR / validSamples),
+                    g: Math.round(totalG / validSamples),
+                    b: Math.round(totalB / validSamples)
+                };
+            }
+
+            // No interior color found - default to white
+            return { r: 255, g: 255, b: 255 };
+        }
+
+        // Sample color directly on the outline points
+        function sampleOutlineColor(outlinePoints, colorData, width, height) {
+            let totalR = 0, totalG = 0, totalB = 0;
+            let validSamples = 0;
+
+            const step = Math.max(1, Math.floor(outlinePoints.length / 20));
+            for (let i = 0; i < outlinePoints.length; i += step) {
+                const x = Math.round(outlinePoints[i].x);
+                const y = Math.round(outlinePoints[i].y);
+
+                if (x < 0 || x >= width || y < 0 || y >= height) continue;
+
+                const idx = (y * width + x) * 4;
+                const r = colorData[idx];
+                const g = colorData[idx + 1];
+                const b = colorData[idx + 2];
+                const a = colorData[idx + 3];
+
+                if (a < 128) continue;
+
+                totalR += r;
+                totalG += g;
+                totalB += b;
+                validSamples++;
+            }
+
+            if (validSamples > 0) {
+                return {
+                    r: Math.round(totalR / validSamples),
+                    g: Math.round(totalG / validSamples),
+                    b: Math.round(totalB / validSamples)
+                };
+            }
+
+            return { r: 0, g: 0, b: 0 };
+        }
+
+        // Legacy function kept for compatibility
+        function extractStrokesWithColor(img, processedImg, isNonTransparent, containerWidth, containerHeight, gap) {
+            // Now redirects to extractColoredRegions
+            return extractColoredRegions(img, processedImg, isNonTransparent, containerWidth, containerHeight, gap);
+        }
+
+        // Sample color - simplified version
+        function sampleStrokeColor(points, colorData, width, height) {
+            let totalR = 0, totalG = 0, totalB = 0;
+            let validSamples = 0;
+            const step = Math.max(1, Math.floor(points.length / 15));
+
+            for (let i = 0; i < points.length; i += step) {
+                const x = Math.round(points[i].x);
+                const y = Math.round(points[i].y);
+
+                if (x >= 0 && x < width && y >= 0 && y < height) {
+                    const idx = (y * width + x) * 4;
+                    const r = colorData[idx];
+                    const g = colorData[idx + 1];
+                    const b = colorData[idx + 2];
+                    const a = colorData[idx + 3];
+
+                    if (a > 128) {
+                        totalR += r;
+                        totalG += g;
+                        totalB += b;
+                        validSamples++;
+                    }
+                }
+            }
+
+            if (validSamples > 0) {
+                return {
+                    r: Math.round(totalR / validSamples),
+                    g: Math.round(totalG / validSamples),
+                    b: Math.round(totalB / validSamples)
+                };
+            }
+
+            // Default to black if no valid samples
+            return { r: 0, g: 0, b: 0 };
+        }
+
+        // Interpolate between two colors
+        function lerpColor(colorA, colorB, t) {
+            return {
+                r: Math.round(colorA.r + (colorB.r - colorA.r) * t),
+                g: Math.round(colorA.g + (colorB.g - colorA.g) * t),
+                b: Math.round(colorA.b + (colorB.b - colorA.b) * t)
+            };
+        }
+
+        // Convert color object to CSS string
+        function colorToCSS(color) {
+            return `rgb(${color.r}, ${color.g}, ${color.b})`;
+        }
+
         // Trace paths using thinning approach (exact copy from index1.html)
         function tracePaths(imgData, threshold) {
             const width = imgData.width;
@@ -2523,6 +2886,161 @@
                 normalizedPointsA = addWiggleToPoints(normalizedPointsA, wiggle);
                 normalizedPointsB = addWiggleToPoints(normalizedPointsB, wiggle);
             }
+        }
+
+        // Normalize colored regions for morphing
+        function normalizeColorStrokesForMorphing() {
+            if (colorStrokesA.length === 0 || colorStrokesB.length === 0) return;
+
+            const wiggle = parseInt(wiggleAmount.value);
+
+            // Get centroids for matching regions
+            const centroidsA = colorStrokesA.map(r => getStrokeCentroid(r.outline));
+            const centroidsB = colorStrokesB.map(r => getStrokeCentroid(r.outline));
+
+            const usedB = new Set();
+            const pairs = [];
+
+            // Match regions by centroid proximity and color similarity
+            for (let i = 0; i < colorStrokesA.length; i++) {
+                let bestScore = Infinity;
+                let bestJ = -1;
+
+                for (let j = 0; j < colorStrokesB.length; j++) {
+                    if (usedB.has(j)) continue;
+
+                    // Distance score
+                    const dx = centroidsA[i].x - centroidsB[j].x;
+                    const dy = centroidsA[i].y - centroidsB[j].y;
+                    const distScore = Math.sqrt(dx * dx + dy * dy);
+
+                    // Color similarity score
+                    const colorA = colorStrokesA[i].fillColor;
+                    const colorB = colorStrokesB[j].fillColor;
+                    const colorDist = Math.sqrt(
+                        Math.pow(colorA.r - colorB.r, 2) +
+                        Math.pow(colorA.g - colorB.g, 2) +
+                        Math.pow(colorA.b - colorB.b, 2)
+                    );
+
+                    // Combined score (weight distance more)
+                    const score = distScore + colorDist * 0.5;
+
+                    if (score < bestScore) {
+                        bestScore = score;
+                        bestJ = j;
+                    }
+                }
+
+                if (bestJ >= 0) {
+                    pairs.push({
+                        regionA: colorStrokesA[i],
+                        regionB: colorStrokesB[bestJ]
+                    });
+                    usedB.add(bestJ);
+                } else {
+                    // No match - collapse to centroid
+                    const c = centroidsA[i];
+                    pairs.push({
+                        regionA: colorStrokesA[i],
+                        regionB: {
+                            outline: colorStrokesA[i].outline.map(() => ({ x: c.x, y: c.y })),
+                            fillColor: colorStrokesA[i].fillColor,
+                            strokeColor: colorStrokesA[i].strokeColor
+                        }
+                    });
+                }
+            }
+
+            // Add unmatched B regions
+            for (let j = 0; j < colorStrokesB.length; j++) {
+                if (!usedB.has(j)) {
+                    const cB = centroidsB[j];
+                    let nearestPoint = cB;
+                    let nearestDist = Infinity;
+
+                    for (const regionA of colorStrokesA) {
+                        for (const pt of regionA.outline) {
+                            const dx = pt.x - cB.x;
+                            const dy = pt.y - cB.y;
+                            const dist = dx * dx + dy * dy;
+                            if (dist < nearestDist) {
+                                nearestDist = dist;
+                                nearestPoint = pt;
+                            }
+                        }
+                    }
+
+                    pairs.push({
+                        regionA: {
+                            outline: colorStrokesB[j].outline.map(() => ({ x: nearestPoint.x, y: nearestPoint.y })),
+                            fillColor: colorStrokesB[j].fillColor,
+                            strokeColor: colorStrokesB[j].strokeColor
+                        },
+                        regionB: colorStrokesB[j]
+                    });
+                }
+            }
+
+            // Build normalized arrays
+            normalizedColorStrokesA = [];
+            normalizedColorStrokesB = [];
+
+            for (const pair of pairs) {
+                const { regionA, regionB } = pair;
+
+                // Align outlines
+                const alignedOutlineB = alignStrokeDirection(regionB.outline, regionA.outline);
+
+                // Resample to same point count
+                const targetCount = Math.max(regionA.outline.length, alignedOutlineB.length, 50);
+                let resampledA = resampleStroke(regionA.outline, targetCount);
+                let resampledB = resampleStroke(alignedOutlineB, targetCount);
+
+                // Add wiggle if enabled
+                if (wiggle > 0) {
+                    resampledA = addWiggleToPoints(resampledA.map(p => ({...p, isBreak: false})), wiggle);
+                    resampledB = addWiggleToPoints(resampledB.map(p => ({...p, isBreak: false})), wiggle);
+                }
+
+                normalizedColorStrokesA.push({
+                    outline: resampledA,
+                    fillColor: regionA.fillColor,
+                    strokeColor: regionA.strokeColor
+                });
+                normalizedColorStrokesB.push({
+                    outline: resampledB,
+                    fillColor: regionB.fillColor,
+                    strokeColor: regionB.strokeColor
+                });
+            }
+        }
+
+        // Interpolate colored regions at progress t
+        function interpolateColorStrokes(t) {
+            const result = [];
+            for (let i = 0; i < normalizedColorStrokesA.length; i++) {
+                const regionA = normalizedColorStrokesA[i];
+                const regionB = normalizedColorStrokesB[i];
+
+                // Interpolate outline points
+                const outline = [];
+                for (let j = 0; j < regionA.outline.length; j++) {
+                    const pA = regionA.outline[j];
+                    const pB = regionB.outline[j];
+                    outline.push({
+                        x: pA.x + (pB.x - pA.x) * t,
+                        y: pA.y + (pB.y - pA.y) * t
+                    });
+                }
+
+                // Interpolate fill and stroke colors
+                const fillColor = lerpColor(regionA.fillColor, regionB.fillColor, t);
+                const strokeColor = lerpColor(regionA.strokeColor, regionB.strokeColor, t);
+
+                result.push({ outline, fillColor, strokeColor });
+            }
+            return result;
         }
 
         // Find best rotation/shift of strokeB to minimize distance to strokeA

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Text Highlighter Animator</title>
+    <title>Text Highlighter</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <style>
         @font-face {
@@ -667,13 +667,59 @@
             font-weight: 500;
         }
 
-        .easing-select {
-            padding: 6px 10px;
-            border: 2px solid #e5e7eb;
-            border-radius: 6px;
-            font-size: 12px;
+        .style-buttons-group {
+            display: flex;
+            gap: 8px;
+        }
+
+        .style-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 14px;
             background: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            color: #6b7280;
             cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .style-btn:hover {
+            border-color: #fbbf24;
+            color: #f59e0b;
+        }
+
+        .style-btn.selected {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            border-color: #fbbf24;
+            color: #92400e;
+        }
+
+        .style-btn svg {
+            flex-shrink: 0;
+        }
+
+        .style-settings-toggle {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: #f9fafb;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .style-settings-toggle:hover {
+            background: #f3f4f6;
+        }
+
+        .popup-left {
+            left: 0;
+            right: auto;
         }
 
         .highlight-regions-list {
@@ -786,7 +832,7 @@
                 <img src="images/mefn.gif" alt="Logo" class="header-logo">
             </a>
             <div class="header-content">
-                <h1>Text Highlighter Animator</h1>
+                <h1>Text Highlighter</h1>
             </div>
         </div>
 
@@ -798,14 +844,54 @@
                     <h3 class="gradient-text">Upload & Draw</h3>
                 </div>
 
-                <div class="instructions">
-                    <h4>How to use:</h4>
-                    <ol>
-                        <li>Upload a PDF or image file</li>
-                        <li>Draw rectangles over text you want to highlight</li>
-                        <li>Adjust highlight color and animation settings</li>
-                        <li>Click "Animate Highlight" to preview</li>
-                    </ol>
+                <div class="setting-group">
+                    <label>Style</label>
+                    <div class="style-buttons-group">
+                        <button type="button" class="style-btn selected" id="styleBtnHighlight" data-style="highlight">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="8" width="18" height="8" rx="1" fill="currentColor" opacity="0.3"/>
+                                <line x1="5" y1="12" x2="19" y2="12"/>
+                            </svg>
+                            Highlight
+                        </button>
+                        <button type="button" class="style-btn" id="styleBtnUnderline" data-style="underline">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M6 3v7a6 6 0 0 0 6 6 6 6 0 0 0 6-6V3"/>
+                                <line x1="4" y1="21" x2="20" y2="21"/>
+                            </svg>
+                            Underline
+                        </button>
+                    </div>
+                    <div class="pos-relative" style="margin-top: 10px;">
+                        <div class="style-settings-toggle" id="styleSettingsToggle">
+                            <div class="color-preview-box" id="highlightColorPreview" style="background: #ffeb3b;"></div>
+                            <span class="label-text" id="styleSettingsLabel">Color & Intensity</span>
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="6 9 12 15 18 9"></polyline>
+                            </svg>
+                        </div>
+                        <div id="styleSettingsPopup" class="popup-menu popup-left">
+                            <div class="mb-12">
+                                <div class="label-text" style="margin-bottom: 8px;">Color</div>
+                                <div class="flex-center-gap-8">
+                                    <input type="color" id="highlightColor" value="#ffeb3b" style="width: 50px; height: 36px; border: 2px solid #e5e7eb; border-radius: 8px; cursor: pointer;">
+                                    <span class="helper-text" id="colorHint">Yellow works best for highlighting</span>
+                                </div>
+                            </div>
+                            <div id="opacityGroup">
+                                <div class="label-text" style="margin-bottom: 8px;">
+                                    Highlight Intensity <span class="value-display" id="opacityDisplay">50%</span>
+                                </div>
+                                <input type="range" id="highlightOpacity" min="30" max="90" value="50" style="width: 100%;">
+                            </div>
+                            <div class="hidden" id="underlineThicknessGroup">
+                                <div class="label-text" style="margin-bottom: 8px;">
+                                    Underline Thickness <span class="value-display" id="underlineThicknessDisplay">3px</span>
+                                </div>
+                                <input type="range" id="underlineThickness" min="2" max="8" value="3" style="width: 100%;">
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="upload-section" id="uploadSection">
@@ -841,44 +927,6 @@
                 </div>
 
                 <div class="highlight-regions-list" id="regionsList"></div>
-
-                <div class="setting-group">
-                    <label>Style</label>
-                    <div class="flex-center-gap-8" style="gap: 16px;">
-                        <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
-                            <input type="radio" name="highlightStyle" id="styleHighlight" value="highlight" checked style="accent-color: #f59e0b;">
-                            <span class="helper-text" style="color: #374151;">Highlight</span>
-                        </label>
-                        <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
-                            <input type="radio" name="highlightStyle" id="styleUnderline" value="underline" style="accent-color: #f59e0b;">
-                            <span class="helper-text" style="color: #374151;">Underline</span>
-                        </label>
-                    </div>
-                </div>
-
-                <div class="setting-group">
-                    <label>
-                        Color
-                    </label>
-                    <div class="flex-center-gap-8">
-                        <input type="color" id="highlightColor" value="#ffeb3b" style="width: 50px; height: 36px; border: 2px solid #e5e7eb; border-radius: 8px; cursor: pointer;">
-                        <span class="helper-text" id="colorHint">Yellow works best for highlighting</span>
-                    </div>
-                </div>
-
-                <div class="setting-group" id="opacityGroup">
-                    <label>
-                        Highlight Intensity <span class="value-display" id="opacityDisplay">50%</span>
-                    </label>
-                    <input type="range" id="highlightOpacity" min="30" max="90" value="50">
-                </div>
-
-                <div class="setting-group hidden" id="underlineThicknessGroup">
-                    <label>
-                        Underline Thickness <span class="value-display" id="underlineThicknessDisplay">3px</span>
-                    </label>
-                    <input type="range" id="underlineThickness" min="2" max="8" value="3">
-                </div>
             </div>
 
             <!-- RIGHT - Preview -->
@@ -888,8 +936,13 @@
                     <h3 class="gradient-text">Animate</h3>
                 </div>
 
-                <!-- Row 1: Controls -->
+                <!-- Row 1: Duration, Background, Ratio -->
                 <div class="controls-row">
+                    <div class="slider-item">
+                        <span class="label-text">Duration:</span>
+                        <input type="range" id="duration" min="0.3" max="3" step="0.1" value="0.8" class="slider-compact">
+                        <span class="value-display" id="durationDisplay">0.8s</span>
+                    </div>
                     <div class="pos-relative">
                         <div class="control-group" id="bgIndicator" style="cursor: pointer;">
                             <span class="label-text">Background:</span>
@@ -944,33 +997,11 @@
                             </button>
                         </div>
                     </div>
+                </div>
+
+                <!-- Row 2: Timing and Delay -->
+                <div class="controls-row">
                     <div class="control-group">
-                        <input type="checkbox" id="loopAnimation" class="checkbox-input" checked>
-                        <span class="label-text">Loop</span>
-                    </div>
-                </div>
-
-                <!-- Row 2: Sliders -->
-                <div class="settings-controls-row">
-                    <div class="slider-item">
-                        <span class="label-text">Duration:</span>
-                        <input type="range" id="duration" min="0.3" max="3" step="0.1" value="0.8" class="slider-compact">
-                        <span class="value-display" id="durationDisplay">0.8s</span>
-                    </div>
-                    <div class="slider-item">
-                        <span class="label-text">Easing:</span>
-                        <select id="easingSelect" class="easing-select">
-                            <option value="easeOut">Ease Out</option>
-                            <option value="linear">Linear</option>
-                            <option value="easeIn">Ease In</option>
-                            <option value="easeInOut">Ease In-Out</option>
-                        </select>
-                    </div>
-                </div>
-
-                <!-- Timing Mode -->
-                <div class="settings-controls-row">
-                    <div class="control-group" style="flex: 1;">
                         <span class="label-text">Timing:</span>
                         <label style="display: flex; align-items: center; gap: 4px; cursor: pointer;">
                             <input type="radio" name="timingMode" id="timingSequential" value="sequential" checked style="accent-color: #f59e0b;">
@@ -1065,10 +1096,11 @@
         const durationDisplay = document.getElementById('durationDisplay');
         const delay = document.getElementById('delay');
         const delayDisplay = document.getElementById('delayDisplay');
-        const easingSelect = document.getElementById('easingSelect');
-        const loopAnimation = document.getElementById('loopAnimation');
-        const styleHighlight = document.getElementById('styleHighlight');
-        const styleUnderline = document.getElementById('styleUnderline');
+        const styleBtnHighlight = document.getElementById('styleBtnHighlight');
+        const styleBtnUnderline = document.getElementById('styleBtnUnderline');
+        const styleSettingsToggle = document.getElementById('styleSettingsToggle');
+        const styleSettingsPopup = document.getElementById('styleSettingsPopup');
+        const highlightColorPreview = document.getElementById('highlightColorPreview');
         const opacityGroup = document.getElementById('opacityGroup');
         const underlineThicknessGroup = document.getElementById('underlineThicknessGroup');
         const underlineThickness = document.getElementById('underlineThickness');
@@ -1083,9 +1115,12 @@
         let bgSaturation = 0;
         let bgValue = 100;
 
+        // Current style state
+        let currentStyle = 'highlight';
+
         // Get current style
         function getCurrentStyle() {
-            return styleUnderline.checked ? 'underline' : 'highlight';
+            return currentStyle;
         }
 
         // Easing functions
@@ -1111,27 +1146,41 @@
         });
 
         highlightColor.addEventListener('input', () => {
+            highlightColorPreview.style.background = highlightColor.value;
             redrawRegions();
         });
 
-        // Style radio button listeners
-        styleHighlight.addEventListener('change', () => {
-            opacityGroup.classList.remove('hidden');
-            underlineThicknessGroup.classList.add('hidden');
-            colorHint.textContent = 'Yellow works best for highlighting';
-            redrawRegions();
-        });
+        // Style button listeners
+        function selectStyle(style) {
+            currentStyle = style;
+            styleBtnHighlight.classList.toggle('selected', style === 'highlight');
+            styleBtnUnderline.classList.toggle('selected', style === 'underline');
 
-        styleUnderline.addEventListener('change', () => {
-            opacityGroup.classList.add('hidden');
-            underlineThicknessGroup.classList.remove('hidden');
-            colorHint.textContent = 'Any color works for underlines';
+            if (style === 'highlight') {
+                opacityGroup.classList.remove('hidden');
+                underlineThicknessGroup.classList.add('hidden');
+                colorHint.textContent = 'Yellow works best for highlighting';
+            } else {
+                opacityGroup.classList.add('hidden');
+                underlineThicknessGroup.classList.remove('hidden');
+                colorHint.textContent = 'Any color works for underlines';
+            }
             redrawRegions();
-        });
+        }
+
+        styleBtnHighlight.addEventListener('click', () => selectStyle('highlight'));
+        styleBtnUnderline.addEventListener('click', () => selectStyle('underline'));
 
         underlineThickness.addEventListener('input', () => {
             underlineThicknessDisplay.textContent = underlineThickness.value + 'px';
             redrawRegions();
+        });
+
+        // Style settings popup toggle
+        styleSettingsToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            styleSettingsPopup.classList.toggle('visible');
+            bgPopup.classList.remove('visible');
         });
 
         // Timing mode listeners
@@ -1147,13 +1196,16 @@
         bgIndicator.addEventListener('click', (e) => {
             e.stopPropagation();
             bgPopup.classList.toggle('visible');
+            styleSettingsPopup.classList.remove('visible');
         });
 
         document.addEventListener('click', () => {
             bgPopup.classList.remove('visible');
+            styleSettingsPopup.classList.remove('visible');
         });
 
         bgPopup.addEventListener('click', (e) => e.stopPropagation());
+        styleSettingsPopup.addEventListener('click', (e) => e.stopPropagation());
 
         bgColor.addEventListener('input', () => {
             bgPreview.style.background = bgColor.value;
@@ -1860,8 +1912,8 @@
             const durationMs = parseFloat(duration.value) * 1000;
             const isSimultaneous = timingSimultaneous.checked;
             const delayMs = isSimultaneous ? 0 : parseFloat(delay.value) * 1000;
-            const easingFn = easingFunctions[easingSelect.value];
-            const loop = loopAnimation.checked;
+            const easingFn = easingFunctions['easeInOut'];
+            const loop = true;
 
             setupCanvases();
             const ctx = animCanvas.getContext('2d');
@@ -2028,7 +2080,7 @@
             const durationMs = parseFloat(duration.value) * 1000;
             const isSimultaneous = timingSimultaneous.checked;
             const delayMs = isSimultaneous ? 0 : parseFloat(delay.value) * 1000;
-            const easingFn = easingFunctions[easingSelect.value];
+            const easingFn = easingFunctions['easeInOut'];
 
             // Filter regions for current page
             const currentRegions = pdfDocument
