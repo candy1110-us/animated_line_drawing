@@ -3,7 +3,7 @@ import { resolve } from 'path';
 import { ViteMinifyPlugin } from 'vite-plugin-minify';
 
 export default defineConfig({
-  base: '/animated_line_drawing/',
+  base: '/',
   plugins: [
     ViteMinifyPlugin({
       minifyCSS: true,
