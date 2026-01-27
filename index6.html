@@ -1548,8 +1548,8 @@
             // Extract all strokes using thinning
             const allPaths = tracePaths(strokeData, 128);
 
-            // Filter out boundary strokes - keep only strokes that are INSIDE the outline
-            const innerStrokes = filterInteriorStrokesForHybrid(allPaths, outline, displayScale, offsetX, offsetY, gap);
+            // Filter out boundary strokes using pixel-based approach
+            const innerStrokes = filterInteriorStrokesForHybrid(allPaths, outline, displayScale, offsetX, offsetY, gap, processWidth, processHeight);
 
             return { outline, innerStrokes };
         }
@@ -1711,40 +1711,12 @@
             return result;
         }
 
-        // Filter strokes to keep only interior ones (not part of the outline)
-        function filterInteriorStrokesForHybrid(allPaths, outline, displayScale, offsetX, offsetY, gap) {
-            if (outline.length < 3) {
-                // No outline, return all paths
-                const strokes = [];
-                for (const pathObj of allPaths) {
-                    if (pathObj.points.length >= 20) {
-                        const scaledPoints = pathObj.points.map(p => ({
-                            x: p.x * displayScale + offsetX,
-                            y: p.y * displayScale + offsetY
-                        }));
-                        const sampled = sampleContour(scaledPoints, gap);
-                        if (sampled.length >= 3) {
-                            strokes.push(sampled);
-                        }
-                    }
-                }
-                return strokes;
-            }
-
-            // Filter: keep only INTERIOR strokes, exclude boundary strokes
-            // Boundary strokes have points that lie ON the outline (very small distance)
-            // Interior strokes (eyes, nose) have points INSIDE, far from outline
-
-            const innerStrokes = [];
-
-            // Calculate the centroid of the outline to determine "inside"
-            let cx = 0, cy = 0;
-            for (const p of outline) {
-                cx += p.x;
-                cy += p.y;
-            }
-            cx /= outline.length;
-            cy /= outline.length;
+        // Filter strokes: keep all strokes EXCEPT those that closely trace the outline
+        // For hybrid mode: return ALL strokes from thinning (same as stroke matching)
+        // The outline provides smooth boundary morphing, strokes provide all details
+        // No filtering - we keep everything to preserve detail quality
+        function filterInteriorStrokesForHybrid(allPaths, outline, displayScale, offsetX, offsetY, gap, processWidth, processHeight) {
+            const strokes = [];
 
             for (const pathObj of allPaths) {
                 if (pathObj.points.length < 20) continue;
@@ -1754,44 +1726,13 @@
                     y: p.y * displayScale + offsetY
                 }));
 
-                // Calculate average distance from outline for this stroke
-                let totalDist = 0;
-                let numSamples = 0;
-                const step = Math.max(1, Math.floor(scaledPoints.length / 20));
-
-                for (let i = 0; i < scaledPoints.length; i += step) {
-                    const p = scaledPoints[i];
-                    let minDist = Infinity;
-                    for (const op of outline) {
-                        const dx = p.x - op.x;
-                        const dy = p.y - op.y;
-                        const dist = Math.sqrt(dx * dx + dy * dy);
-                        if (dist < minDist) minDist = dist;
-                    }
-                    totalDist += minDist;
-                    numSamples++;
+                const sampled = sampleContour(scaledPoints, gap);
+                if (sampled.length >= 3) {
+                    strokes.push(sampled);
                 }
-
-                const avgDist = totalDist / numSamples;
-
-                // If average distance is small, this stroke is ON the outline (boundary)
-                // If average distance is large, this stroke is INSIDE (interior detail)
-                // Note: thinning gives center line of stroke, marching squares gives edge
-                // So boundary strokes will be ~half stroke width away from outline
-                // Use larger threshold (20 pixels) to catch boundary strokes
-                const distThreshold = 20 * displayScale;
-
-                if (avgDist > distThreshold) {
-                    // This is an interior stroke - keep it
-                    const sampled = sampleContour(scaledPoints, gap);
-                    if (sampled.length >= 3) {
-                        innerStrokes.push(sampled);
-                    }
-                }
-                // else: this is a boundary stroke - skip it (outline will draw it)
             }
 
-            return innerStrokes;
+            return strokes;
         }
 
         // Normalize outlines for morphing
@@ -1848,10 +1789,14 @@
         }
 
         // Normalize inner strokes for morphing
+        // innerStrokePairs tracks which strokes are matched vs only in A or B
+        let innerStrokePairs = [];
+
         function normalizeInnerStrokesForMorphing() {
             if (innerStrokesA.length === 0 && innerStrokesB.length === 0) {
                 normalizedInnerA = [];
                 normalizedInnerB = [];
+                innerStrokePairs = [];
                 return;
             }
 
@@ -1877,37 +1822,45 @@
                 }
 
                 if (bestJ >= 0) {
-                    pairs.push({ strokeA: innerStrokesA[i], strokeB: innerStrokesB[bestJ] });
+                    pairs.push({ strokeA: innerStrokesA[i], strokeB: innerStrokesB[bestJ], type: 'matched' });
                     usedB.add(bestJ);
                 } else {
+                    // Stroke only in A - will disappear during morph
                     const c = centroidsA[i];
                     pairs.push({
                         strokeA: innerStrokesA[i],
-                        strokeB: innerStrokesA[i].map(() => ({ x: c.x, y: c.y }))
+                        strokeB: innerStrokesA[i].map(() => ({ x: c.x, y: c.y })),
+                        type: 'onlyA'
                     });
                 }
             }
 
             for (let j = 0; j < innerStrokesB.length; j++) {
                 if (!usedB.has(j)) {
+                    // Stroke only in B - will appear during morph (NOT at start)
                     const cB = centroidsB[j];
                     pairs.push({
                         strokeA: innerStrokesB[j].map(() => ({ x: cB.x, y: cB.y })),
-                        strokeB: innerStrokesB[j]
+                        strokeB: innerStrokesB[j],
+                        type: 'onlyB'
                     });
                 }
             }
 
             normalizedInnerA = [];
             normalizedInnerB = [];
+            innerStrokePairs = [];
 
             for (let i = 0; i < pairs.length; i++) {
-                let { strokeA, strokeB } = pairs[i];
+                let { strokeA, strokeB, type } = pairs[i];
                 strokeB = alignStrokeDirection(strokeB, strokeA);
 
                 const targetCount = Math.max(strokeA.length, strokeB.length, 30);
                 const resampledA = resampleStroke(strokeA, targetCount);
                 const resampledB = resampleStroke(strokeB, targetCount);
+
+                // Track this stroke's range and type
+                const startIdx = normalizedInnerA.length + (i > 0 ? 1 : 0); // account for break point
 
                 if (i > 0) {
                     normalizedInnerA.push({ x: resampledA[0].x, y: resampledA[0].y, isBreak: true });
@@ -1918,6 +1871,12 @@
                     normalizedInnerA.push({ ...resampledA[j], isBreak: false });
                     normalizedInnerB.push({ ...resampledB[j], isBreak: false });
                 }
+
+                innerStrokePairs.push({
+                    startIdx: startIdx,
+                    endIdx: normalizedInnerA.length,
+                    type: type
+                });
             }
         }
 
@@ -1939,13 +1898,42 @@
 
             if (normalizedInnerA.length > 0 && normalizedInnerB.length > 0) {
                 const count = Math.min(normalizedInnerA.length, normalizedInnerB.length);
+
+                // Build a set of indices to skip based on stroke type and t value
+                const skipIndices = new Set();
+                for (const pair of innerStrokePairs) {
+                    // onlyB strokes: don't show until t > 0.5 (halfway through morph)
+                    if (pair.type === 'onlyB' && t < 0.5) {
+                        for (let idx = pair.startIdx; idx < pair.endIdx; idx++) {
+                            skipIndices.add(idx);
+                        }
+                    }
+                    // onlyA strokes: hide after t > 0.5 (halfway through morph)
+                    if (pair.type === 'onlyA' && t > 0.5) {
+                        for (let idx = pair.startIdx; idx < pair.endIdx; idx++) {
+                            skipIndices.add(idx);
+                        }
+                    }
+                }
+
+                let lastWasSkipped = false;
                 for (let i = 0; i < count; i++) {
+                    if (skipIndices.has(i)) {
+                        lastWasSkipped = true;
+                        continue;
+                    }
+
                     const a = normalizedInnerA[i];
                     const b = normalizedInnerB[i];
+
+                    // If we skipped points and now resuming, add a break
+                    const needsBreak = lastWasSkipped || a.isBreak || b.isBreak;
+                    lastWasSkipped = false;
+
                     result.inner.push({
                         x: a.x + t * (b.x - a.x),
                         y: a.y + t * (b.y - a.y),
-                        isBreak: a.isBreak || b.isBreak
+                        isBreak: needsBreak
                     });
                 }
             }
