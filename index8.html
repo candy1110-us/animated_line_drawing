@@ -1,0 +1,1961 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Paper Folding Effect</title>
+    <style>
+        @font-face {
+            font-family: 'Be Vietnam Pro';
+            src: url('fonts/BeVietnamPro-Regular.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        @font-face {
+            font-family: 'Hmt Regular';
+            src: url('fonts/HmtRegular-WRrv.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background-color: #ecebe4;
+            background-image: url('data:image/svg+xml;utf8,<svg width="28" height="28" xmlns="http://www.w3.org/2000/svg"><circle cx="14" cy="14" r="1" fill="%23d2d1c7"/></svg>');
+            background-size: 28px 28px;
+            min-height: 100vh;
+            padding: 40px 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before,
+        body::after {
+            content: '';
+            position: fixed;
+            border-radius: 50%;
+            opacity: 0.15;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        body::before {
+            background: #fbbf24;
+            width: 50vh;
+            height: 50vh;
+            top: 20%;
+            left: -10vh;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        body::after {
+            background: #f59e0b;
+            width: 150px;
+            height: 150px;
+            bottom: 15%;
+            right: 8%;
+            animation: float 8s ease-in-out infinite reverse;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(5deg); }
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header {
+            background: transparent;
+            padding: 20px 30px;
+            margin-bottom: 30px;
+            text-align: center;
+            position: relative;
+        }
+
+        .logo-link {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            overflow: hidden;
+            background: white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 100;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .logo-link:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.25);
+        }
+
+        .header-logo {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .header h1 {
+            font-family: 'Hmt Regular', 'Inter', sans-serif;
+            font-size: 3.5rem;
+            color: #2d3436;
+            margin-bottom: 12px;
+            text-shadow: 3px 3px 0px rgba(251, 191, 36, 0.3);
+        }
+
+        .header p {
+            color: #636e72;
+            font-size: 1.1rem;
+        }
+
+        .main-layout {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        @media (min-width: 1024px) {
+            .main-layout {
+                flex-direction: row;
+                align-items: stretch;
+            }
+
+            .sidebar {
+                flex: 0 0 33%;
+                max-width: 33%;
+                display: flex;
+                flex-direction: column;
+                min-width: 0;
+            }
+
+            .preview-section {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                min-width: 0;
+            }
+        }
+
+        .sidebar, .preview-section {
+            background: white;
+            border-radius: 20px;
+            padding: 24px;
+            box-shadow:
+                3px 3px 0px rgba(0, 0, 0, 0.05),
+                6px 6px 0px rgba(251, 191, 36, 0.08);
+            border: 1px solid rgba(45, 52, 54, 0.15);
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .numbered-badge {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: white;
+            font-size: 24px;
+            box-shadow: 3px 3px 0px rgba(251, 191, 36, 0.3);
+            flex-shrink: 0;
+        }
+
+        .gradient-text {
+            margin: 0;
+            padding: 0;
+            font-family: 'Hmt Regular', 'Inter', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #2d3436;
+            line-height: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+        }
+
+        .upload-section {
+            border: 2px dashed rgba(251, 191, 36, 0.4);
+            border-radius: 20px;
+            padding: 30px 20px;
+            text-align: center;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 3px 3px 0px rgba(251, 191, 36, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .upload-section:hover {
+            border-color: #fbbf24;
+            background: #fffbeb;
+            transform: translateY(-3px) rotate(1deg);
+            box-shadow: 5px 5px 0px rgba(251, 191, 36, 0.2);
+        }
+
+        .upload-section.has-file {
+            border-style: solid;
+            border-color: #fbbf24;
+            padding: 15px;
+            cursor: default;
+        }
+
+        .upload-section.has-file:hover {
+            transform: none;
+            box-shadow: 3px 3px 0px rgba(251, 191, 36, 0.1);
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .upload-label {
+            font-size: 16px;
+            color: #f59e0b;
+            font-weight: 600;
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .helper-text {
+            font-size: 12px;
+            color: #6b7280;
+            margin-top: 4px;
+            line-height: 1.4;
+        }
+
+        .image-preview-container {
+            position: relative;
+            width: 100%;
+            max-height: 400px;
+            overflow: hidden;
+            background: #f9fafb;
+            border-radius: 12px;
+            padding: 12px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .image-preview {
+            max-width: 100%;
+            max-height: 350px;
+            border-radius: 8px;
+            object-fit: contain;
+        }
+
+        .upload-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            margin-top: 10px;
+        }
+
+        .setting-group {
+            margin-bottom: 18px;
+        }
+
+        .setting-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            color: white;
+            border: none;
+            padding: 14px 24px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 3px 3px 0px rgba(251, 191, 36, 0.3);
+            width: 100%;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 5px 5px 0px rgba(251, 191, 36, 0.4);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .preview-content-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 300px;
+        }
+
+        .preview-content {
+            position: relative;
+            background: #f9fafb;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 640px;
+            aspect-ratio: 16 / 9;
+            display: flex;
+            overflow: hidden;
+            background: repeating-conic-gradient(#e5e7eb 0% 25%, #f9fafb 0% 50%) 50% / 20px 20px;
+        }
+
+        .preview-content.ratio-16-9 {
+            aspect-ratio: 16 / 9;
+            max-width: 640px;
+        }
+
+        .preview-content.ratio-9-16 {
+            aspect-ratio: 9 / 16;
+            max-width: 280px;
+        }
+
+        .preview-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .placeholder {
+            text-align: center;
+            color: #9ca3af;
+            margin: auto;
+        }
+
+        .placeholder svg {
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 16px;
+            opacity: 0.3;
+        }
+
+        .controls-row {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: #f9fafb;
+            border-radius: 8px;
+        }
+
+        .label-text {
+            font-size: 12px;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .slider-compact {
+            width: 100px;
+            height: 4px;
+            border-radius: 2px;
+            background: #fef3c7;
+            outline: none;
+            -webkit-appearance: none;
+            cursor: pointer;
+        }
+
+        .slider-compact::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            cursor: pointer;
+        }
+
+        .color-preview-box {
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+            border: 2px solid #e5e7eb;
+            cursor: pointer;
+        }
+
+        .popup-menu {
+            display: none;
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 8px;
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            width: 280px;
+            z-index: 1000;
+        }
+
+        .popup-menu.visible {
+            display: block;
+        }
+
+        .color-square {
+            position: relative;
+            width: 100%;
+            height: 150px;
+            background: linear-gradient(to right, white, red);
+            border-radius: 8px;
+            margin-bottom: 12px;
+            cursor: crosshair;
+            border: 2px solid #e5e7eb;
+        }
+
+        .color-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(to bottom, transparent, black);
+            border-radius: 6px;
+        }
+
+        .color-cursor {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            border: 2px solid white;
+            border-radius: 50%;
+            pointer-events: none;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 3px rgba(0,0,0,0.5);
+        }
+
+        .hue-slider {
+            height: 20px;
+            border-radius: 6px;
+            background: linear-gradient(to right, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000);
+            position: relative;
+            cursor: pointer;
+            border: 2px solid #e5e7eb;
+            margin-bottom: 12px;
+        }
+
+        .hue-cursor {
+            position: absolute;
+            width: 4px;
+            height: 24px;
+            background: white;
+            border: 2px solid #666;
+            border-radius: 2px;
+            top: -2px;
+            transform: translateX(-50%);
+            pointer-events: none;
+        }
+
+        .hex-input {
+            flex: 1;
+            padding: 6px 10px;
+            border: 2px solid #e5e7eb;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 13px;
+        }
+
+        .color-input {
+            width: 40px;
+            height: 32px;
+            border: 2px solid #e5e7eb;
+            border-radius: 6px;
+            cursor: pointer;
+            padding: 0;
+        }
+
+        .mb-12 {
+            margin-bottom: 12px;
+        }
+
+        .flex-center-gap-8 {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .pos-relative {
+            position: relative;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .export-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 16px;
+            justify-content: center;
+        }
+
+        .export-buttons .btn-primary {
+            width: auto;
+        }
+
+        .aspect-ratio-group {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .aspect-ratio-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            padding: 4px 6px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            opacity: 0.4;
+            transition: opacity 0.2s;
+        }
+
+        .aspect-ratio-btn:hover {
+            opacity: 0.7;
+        }
+
+        .aspect-ratio-btn.selected {
+            opacity: 1;
+        }
+
+        .aspect-ratio-btn span {
+            font-size: 9px;
+            font-weight: 500;
+        }
+
+        .value-display {
+            display: inline-block;
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+
+        .slider-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 10px;
+            background: #f9fafb;
+            border-radius: 8px;
+            height: 36px;
+        }
+
+        .slider-item-sm {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 8px;
+            background: #f9fafb;
+            border-radius: 8px;
+            height: 32px;
+        }
+
+        .slider-item-sm .slider-compact {
+            width: 60px;
+        }
+
+        .slider-item-sm .value-display {
+            margin-left: 4px;
+            padding: 1px 6px;
+            font-size: 11px;
+        }
+
+        .slider-item-sm .label-text {
+            font-size: 11px;
+        }
+
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.9);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            border-radius: 12px;
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #fef3c7;
+            border-top-color: #f59e0b;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            margin-top: 12px;
+            font-size: 14px;
+            color: #6b7280;
+        }
+
+        .speed-group {
+            display: flex;
+            gap: 4px;
+        }
+
+        .speed-btn {
+            padding: 4px 10px;
+            border: 1.5px solid #e5e7eb;
+            border-radius: 6px;
+            background: white;
+            font-size: 11px;
+            font-weight: 600;
+            color: #6b7280;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .speed-btn:hover {
+            border-color: #fbbf24;
+            color: #f59e0b;
+        }
+
+        .speed-btn.selected {
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            color: white;
+            border-color: #f59e0b;
+        }
+
+        .controls-row-2 {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .toggle-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 10px;
+            background: #f9fafb;
+            border-radius: 8px;
+            height: 36px;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 32px;
+            height: 18px;
+            background: #d1d5db;
+            border-radius: 9px;
+            cursor: pointer;
+            transition: background 0.2s;
+            flex-shrink: 0;
+        }
+
+        .toggle-switch.active {
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+        }
+
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 14px;
+            height: 14px;
+            background: white;
+            border-radius: 50%;
+            transition: transform 0.2s;
+        }
+
+        .toggle-switch.active::after {
+            transform: translateX(14px);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <a href="index.html" class="logo-link">
+                <img src="images/mefn.gif" alt="Logo" class="header-logo">
+            </a>
+            <div class="header-content">
+                <h1>Paper Folding</h1>
+            </div>
+        </div>
+
+        <div class="main-layout">
+            <!-- LEFT - Upload -->
+            <div class="sidebar">
+                <div class="section-header">
+                    <div class="numbered-badge">1</div>
+                    <h3 class="gradient-text">Upload Image</h3>
+                </div>
+
+                <div class="upload-section" id="uploadSection">
+                    <input type="file" id="fileUpload" accept="image/*">
+                    <div id="uploadPlaceholder">
+                        <label for="fileUpload" class="upload-label">
+                            Upload Your Image
+                        </label>
+                        <div class="helper-text">
+                            Click to upload (PNG, JPG, GIF)
+                        </div>
+                        <div class="helper-text" style="margin-top: 8px; color: #9ca3af;">
+                            Your image will appear inside the folding paper
+                        </div>
+                    </div>
+                    <div id="uploadPreview" class="hidden">
+                        <div class="image-preview-container">
+                            <img id="imagePreview" class="image-preview" />
+                        </div>
+                        <div class="upload-actions">
+                            <label for="fileUpload" class="helper-text" style="color: #f59e0b; cursor: pointer;">Change image</label>
+                            <span class="helper-text" style="color: #9ca3af;">|</span>
+                            <span id="removeFile" class="helper-text" style="color: #dd6143; cursor: pointer;">Remove</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT - Preview -->
+            <div class="preview-section">
+                <div class="section-header">
+                    <div class="numbered-badge">2</div>
+                    <h3 class="gradient-text">Preview</h3>
+                </div>
+
+                <!-- Controls Row -->
+                <div class="controls-row">
+                    <div class="pos-relative">
+                        <div class="control-group" id="bgIndicator" style="cursor: pointer;">
+                            <span class="label-text">Background:</span>
+                            <div id="bgPreview" class="color-preview-box" style="background: #00b140;"></div>
+                        </div>
+                        <div id="bgPopup" class="popup-menu">
+                            <div class="color-square" id="bgColorSquare">
+                                <div class="color-overlay"></div>
+                                <div id="bgColorCursor" class="color-cursor"></div>
+                            </div>
+                            <div class="hue-slider" id="bgHueSlider">
+                                <div id="bgHueCursor" class="hue-cursor"></div>
+                            </div>
+                            <div class="flex-center-gap-8 mb-12">
+                                <span class="label-text">Hex:</span>
+                                <input type="text" id="bgColorHexInput" value="#00b140" class="hex-input">
+                                <input type="color" id="bgColor" value="#00b140" class="color-input">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <span class="label-text">Ratio:</span>
+                        <div class="aspect-ratio-group">
+                            <button class="aspect-ratio-btn selected" id="ratio16x9" title="16:9 Landscape">
+                                <svg width="20" height="12" viewBox="0 0 20 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <rect x="0.5" y="0.5" width="19" height="11" rx="1" stroke="currentColor" fill="none"/>
+                                </svg>
+                                <span>16:9</span>
+                            </button>
+                            <button class="aspect-ratio-btn" id="ratio9x16" title="9:16 Portrait">
+                                <svg width="12" height="20" viewBox="0 0 12 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <rect x="0.5" y="0.5" width="11" height="19" rx="1" stroke="currentColor" fill="none"/>
+                                </svg>
+                                <span>9:16</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="slider-item">
+                        <span class="label-text">Scale:</span>
+                        <input type="range" id="scaleSlider" min="30" max="150" value="90" class="slider-compact">
+                        <span class="value-display" id="scaleDisplay">90%</span>
+                    </div>
+                </div>
+
+                <div class="controls-row-2">
+                    <div class="control-group">
+                        <span class="label-text">Speed:</span>
+                        <div class="speed-group">
+                            <button class="speed-btn" id="speedSlow" data-speed="slow">Slow</button>
+                            <button class="speed-btn selected" id="speedMedium" data-speed="medium">Medium</button>
+                            <button class="speed-btn" id="speedFast" data-speed="fast">Fast</button>
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <span class="label-text">Jiggle:</span>
+                        <div class="speed-group">
+                            <button class="speed-btn jiggle-btn" id="jiggleNone" data-jiggle="0">None</button>
+                            <button class="speed-btn jiggle-btn selected" id="jiggleLight" data-jiggle="25">Light</button>
+                            <button class="speed-btn jiggle-btn" id="jiggleMedium" data-jiggle="55">Medium</button>
+                            <button class="speed-btn jiggle-btn" id="jiggleHeavy" data-jiggle="85">Heavy</button>
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <span class="label-text">Texture:</span>
+                        <div class="speed-group">
+                            <button class="speed-btn texture-btn selected" id="textureNone" data-texture="none">None</button>
+                            <button class="speed-btn texture-btn" id="texture1" data-texture="1">1</button>
+                            <button class="speed-btn texture-btn" id="texture2" data-texture="2">2</button>
+                            <button class="speed-btn texture-btn" id="texture3" data-texture="3">3</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="controls-row-2">
+                    <div class="slider-item-sm">
+                        <span class="label-text">Border:</span>
+                        <input type="range" id="borderSlider" min="0" max="100" value="50" class="slider-compact">
+                        <span class="value-display" id="borderDisplay">50px</span>
+                    </div>
+                    <div class="slider-item-sm" id="jaggedGroup">
+                        <span class="label-text">Tear:</span>
+                        <input type="range" id="jaggedSlider" min="0" max="100" value="30" class="slider-compact">
+                        <span class="value-display" id="jaggedDisplay">30%</span>
+                    </div>
+                    <div class="slider-item-sm">
+                        <span class="label-text">Shadow:</span>
+                        <input type="range" id="shadowBlurSlider" min="0" max="80" value="50" class="slider-compact">
+                        <span class="value-display" id="shadowBlurDisplay">50</span>
+                    </div>
+                    <div class="slider-item-sm" id="shadowIntensityGroup">
+                        <span class="label-text">Intensity:</span>
+                        <input type="range" id="shadowIntensitySlider" min="0" max="100" value="50" class="slider-compact">
+                        <span class="value-display" id="shadowIntensityDisplay">50%</span>
+                    </div>
+                </div>
+
+                <div class="preview-content-wrapper">
+                    <div class="preview-content ratio-16-9" id="previewContent">
+                        <canvas id="previewCanvas" class="preview-canvas"></canvas>
+                        <div class="placeholder" id="previewPlaceholder">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                                <polyline points="21 15 16 10 5 21"></polyline>
+                            </svg>
+                            <p>Upload an image to see the paper folding effect</p>
+                        </div>
+                        <div class="loading-overlay hidden" id="loadingOverlay">
+                            <div class="loading-spinner"></div>
+                            <div class="loading-text">Loading animation...</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="export-buttons">
+                    <button class="btn-primary" id="exportMp4Btn" disabled style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); box-shadow: 3px 3px 0px rgba(16, 185, 129, 0.3);">Export MP4</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // State
+        let uploadedImage = null;
+        let frameImages = []; // The loaded PNG frame images
+        let frameWidth = 0;
+        let frameHeight = 0;
+        let isAnimating = false;
+        let animationId = null;
+        let currentFrame = 0;
+        let lastFrameTime = 0;
+        let backgroundColor = '#00b140';
+        let scale = 90; // percentage of fit-to-canvas size
+
+        // Pre-computed masks for each frame (canvases with white=inner hole)
+        let frameMasks = []; // One mask canvas per frame (0-5)
+        let frame6HoleBounds = null; // { minX, maxX, minY, maxY }
+        // Cached user image canvas drawn at frame 6 bounds
+        let cachedUserImageCanvas = null;
+        // Cached alpha mask of user image (white where user image is non-transparent)
+        let cachedUserAlphaMask = null;
+        // (border is now baked into cachedUserImageCanvas and cachedUserAlphaMask)
+
+        // Border settings
+        let borderThickness = 50;
+        let borderJagged = 30;
+        // Jiggle settings
+        let jiggleAmount = 25;
+        // Texture overlay
+        let textureEnabled = false;
+        let textureImage = null;
+        let textureImages = {}; // { '1': img, '2': img, '3': img }
+        // Shadow settings
+        let shadowBlur = 50;
+        let shadowIntensity = 50;
+
+        // Speed presets: { frameDelay, exportDelay }
+        const speedPresets = {
+            slow: { frameDelay: 160, exportDelay: 80 },
+            medium: { frameDelay: 100, exportDelay: 50 },
+            fast: { frameDelay: 60, exportDelay: 30 }
+        };
+        let currentSpeed = 'medium';
+
+        // Build frame sequence for forward + hold with jiggle + reverse
+        // Frame 0 = empty (just background), frames 1-6 = paper frames
+        function buildFrameSequence() {
+            const forward = [
+                0, 0, 0, 0,             // Empty frames at start
+                1, 1, 1,
+                2, 2,
+                3, 3,
+                4, 4,
+                5, 5,
+                6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,  // Hold at frame 6 (~2-3 sec)
+            ];
+            const reverse = [
+                5, 5,
+                4, 4,
+                3, 3,
+                2, 2,
+                1, 1, 1,
+                0, 0, 0, 0              // Empty frames at end before looping
+            ];
+            return [...forward, ...reverse];
+        }
+
+        let frameSequence = buildFrameSequence();
+        let frameDelay = speedPresets.medium.frameDelay;
+
+        // DOM Elements
+        const fileUpload = document.getElementById('fileUpload');
+        const uploadSection = document.getElementById('uploadSection');
+        const uploadPlaceholder = document.getElementById('uploadPlaceholder');
+        const uploadPreview = document.getElementById('uploadPreview');
+        const imagePreview = document.getElementById('imagePreview');
+        const removeFile = document.getElementById('removeFile');
+        const previewPlaceholder = document.getElementById('previewPlaceholder');
+        const previewContent = document.getElementById('previewContent');
+        const previewCanvas = document.getElementById('previewCanvas');
+        const exportMp4Btn = document.getElementById('exportMp4Btn');
+        const loadingOverlay = document.getElementById('loadingOverlay');
+
+        // Controls
+        const bgColor = document.getElementById('bgColor');
+        const bgPreview = document.getElementById('bgPreview');
+        const bgPopup = document.getElementById('bgPopup');
+        const bgIndicator = document.getElementById('bgIndicator');
+        const bgColorHexInput = document.getElementById('bgColorHexInput');
+        const borderSlider = document.getElementById('borderSlider');
+        const borderDisplay = document.getElementById('borderDisplay');
+        const jaggedSlider = document.getElementById('jaggedSlider');
+        const jaggedDisplay = document.getElementById('jaggedDisplay');
+        const jaggedGroup = document.getElementById('jaggedGroup');
+        const jiggleBtns = document.querySelectorAll('.jiggle-btn');
+        const textureBtns = document.querySelectorAll('.texture-btn');
+        const speedBtns = document.querySelectorAll('.speed-btn:not(.jiggle-btn):not(.texture-btn)');
+        const shadowBlurSlider = document.getElementById('shadowBlurSlider');
+        const shadowBlurDisplay = document.getElementById('shadowBlurDisplay');
+        const shadowIntensitySlider = document.getElementById('shadowIntensitySlider');
+        const shadowIntensityDisplay = document.getElementById('shadowIntensityDisplay');
+        const shadowIntensityGroup = document.getElementById('shadowIntensityGroup');
+        const scaleSlider = document.getElementById('scaleSlider');
+        const scaleDisplay = document.getElementById('scaleDisplay');
+        const ratio16x9 = document.getElementById('ratio16x9');
+        const ratio9x16 = document.getElementById('ratio9x16');
+
+        // Color picker state
+        let bgHue = 140;
+        let bgSaturation = 100;
+        let bgValue = 69;
+
+        // Load the paper folding PNG frames
+        async function loadPaperFoldingFrames() {
+            loadingOverlay.classList.remove('hidden');
+
+            try {
+                const framePromises = [];
+                for (let i = 1; i <= 6; i++) {
+                    const img = new Image();
+                    const promise = new Promise((resolve, reject) => {
+                        img.onload = () => resolve(img);
+                        img.onerror = reject;
+                    });
+                    img.src = `images/paperfolding/f${i}.png`;
+                    framePromises.push(promise);
+                }
+
+                frameImages = await Promise.all(framePromises);
+
+                // Load texture images
+                for (let t = 1; t <= 3; t++) {
+                    try {
+                        const texImg = new Image();
+                        const texPromise = new Promise((resolve) => {
+                            texImg.onload = () => resolve(texImg);
+                            texImg.onerror = () => resolve(null);
+                        });
+                        texImg.src = `images/texture/texture${t}.png`;
+                        const loaded = await texPromise;
+                        if (loaded) {
+                            textureImages[String(t)] = loaded;
+                            console.log(`Texture ${t} loaded:`, loaded.width, 'x', loaded.height);
+                        }
+                    } catch (e) {
+                        console.warn(`Could not load texture ${t}:`, e);
+                    }
+                }
+
+                if (frameImages.length > 0) {
+                    frameWidth = frameImages[0].width;
+                    frameHeight = frameImages[0].height;
+                    console.log(`Loaded ${frameImages.length} frames: ${frameWidth}x${frameHeight}`);
+
+                    // Pre-compute all masks and frame 6 bounds
+                    precomputeFrameData();
+
+                    // Start animation immediately after loading
+                    startAnimation();
+                }
+            } catch (error) {
+                console.error('Error loading frames:', error);
+                alert('Error loading frames: ' + error.message);
+            }
+
+            loadingOverlay.classList.add('hidden');
+        }
+
+        // Pre-compute mask canvases and frame 6 hole bounds at load time
+        function precomputeFrameData() {
+            frameMasks = [];
+
+            for (let f = 0; f < frameImages.length; f++) {
+                const img = frameImages[f];
+                // Get pixel data for this frame
+                const tempCanvas = document.createElement('canvas');
+                tempCanvas.width = frameWidth;
+                tempCanvas.height = frameHeight;
+                const tempCtx = tempCanvas.getContext('2d');
+                tempCtx.drawImage(img, 0, 0);
+                const data = tempCtx.getImageData(0, 0, frameWidth, frameHeight).data;
+
+                // Find inner hole using flood fill
+                const holeMask = findInnerHoleMask(data, frameWidth, frameHeight);
+
+                // Create a mask canvas: opaque white where inner hole is, transparent elsewhere
+                const maskCanvas = document.createElement('canvas');
+                maskCanvas.width = frameWidth;
+                maskCanvas.height = frameHeight;
+                const maskCtx = maskCanvas.getContext('2d');
+                const maskImageData = maskCtx.createImageData(frameWidth, frameHeight);
+                const maskData = maskImageData.data;
+
+                for (let i = 0; i < holeMask.length; i++) {
+                    if (holeMask[i] === 3) { // inner hole
+                        maskData[i * 4] = 255;
+                        maskData[i * 4 + 1] = 255;
+                        maskData[i * 4 + 2] = 255;
+                        maskData[i * 4 + 3] = 255;
+                    }
+                }
+                maskCtx.putImageData(maskImageData, 0, 0);
+                frameMasks.push(maskCanvas);
+
+                // For frame 6, also compute the hole bounds
+                if (f === 5) {
+                    let minX = frameWidth, maxX = 0, minY = frameHeight, maxY = 0;
+                    let hasHole = false;
+                    for (let y = 0; y < frameHeight; y++) {
+                        for (let x = 0; x < frameWidth; x++) {
+                            if (holeMask[y * frameWidth + x] === 3) {
+                                hasHole = true;
+                                minX = Math.min(minX, x);
+                                maxX = Math.max(maxX, x);
+                                minY = Math.min(minY, y);
+                                maxY = Math.max(maxY, y);
+                            }
+                        }
+                    }
+                    if (hasHole) {
+                        frame6HoleBounds = { minX, maxX, minY, maxY };
+                        console.log('Frame 6 hole bounds:', frame6HoleBounds);
+                    }
+                }
+            }
+            console.log(`Pre-computed ${frameMasks.length} frame masks`);
+        }
+
+        // Cache the user image sized to fit frame 6's inner hole
+        // The border is baked into the image and alpha mask so it animates with the paper
+        function cacheUserImageForFrame6() {
+            if (!uploadedImage || !frame6HoleBounds) {
+                cachedUserImageCanvas = null;
+                cachedUserAlphaMask = null;
+                return;
+            }
+
+            const fullHoleWidth = frame6HoleBounds.maxX - frame6HoleBounds.minX + 1;
+            const fullHoleHeight = frame6HoleBounds.maxY - frame6HoleBounds.minY + 1;
+
+            // Inset the available area by borderThickness so image + border fits within the hole
+            const inset = borderThickness;
+            const holeWidth = Math.max(1, fullHoleWidth - inset * 2);
+            const holeHeight = Math.max(1, fullHoleHeight - inset * 2);
+            const holeStartX = frame6HoleBounds.minX + inset;
+            const holeStartY = frame6HoleBounds.minY + inset;
+
+            // Calculate how to fit entire user image into the inset area (contain)
+            const imgAspect = uploadedImage.width / uploadedImage.height;
+            const holeAspect = holeWidth / holeHeight;
+            let drawWidth, drawHeight, drawX, drawY;
+
+            if (imgAspect > holeAspect) {
+                drawWidth = holeWidth;
+                drawHeight = drawWidth / imgAspect;
+                drawX = holeStartX;
+                drawY = holeStartY + (holeHeight - drawHeight) / 2;
+            } else {
+                drawHeight = holeHeight;
+                drawWidth = drawHeight * imgAspect;
+                drawX = holeStartX + (holeWidth - drawWidth) / 2;
+                drawY = holeStartY;
+            }
+
+            // Step 1: Build the border region (solid white with jagged contour)
+            let borderCanvas = null;
+            if (borderThickness > 0) {
+                borderCanvas = buildJaggedBorder(drawX, drawY, drawWidth, drawHeight);
+            }
+
+            // Step 2: Build cachedUserImageCanvas — border behind, image on top
+            cachedUserImageCanvas = document.createElement('canvas');
+            cachedUserImageCanvas.width = frameWidth;
+            cachedUserImageCanvas.height = frameHeight;
+            const ctx = cachedUserImageCanvas.getContext('2d');
+
+            // Draw off-white border first (behind image)
+            if (borderCanvas) {
+                ctx.drawImage(borderCanvas, 0, 0);
+            }
+            // Draw user image on top
+            ctx.drawImage(uploadedImage, drawX, drawY, drawWidth, drawHeight);
+
+            // Step 3: Build alpha mask = opaque white wherever cachedUserImageCanvas has content
+            cachedUserAlphaMask = document.createElement('canvas');
+            cachedUserAlphaMask.width = frameWidth;
+            cachedUserAlphaMask.height = frameHeight;
+            const maskCtx = cachedUserAlphaMask.getContext('2d');
+            // Draw the combined image (border + user image)
+            maskCtx.drawImage(cachedUserImageCanvas, 0, 0);
+            // Convert to white alpha mask
+            const imgData = maskCtx.getImageData(0, 0, frameWidth, frameHeight);
+            const pixels = imgData.data;
+            for (let i = 0; i < pixels.length; i += 4) {
+                if (pixels[i + 3] > 0) {
+                    pixels[i] = 255;
+                    pixels[i + 1] = 255;
+                    pixels[i + 2] = 255;
+                    pixels[i + 3] = 255; // Fully opaque where any content exists
+                }
+            }
+            maskCtx.putImageData(imgData, 0, 0);
+
+            console.log('Cached user image with border and alpha mask for frame 6');
+        }
+
+        // Generate a solid off-white border with jagged/torn contour around user image
+        function buildJaggedBorder(drawX, drawY, drawWidth, drawHeight) {
+            const w = frameWidth, h = frameHeight;
+            const canvas = document.createElement('canvas');
+            canvas.width = w;
+            canvas.height = h;
+            const bCtx = canvas.getContext('2d');
+
+            // Get user image alpha
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = w;
+            tempCanvas.height = h;
+            const tCtx = tempCanvas.getContext('2d');
+            tCtx.drawImage(uploadedImage, drawX, drawY, drawWidth, drawHeight);
+            const src = tCtx.getImageData(0, 0, w, h).data;
+
+            // Binary mask of non-transparent pixels
+            const filled = new Uint8Array(w * h);
+            for (let i = 0; i < w * h; i++) {
+                if (src[i * 4 + 3] > 20) filled[i] = 1;
+            }
+
+            // Find edge pixels of the filled region
+            const edgePixels = [];
+            for (let y = 0; y < h; y++) {
+                for (let x = 0; x < w; x++) {
+                    const idx = y * w + x;
+                    if (filled[idx] === 0) continue;
+                    if ((x > 0 && filled[idx - 1] === 0) ||
+                        (x < w - 1 && filled[idx + 1] === 0) ||
+                        (y > 0 && filled[idx - w] === 0) ||
+                        (y < h - 1 && filled[idx + w] === 0)) {
+                        edgePixels.push(idx);
+                    }
+                }
+            }
+
+            // BFS outward from edge pixels to compute distance field
+            const dist = new Float32Array(w * h).fill(Infinity);
+            const queue = [];
+            for (const idx of edgePixels) {
+                dist[idx] = 0;
+                queue.push(idx);
+            }
+
+            const thickness = borderThickness;
+            let head = 0;
+            while (head < queue.length) {
+                const idx = queue[head++];
+                const x = idx % w;
+                const y = (idx - x) / w;
+                const d = dist[idx];
+                if (d >= thickness) continue;
+
+                if (x > 0 && d + 1 < dist[idx - 1] && filled[idx - 1] === 0) { dist[idx - 1] = d + 1; queue.push(idx - 1); }
+                if (x < w - 1 && d + 1 < dist[idx + 1] && filled[idx + 1] === 0) { dist[idx + 1] = d + 1; queue.push(idx + 1); }
+                if (y > 0 && d + 1 < dist[idx - w] && filled[idx - w] === 0) { dist[idx - w] = d + 1; queue.push(idx - w); }
+                if (y < h - 1 && d + 1 < dist[idx + w] && filled[idx + w] === 0) { dist[idx + w] = d + 1; queue.push(idx + w); }
+            }
+
+            // Smooth noise function for jagged contour (not per-pixel noise)
+            // Uses low-frequency noise so the jagged line is a smooth wavy contour
+            const jaggedFactor = borderJagged / 100;
+
+            function smoothNoise(x, y) {
+                // Hash-based noise at a coarser grid, then interpolate
+                const gridSize = Math.max(4, thickness * 0.5);
+                const gx = x / gridSize;
+                const gy = y / gridSize;
+                const ix = Math.floor(gx);
+                const iy = Math.floor(gy);
+                const fx = gx - ix;
+                const fy = gy - iy;
+
+                function hash(px, py) {
+                    let n = px * 374761393 + py * 668265263;
+                    n = (n ^ (n >> 13)) * 1274126177;
+                    return ((n ^ (n >> 16)) & 0x7fffffff) / 0x7fffffff;
+                }
+
+                // Bilinear interpolation
+                const n00 = hash(ix, iy);
+                const n10 = hash(ix + 1, iy);
+                const n01 = hash(ix, iy + 1);
+                const n11 = hash(ix + 1, iy + 1);
+                const nx0 = n00 + (n10 - n00) * fx;
+                const nx1 = n01 + (n11 - n01) * fx;
+                return nx0 + (nx1 - nx0) * fy;
+            }
+
+            // Build border: solid off-white where dist <= effective jagged threshold
+            const borderData = bCtx.createImageData(w, h);
+            const bd = borderData.data;
+            const borderR = 245, borderG = 240, borderB = 232; // off-white #f5f0e8
+
+            for (let y = 0; y < h; y++) {
+                for (let x = 0; x < w; x++) {
+                    const idx = y * w + x;
+                    if (filled[idx] === 1) continue; // inside image, skip
+                    const d = dist[idx];
+                    if (d === Infinity || d > thickness) continue;
+
+                    // Jagged contour: smooth noise varies the effective border threshold
+                    const jag = jaggedFactor > 0 ? smoothNoise(x, y) * jaggedFactor * thickness : 0;
+                    const effectiveThickness = thickness - jag;
+
+                    if (d <= effectiveThickness) {
+                        bd[idx * 4] = borderR;
+                        bd[idx * 4 + 1] = borderG;
+                        bd[idx * 4 + 2] = borderB;
+                        bd[idx * 4 + 3] = 255; // Fully solid
+                    }
+                }
+            }
+
+            bCtx.putImageData(borderData, 0, 0);
+            return canvas;
+        }
+
+        // Initialize
+        loadPaperFoldingFrames();
+
+        // File upload handling
+        fileUpload.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file && file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        uploadedImage = img;
+                        imagePreview.src = event.target.result;
+                        uploadPlaceholder.classList.add('hidden');
+                        uploadPreview.classList.remove('hidden');
+                        uploadSection.classList.add('has-file');
+
+                        previewPlaceholder.classList.add('hidden');
+                        exportMp4Btn.disabled = false;
+
+                        // Cache user image sized to frame 6
+                        cacheUserImageForFrame6();
+
+                        startAnimation();
+                    };
+                    img.src = event.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Remove file
+        removeFile.addEventListener('click', () => {
+            uploadedImage = null;
+            cachedUserImageCanvas = null;
+            cachedUserAlphaMask = null;
+            fileUpload.value = '';
+            uploadPlaceholder.classList.remove('hidden');
+            uploadPreview.classList.remove('hidden');
+            uploadPreview.classList.add('hidden');
+            uploadSection.classList.remove('has-file');
+
+            previewPlaceholder.classList.remove('hidden');
+            exportMp4Btn.disabled = true;
+
+            stopAnimation();
+            clearCanvas();
+        });
+
+        // Click upload section to trigger file input
+        uploadSection.addEventListener('click', (e) => {
+            if (!uploadSection.classList.contains('has-file')) {
+                fileUpload.click();
+            }
+        });
+
+        // Background color picker
+        bgIndicator.addEventListener('click', (e) => {
+            e.stopPropagation();
+            bgPopup.classList.toggle('visible');
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!bgPopup.contains(e.target) && !bgIndicator.contains(e.target)) {
+                bgPopup.classList.remove('visible');
+            }
+        });
+
+        // Color picker logic
+        const bgColorSquare = document.getElementById('bgColorSquare');
+        const bgColorCursor = document.getElementById('bgColorCursor');
+        const bgHueSlider = document.getElementById('bgHueSlider');
+        const bgHueCursor = document.getElementById('bgHueCursor');
+
+        function hsvToRgb(h, s, v) {
+            let r, g, b;
+            const i = Math.floor(h * 6);
+            const f = h * 6 - i;
+            const p = v * (1 - s);
+            const q = v * (1 - f * s);
+            const t = v * (1 - (1 - f) * s);
+            switch (i % 6) {
+                case 0: r = v; g = t; b = p; break;
+                case 1: r = q; g = v; b = p; break;
+                case 2: r = p; g = v; b = t; break;
+                case 3: r = p; g = q; b = v; break;
+                case 4: r = t; g = p; b = v; break;
+                case 5: r = v; g = p; b = q; break;
+            }
+            return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
+        }
+
+        function rgbToHex(r, g, b) {
+            return '#' + [r, g, b].map(x => x.toString(16).padStart(2, '0')).join('');
+        }
+
+        function hexToRgb(hex) {
+            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? {
+                r: parseInt(result[1], 16),
+                g: parseInt(result[2], 16),
+                b: parseInt(result[3], 16)
+            } : null;
+        }
+
+        function updateBgColor() {
+            const [r, g, b] = hsvToRgb(bgHue / 360, bgSaturation / 100, bgValue / 100);
+            const hex = rgbToHex(r, g, b);
+            backgroundColor = hex;
+            bgPreview.style.background = hex;
+            bgColor.value = hex;
+            bgColorHexInput.value = hex;
+
+            const hueColor = hsvToRgb(bgHue / 360, 1, 1);
+            bgColorSquare.style.background = `linear-gradient(to right, white, rgb(${hueColor[0]}, ${hueColor[1]}, ${hueColor[2]}))`;
+        }
+
+        function updateBgColorCursor() {
+            bgColorCursor.style.left = `${bgSaturation}%`;
+            bgColorCursor.style.top = `${100 - bgValue}%`;
+        }
+
+        function updateBgHueCursor() {
+            bgHueCursor.style.left = `${(bgHue / 360) * 100}%`;
+        }
+
+        let isDraggingBgSquare = false;
+        let isDraggingBgHue = false;
+
+        bgColorSquare.addEventListener('mousedown', (e) => {
+            isDraggingBgSquare = true;
+            updateBgFromSquare(e);
+        });
+
+        bgHueSlider.addEventListener('mousedown', (e) => {
+            isDraggingBgHue = true;
+            updateBgFromHue(e);
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (isDraggingBgSquare) updateBgFromSquare(e);
+            if (isDraggingBgHue) updateBgFromHue(e);
+        });
+
+        document.addEventListener('mouseup', () => {
+            isDraggingBgSquare = false;
+            isDraggingBgHue = false;
+        });
+
+        function updateBgFromSquare(e) {
+            const rect = bgColorSquare.getBoundingClientRect();
+            bgSaturation = Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100));
+            bgValue = Math.max(0, Math.min(100, 100 - ((e.clientY - rect.top) / rect.height) * 100));
+            updateBgColorCursor();
+            updateBgColor();
+        }
+
+        function updateBgFromHue(e) {
+            const rect = bgHueSlider.getBoundingClientRect();
+            bgHue = Math.max(0, Math.min(360, ((e.clientX - rect.left) / rect.width) * 360));
+            updateBgHueCursor();
+            updateBgColor();
+        }
+
+        bgColor.addEventListener('input', (e) => {
+            const hex = e.target.value;
+            const rgb = hexToRgb(hex);
+            if (rgb) {
+                backgroundColor = hex;
+                bgPreview.style.background = hex;
+                bgColorHexInput.value = hex;
+            }
+        });
+
+        bgColorHexInput.addEventListener('input', (e) => {
+            let hex = e.target.value;
+            if (!hex.startsWith('#')) hex = '#' + hex;
+            if (/^#[0-9A-Fa-f]{6}$/.test(hex)) {
+                backgroundColor = hex;
+                bgPreview.style.background = hex;
+                bgColor.value = hex;
+            }
+        });
+
+        // Initialize color picker
+        updateBgColorCursor();
+        updateBgHueCursor();
+        updateBgColor();
+
+        // Scale slider
+        scaleSlider.addEventListener('input', (e) => {
+            scale = parseInt(e.target.value);
+            scaleDisplay.textContent = scale + '%';
+        });
+
+        // Speed buttons
+        speedBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                speedBtns.forEach(b => b.classList.remove('selected'));
+                btn.classList.add('selected');
+                currentSpeed = btn.dataset.speed;
+                frameDelay = speedPresets[currentSpeed].frameDelay;
+            });
+        });
+
+        // Border slider
+        borderSlider.addEventListener('input', (e) => {
+            borderThickness = parseInt(e.target.value);
+            borderDisplay.textContent = borderThickness + 'px';
+            // Enable/disable jagged slider
+            if (borderThickness > 0) {
+                jaggedGroup.style.opacity = '1';
+                jaggedGroup.style.pointerEvents = 'auto';
+            } else {
+                jaggedGroup.style.opacity = '0.4';
+                jaggedGroup.style.pointerEvents = 'none';
+            }
+            if (uploadedImage) cacheUserImageForFrame6();
+        });
+
+        // Jagged slider
+        jaggedSlider.addEventListener('input', (e) => {
+            borderJagged = parseInt(e.target.value);
+            jaggedDisplay.textContent = borderJagged + '%';
+            if (uploadedImage && borderThickness > 0) cacheUserImageForFrame6();
+        });
+
+        // Jiggle buttons
+        jiggleBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                jiggleBtns.forEach(b => b.classList.remove('selected'));
+                btn.classList.add('selected');
+                jiggleAmount = parseInt(btn.dataset.jiggle);
+            });
+        });
+
+        // Texture buttons
+        textureBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                textureBtns.forEach(b => b.classList.remove('selected'));
+                btn.classList.add('selected');
+                const tex = btn.dataset.texture;
+                if (tex === 'none') {
+                    textureEnabled = false;
+                    textureImage = null;
+                } else {
+                    textureEnabled = true;
+                    textureImage = textureImages[tex] || null;
+                }
+            });
+        });
+
+        // Shadow sliders
+        shadowBlurSlider.addEventListener('input', (e) => {
+            shadowBlur = parseInt(e.target.value);
+            shadowBlurDisplay.textContent = shadowBlur;
+            if (shadowBlur > 0) {
+                shadowIntensityGroup.style.opacity = '1';
+                shadowIntensityGroup.style.pointerEvents = 'auto';
+            } else {
+                shadowIntensityGroup.style.opacity = '0.4';
+                shadowIntensityGroup.style.pointerEvents = 'none';
+            }
+        });
+
+        shadowIntensitySlider.addEventListener('input', (e) => {
+            shadowIntensity = parseInt(e.target.value);
+            shadowIntensityDisplay.textContent = shadowIntensity + '%';
+        });
+
+        // Aspect ratio buttons
+        ratio16x9.addEventListener('click', () => {
+            ratio16x9.classList.add('selected');
+            ratio9x16.classList.remove('selected');
+            previewContent.classList.remove('ratio-9-16');
+            previewContent.classList.add('ratio-16-9');
+            startAnimation();
+        });
+
+        ratio9x16.addEventListener('click', () => {
+            ratio9x16.classList.add('selected');
+            ratio16x9.classList.remove('selected');
+            previewContent.classList.remove('ratio-16-9');
+            previewContent.classList.add('ratio-9-16');
+            startAnimation();
+        });
+
+        // Canvas functions
+        function clearCanvas() {
+            const ctx = previewCanvas.getContext('2d');
+            ctx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
+        }
+
+        function startAnimation() {
+            console.log('startAnimation called, frames:', frameImages.length);
+            if (frameImages.length === 0) {
+                console.log('No frames available yet');
+                return;
+            }
+
+            // Hide placeholder when animation starts
+            previewPlaceholder.classList.add('hidden');
+
+            stopAnimation();
+            isAnimating = true;
+            currentFrame = 0;
+            lastFrameTime = 0;
+            console.log('Starting animation loop');
+            animate(0);
+        }
+
+        function stopAnimation() {
+            isAnimating = false;
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+                animationId = null;
+            }
+        }
+
+        function animate(timestamp) {
+            if (!isAnimating) return;
+
+            if (timestamp - lastFrameTime >= frameDelay) {
+                const seqValue = frameSequence[currentFrame];
+                if (seqValue === 0) {
+                    // Empty frame — just draw background
+                    renderEmptyFrame();
+                } else {
+                    renderFrame(seqValue - 1); // Convert 1-based to 0-based
+                }
+                currentFrame = (currentFrame + 1) % frameSequence.length;
+                lastFrameTime = timestamp;
+            }
+
+            animationId = requestAnimationFrame(animate);
+        }
+
+        function renderEmptyFrame() {
+            const canvas = previewCanvas;
+            const ctx = canvas.getContext('2d');
+            const rect = previewContent.getBoundingClientRect();
+            if (rect.width === 0 || rect.height === 0) return;
+            const pixelScale = Math.max(1, Math.ceil(Math.max(frameWidth, frameHeight) / Math.min(rect.width, rect.height)));
+            canvas.width = Math.round(rect.width * pixelScale);
+            canvas.height = Math.round(rect.height * pixelScale);
+            canvas.style.width = rect.width + 'px';
+            canvas.style.height = rect.height + 'px';
+            ctx.fillStyle = backgroundColor;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+
+        // Find the inner hole/window of the paper using flood fill from edges
+        function findInnerHoleMask(data, width, height) {
+            // Create a mask: 0 = unknown, 1 = outer transparent, 2 = paper, 3 = inner hole
+            const mask = new Uint8Array(width * height);
+
+            // First pass: mark all paper pixels (non-transparent)
+            for (let i = 0; i < width * height; i++) {
+                const a = data[i * 4 + 3];
+                if (a > 20) { // Has some opacity = paper
+                    mask[i] = 2; // paper
+                }
+            }
+
+            // Flood fill from edges to mark outer transparent area
+            const queue = [];
+
+            // Add all edge transparent pixels to queue
+            for (let x = 0; x < width; x++) {
+                if (mask[x] === 0) queue.push(x); // top edge
+                const bottomIdx = (height - 1) * width + x;
+                if (mask[bottomIdx] === 0) queue.push(bottomIdx);
+            }
+            for (let y = 0; y < height; y++) {
+                const leftIdx = y * width;
+                if (mask[leftIdx] === 0) queue.push(leftIdx);
+                const rightIdx = y * width + (width - 1);
+                if (mask[rightIdx] === 0) queue.push(rightIdx);
+            }
+
+            // Flood fill outer area
+            while (queue.length > 0) {
+                const idx = queue.pop();
+                if (mask[idx] !== 0) continue; // already visited or is paper
+
+                mask[idx] = 1; // outer transparent
+
+                const x = idx % width;
+                const y = Math.floor(idx / width);
+
+                // Check 4 neighbors
+                if (x > 0 && mask[idx - 1] === 0) queue.push(idx - 1);
+                if (x < width - 1 && mask[idx + 1] === 0) queue.push(idx + 1);
+                if (y > 0 && mask[idx - width] === 0) queue.push(idx - width);
+                if (y < height - 1 && mask[idx + width] === 0) queue.push(idx + width);
+            }
+
+            // Remaining transparent pixels (mask = 0) are inner hole
+            for (let i = 0; i < mask.length; i++) {
+                if (mask[i] === 0) {
+                    mask[i] = 3; // inner hole
+                }
+            }
+
+            return mask;
+        }
+
+        // Composited rendering: uses pre-computed masks and canvas compositing (GPU-accelerated)
+        // Border is baked into cachedUserImageCanvas, so it animates with the paper naturally
+        function compositeFrame(frameIndex, ctx, canvasWidth, canvasHeight) {
+            ctx.fillStyle = backgroundColor;
+            ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+
+            if (frameIndex >= frameImages.length || frameIndex >= frameMasks.length) return;
+
+            const frameImg = frameImages[frameIndex];
+            const maskCanvas = frameMasks[frameIndex];
+
+            // Calculate scaling: fit frame within canvas, then apply user scale
+            const fitScale = Math.min(canvasWidth / frameWidth, canvasHeight / frameHeight);
+            const userScale = scale / 100;
+            const finalScale = fitScale * userScale;
+            const scaledWidth = frameWidth * finalScale;
+            const scaledHeight = frameHeight * finalScale;
+
+            // Apply jiggle offset
+            let jiggleX = 0, jiggleY = 0, jiggleRot = 0;
+            if (jiggleAmount > 0) {
+                const intensity = jiggleAmount / 100;
+                const maxShift = 8 * intensity * finalScale;
+                const maxRot = 1.5 * intensity; // degrees
+                jiggleX = (Math.random() - 0.5) * 2 * maxShift;
+                jiggleY = (Math.random() - 0.5) * 2 * maxShift;
+                jiggleRot = (Math.random() - 0.5) * 2 * maxRot;
+            }
+
+            const xPos = (canvasWidth - scaledWidth) / 2 + jiggleX;
+            const yPos = (canvasHeight - scaledHeight) / 2 + jiggleY;
+
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
+
+            // Compose all content (user image + paper) onto a single offscreen
+            const contentCanvas = document.createElement('canvas');
+            contentCanvas.width = canvasWidth;
+            contentCanvas.height = canvasHeight;
+            const cCtx = contentCanvas.getContext('2d');
+            cCtx.imageSmoothingEnabled = true;
+            cCtx.imageSmoothingQuality = 'high';
+
+            if (jiggleRot !== 0) {
+                const cx = canvasWidth / 2 + jiggleX;
+                const cy = canvasHeight / 2 + jiggleY;
+                cCtx.translate(cx, cy);
+                cCtx.rotate(jiggleRot * Math.PI / 180);
+                cCtx.translate(-cx, -cy);
+            }
+
+            // Draw user image (with border baked in) clipped to inner hole
+            if (cachedUserImageCanvas) {
+                const offscreen = document.createElement('canvas');
+                offscreen.width = canvasWidth;
+                offscreen.height = canvasHeight;
+                const offCtx = offscreen.getContext('2d');
+                offCtx.imageSmoothingEnabled = true;
+                offCtx.imageSmoothingQuality = 'high';
+
+                // Draw user image + border
+                offCtx.drawImage(cachedUserImageCanvas, xPos, yPos, scaledWidth, scaledHeight);
+
+                // Apply texture overlay on user image if enabled
+                if (textureEnabled && textureImage) {
+                    // Draw texture on top of user image, clipped to where user image exists
+                    const texOffscreen = document.createElement('canvas');
+                    texOffscreen.width = canvasWidth;
+                    texOffscreen.height = canvasHeight;
+                    const texCtx = texOffscreen.getContext('2d');
+                    // Draw texture stretched over the area
+                    texCtx.drawImage(textureImage, xPos, yPos, scaledWidth, scaledHeight);
+                    // Keep texture only where user image exists
+                    texCtx.globalCompositeOperation = 'destination-in';
+                    texCtx.drawImage(cachedUserAlphaMask, xPos, yPos, scaledWidth, scaledHeight);
+                    // Draw texture directly on top (no blending mode)
+                    offCtx.drawImage(texOffscreen, 0, 0);
+                }
+
+                // Clip to inner hole mask
+                offCtx.globalCompositeOperation = 'destination-in';
+                offCtx.drawImage(maskCanvas, xPos, yPos, scaledWidth, scaledHeight);
+
+                cCtx.drawImage(offscreen, 0, 0);
+            }
+
+            // Draw the paper frame on top, masked by user image alpha if available
+            if (cachedUserAlphaMask) {
+                const paperOffscreen = document.createElement('canvas');
+                paperOffscreen.width = canvasWidth;
+                paperOffscreen.height = canvasHeight;
+                const paperCtx = paperOffscreen.getContext('2d');
+                paperCtx.imageSmoothingEnabled = true;
+                paperCtx.imageSmoothingQuality = 'high';
+
+                paperCtx.drawImage(frameImg, xPos, yPos, scaledWidth, scaledHeight);
+
+                // Mask paper to user image alpha (which now includes border)
+                paperCtx.globalCompositeOperation = 'destination-in';
+                paperCtx.drawImage(cachedUserAlphaMask, xPos, yPos, scaledWidth, scaledHeight);
+
+                cCtx.drawImage(paperOffscreen, 0, 0);
+            } else {
+                cCtx.drawImage(frameImg, xPos, yPos, scaledWidth, scaledHeight);
+            }
+
+            // Draw content onto main canvas with optional shadow
+            if (shadowBlur > 0) {
+                const alpha = shadowIntensity / 100;
+                ctx.shadowColor = `rgba(0, 0, 0, ${alpha})`;
+                ctx.shadowBlur = shadowBlur * (finalScale / 1);
+                ctx.shadowOffsetX = 0;
+                ctx.shadowOffsetY = shadowBlur * 0.25 * (finalScale / 1);
+            }
+            ctx.drawImage(contentCanvas, 0, 0);
+            // Reset shadow
+            ctx.shadowColor = 'transparent';
+            ctx.shadowBlur = 0;
+            ctx.shadowOffsetX = 0;
+            ctx.shadowOffsetY = 0;
+        }
+
+        function renderFrame(frameIndex) {
+            const canvas = previewCanvas;
+            const ctx = canvas.getContext('2d');
+
+            const rect = previewContent.getBoundingClientRect();
+            if (rect.width === 0 || rect.height === 0) return;
+
+            // Use the display container's aspect ratio for canvas resolution
+            // so the image doesn't get stretched. Scale up for crisp rendering.
+            const displayAspect = rect.width / rect.height;
+            const pixelScale = Math.max(1, Math.ceil(Math.max(frameWidth, frameHeight) / Math.min(rect.width, rect.height)));
+            const canvasW = Math.round(rect.width * pixelScale);
+            const canvasH = Math.round(rect.height * pixelScale);
+            canvas.width = canvasW;
+            canvas.height = canvasH;
+            canvas.style.width = rect.width + 'px';
+            canvas.style.height = rect.height + 'px';
+
+            compositeFrame(frameIndex, ctx, canvasW, canvasH);
+        }
+
+        // Export MP4
+        exportMp4Btn.addEventListener('click', async () => {
+            if (!uploadedImage || frameImages.length === 0) return;
+
+            exportMp4Btn.disabled = true;
+            exportMp4Btn.textContent = 'Exporting...';
+
+            // Export at resolution matching the selected aspect ratio
+            const is16x9 = previewContent.classList.contains('ratio-16-9');
+            const exportAspect = is16x9 ? 16 / 9 : 9 / 16;
+            const maxDim = Math.max(frameWidth, frameHeight);
+            let exportWidth, exportHeight;
+            if (exportAspect >= 1) {
+                exportWidth = maxDim;
+                exportHeight = Math.round(maxDim / exportAspect);
+            } else {
+                exportHeight = maxDim;
+                exportWidth = Math.round(maxDim * exportAspect);
+            }
+
+            const recordCanvas = document.createElement('canvas');
+            recordCanvas.width = exportWidth;
+            recordCanvas.height = exportHeight;
+            const recordCtx = recordCanvas.getContext('2d');
+
+            // Set up MediaRecorder
+            const stream = recordCanvas.captureStream(0);
+            const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9')
+                ? 'video/webm;codecs=vp9'
+                : 'video/webm';
+            const mediaRecorder = new MediaRecorder(stream, {
+                mimeType,
+                videoBitsPerSecond: 8000000
+            });
+
+            const chunks = [];
+            mediaRecorder.ondataavailable = (e) => {
+                if (e.data.size > 0) chunks.push(e.data);
+            };
+
+            mediaRecorder.onstop = () => {
+                const blob = new Blob(chunks, { type: 'video/webm' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.download = 'paper-folding.webm';
+                link.href = url;
+                link.click();
+                URL.revokeObjectURL(url);
+
+                exportMp4Btn.disabled = false;
+                exportMp4Btn.textContent = 'Export MP4';
+            };
+
+            mediaRecorder.start();
+
+            const track = stream.getVideoTracks()[0];
+            let frameIdx = 0;
+            const totalFrames = frameSequence.length;
+
+            // Save and restore scale for export (use 100% to fill export canvas)
+            const savedScale = scale;
+            scale = 100;
+
+            function renderNextFrame() {
+                if (frameIdx >= totalFrames) {
+                    scale = savedScale;
+                    setTimeout(() => mediaRecorder.stop(), 200);
+                    return;
+                }
+
+                const seqValue = frameSequence[frameIdx];
+                if (seqValue === 0) {
+                    recordCtx.fillStyle = backgroundColor;
+                    recordCtx.fillRect(0, 0, exportWidth, exportHeight);
+                } else {
+                    compositeFrame(seqValue - 1, recordCtx, exportWidth, exportHeight);
+                }
+
+                if (track.requestFrame) track.requestFrame();
+                frameIdx++;
+                setTimeout(renderNextFrame, speedPresets[currentSpeed].exportDelay);
+            }
+
+            renderNextFrame();
+        });
+    </script>
+</body>
+</html>

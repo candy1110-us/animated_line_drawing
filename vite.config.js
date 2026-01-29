@@ -22,6 +22,7 @@ export default defineConfig({
         jiggle: resolve(__dirname, 'index5.html'),
         morph: resolve(__dirname, 'index6.html'),
         highlighter: resolve(__dirname, 'index7.html'),
+        paperfolding: resolve(__dirname, 'index8.html'),
       },
     },
     minify: 'terser',
