@@ -720,6 +720,46 @@
         .toggle-switch.active::after {
             transform: translateX(14px);
         }
+
+        .bg-upload-area {
+            border: 1.5px dashed #d1d5db;
+            border-radius: 8px;
+            padding: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: border-color 0.2s, background 0.2s;
+            min-height: 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .bg-upload-area:hover {
+            border-color: #fbbf24;
+            background: #fffbeb;
+        }
+
+        .bg-upload-area .bg-thumb {
+            max-width: 100%;
+            max-height: 60px;
+            border-radius: 4px;
+            object-fit: contain;
+            margin-bottom: 4px;
+        }
+
+        .bg-upload-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            margin-top: 4px;
+        }
+
+        .bg-upload-actions span {
+            font-size: 11px;
+            cursor: pointer;
+            font-weight: 500;
+        }
     </style>
 </head>
 <body>
@@ -794,6 +834,23 @@
                                 <input type="text" id="bgColorHexInput" value="#00b140" class="hex-input">
                                 <input type="color" id="bgColor" value="#00b140" class="color-input">
                             </div>
+                            <div style="border-top: 1px solid #e5e7eb; padding-top: 10px;">
+                                <div style="font-size: 11px; color: #9ca3af; margin-bottom: 6px;">Or use background image:</div>
+                                <div class="bg-upload-area" id="bgImageUploadArea">
+                                    <input type="file" id="bgImageUpload" accept="image/*" style="display: none;">
+                                    <div id="bgUploadPlaceholder">
+                                        <span style="font-size: 12px; color: #f59e0b; font-weight: 600;">Click to upload</span>
+                                    </div>
+                                    <div id="bgImagePreviewEl" style="display: none; text-align: center;">
+                                        <img id="bgPreviewImg" class="bg-thumb" />
+                                        <div class="bg-upload-actions">
+                                            <span id="changeBgImage" style="color: #f59e0b;">Change</span>
+                                            <span style="color: #d1d5db;">|</span>
+                                            <span id="removeBgImage" style="color: #dd6143;">Remove</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <div class="control-group">
@@ -814,7 +871,7 @@
                         </div>
                     </div>
                     <div class="slider-item">
-                        <span class="label-text">Scale:</span>
+                        <span class="label-text">Zoom:</span>
                         <input type="range" id="scaleSlider" min="30" max="150" value="90" class="slider-compact">
                         <span class="value-display" id="scaleDisplay">90%</span>
                     </div>
@@ -856,7 +913,7 @@
                         <span class="value-display" id="borderDisplay">50px</span>
                     </div>
                     <div class="slider-item-sm" id="jaggedGroup">
-                        <span class="label-text">Tear:</span>
+                        <span class="label-text">Edge Roughness:</span>
                         <input type="range" id="jaggedSlider" min="0" max="100" value="30" class="slider-compact">
                         <span class="value-display" id="jaggedDisplay">30%</span>
                     </div>
@@ -866,7 +923,7 @@
                         <span class="value-display" id="shadowBlurDisplay">50</span>
                     </div>
                     <div class="slider-item-sm" id="shadowIntensityGroup">
-                        <span class="label-text">Intensity:</span>
+                        <span class="label-text">Shadow Opacity:</span>
                         <input type="range" id="shadowIntensitySlider" min="0" max="100" value="50" class="slider-compact">
                         <span class="value-display" id="shadowIntensityDisplay">50%</span>
                     </div>
@@ -892,11 +949,13 @@
 
                 <div class="export-buttons">
                     <button class="btn-primary" id="exportMp4Btn" disabled style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); box-shadow: 3px 3px 0px rgba(16, 185, 129, 0.3);">Export MP4</button>
+                    <button class="btn-primary" id="exportGifBtn" disabled style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); box-shadow: 3px 3px 0px rgba(245, 158, 11, 0.3);">Export GIF</button>
                 </div>
             </div>
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/gifshot@0.4.5/dist/gifshot.min.js"></script>
     <script type="module">
         // State
         let uploadedImage = null;
@@ -908,6 +967,8 @@
         let currentFrame = 0;
         let lastFrameTime = 0;
         let backgroundColor = '#00b140';
+        let bgImageData = null;       // base64 data URL of uploaded bg image
+        let cachedBgImage = null;     // Image object for canvas rendering
         let scale = 90; // percentage of fit-to-canvas size
 
         // Pre-computed masks for each frame (canvases with white=inner hole)
@@ -977,6 +1038,7 @@
         const previewContent = document.getElementById('previewContent');
         const previewCanvas = document.getElementById('previewCanvas');
         const exportMp4Btn = document.getElementById('exportMp4Btn');
+        const exportGifBtn = document.getElementById('exportGifBtn');
         const loadingOverlay = document.getElementById('loadingOverlay');
 
         // Controls
@@ -1340,6 +1402,7 @@
 
                         previewPlaceholder.classList.add('hidden');
                         exportMp4Btn.disabled = false;
+                        exportGifBtn.disabled = false;
 
                         // Cache user image sized to frame 6
                         cacheUserImageForFrame6();
@@ -1365,6 +1428,7 @@
 
             previewPlaceholder.classList.remove('hidden');
             exportMp4Btn.disabled = true;
+            exportGifBtn.disabled = true;
 
             stopAnimation();
             clearCanvas();
@@ -1433,6 +1497,13 @@
             bgPreview.style.background = hex;
             bgColor.value = hex;
             bgColorHexInput.value = hex;
+            // Clear background image when color is picked
+            if (bgImageData) {
+                bgImageData = null;
+                cachedBgImage = null;
+                document.getElementById('bgImagePreviewEl').style.display = 'none';
+                document.getElementById('bgUploadPlaceholder').style.display = '';
+            }
 
             const hueColor = hsvToRgb(bgHue / 360, 1, 1);
             bgColorSquare.style.background = `linear-gradient(to right, white, rgb(${hueColor[0]}, ${hueColor[1]}, ${hueColor[2]}))`;
@@ -1492,6 +1563,12 @@
                 backgroundColor = hex;
                 bgPreview.style.background = hex;
                 bgColorHexInput.value = hex;
+                if (bgImageData) {
+                    bgImageData = null;
+                    cachedBgImage = null;
+                    document.getElementById('bgImagePreviewEl').style.display = 'none';
+                    document.getElementById('bgUploadPlaceholder').style.display = '';
+                }
             }
         });
 
@@ -1502,6 +1579,12 @@
                 backgroundColor = hex;
                 bgPreview.style.background = hex;
                 bgColor.value = hex;
+                if (bgImageData) {
+                    bgImageData = null;
+                    cachedBgImage = null;
+                    document.getElementById('bgImagePreviewEl').style.display = 'none';
+                    document.getElementById('bgUploadPlaceholder').style.display = '';
+                }
             }
         });
 
@@ -1509,6 +1592,52 @@
         updateBgColorCursor();
         updateBgHueCursor();
         updateBgColor();
+
+        // Background image upload
+        const bgImageUploadArea = document.getElementById('bgImageUploadArea');
+        const bgImageUpload = document.getElementById('bgImageUpload');
+        const bgUploadPlaceholder = document.getElementById('bgUploadPlaceholder');
+        const bgImagePreviewEl = document.getElementById('bgImagePreviewEl');
+        const bgPreviewImg = document.getElementById('bgPreviewImg');
+
+        function clearBgImage() {
+            bgImageData = null;
+            cachedBgImage = null;
+            bgImagePreviewEl.style.display = 'none';
+            bgUploadPlaceholder.style.display = '';
+        }
+
+        bgImageUploadArea.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (e.target.id === 'removeBgImage') {
+                clearBgImage();
+                bgPreview.style.background = backgroundColor;
+                return;
+            }
+            if (e.target.id === 'changeBgImage' || !bgImageData) {
+                bgImageUpload.click();
+            }
+        });
+
+        bgImageUpload.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                bgImageData = event.target.result;
+                bgPreviewImg.src = bgImageData;
+                bgUploadPlaceholder.style.display = 'none';
+                bgImagePreviewEl.style.display = '';
+
+                cachedBgImage = new Image();
+                cachedBgImage.onload = () => {
+                    // Show image thumbnail in the background indicator
+                    bgPreview.style.background = `url(${bgImageData}) center/cover`;
+                };
+                cachedBgImage.src = bgImageData;
+            };
+            reader.readAsDataURL(file);
+        });
 
         // Scale slider
         scaleSlider.addEventListener('input', (e) => {
@@ -1614,6 +1743,30 @@
             ctx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
         }
 
+        // Draw background: image (cover-fit) or solid color
+        function drawBg(ctx, w, h) {
+            if (cachedBgImage) {
+                const imgAspect = cachedBgImage.width / cachedBgImage.height;
+                const canvasAspect = w / h;
+                let sx, sy, sw, sh;
+                if (imgAspect > canvasAspect) {
+                    sh = cachedBgImage.height;
+                    sw = sh * canvasAspect;
+                    sx = (cachedBgImage.width - sw) / 2;
+                    sy = 0;
+                } else {
+                    sw = cachedBgImage.width;
+                    sh = sw / canvasAspect;
+                    sx = 0;
+                    sy = (cachedBgImage.height - sh) / 2;
+                }
+                ctx.drawImage(cachedBgImage, sx, sy, sw, sh, 0, 0, w, h);
+            } else {
+                ctx.fillStyle = backgroundColor;
+                ctx.fillRect(0, 0, w, h);
+            }
+        }
+
         function startAnimation() {
             console.log('startAnimation called, frames:', frameImages.length);
             if (frameImages.length === 0) {
@@ -1668,8 +1821,7 @@
             canvas.height = Math.round(rect.height * pixelScale);
             canvas.style.width = rect.width + 'px';
             canvas.style.height = rect.height + 'px';
-            ctx.fillStyle = backgroundColor;
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            drawBg(ctx, canvas.width, canvas.height);
         }
 
         // Find the inner hole/window of the paper using flood fill from edges
@@ -1731,8 +1883,7 @@
         // Composited rendering: uses pre-computed masks and canvas compositing (GPU-accelerated)
         // Border is baked into cachedUserImageCanvas, so it animates with the paper naturally
         function compositeFrame(frameIndex, ctx, canvasWidth, canvasHeight) {
-            ctx.fillStyle = backgroundColor;
-            ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+            drawBg(ctx, canvasWidth, canvasHeight);
 
             if (frameIndex >= frameImages.length || frameIndex >= frameMasks.length) return;
 
@@ -1943,8 +2094,7 @@
 
                 const seqValue = frameSequence[frameIdx];
                 if (seqValue === 0) {
-                    recordCtx.fillStyle = backgroundColor;
-                    recordCtx.fillRect(0, 0, exportWidth, exportHeight);
+                    drawBg(recordCtx, exportWidth, exportHeight);
                 } else {
                     compositeFrame(seqValue - 1, recordCtx, exportWidth, exportHeight);
                 }
@@ -1955,6 +2105,95 @@
             }
 
             renderNextFrame();
+        });
+
+        // Export GIF
+        exportGifBtn.addEventListener('click', async () => {
+            if (!uploadedImage || frameImages.length === 0) return;
+            if (typeof gifshot === 'undefined') {
+                alert('GIF library not loaded. Please refresh and try again.');
+                return;
+            }
+
+            exportGifBtn.disabled = true;
+            exportMp4Btn.disabled = true;
+            exportGifBtn.textContent = 'Rendering frames...';
+
+            // GIF resolution: cap at 960px on longest side for reasonable file size & encode speed
+            // (full 4K is too large for gifshot to handle; 960px is still high quality for GIF)
+            const is16x9 = previewContent.classList.contains('ratio-16-9');
+            const exportAspect = is16x9 ? 16 / 9 : 9 / 16;
+            const gifMaxDim = 960;
+            let exportWidth, exportHeight;
+            if (exportAspect >= 1) {
+                exportWidth = gifMaxDim;
+                exportHeight = Math.round(gifMaxDim / exportAspect);
+            } else {
+                exportHeight = gifMaxDim;
+                exportWidth = Math.round(gifMaxDim * exportAspect);
+            }
+
+            const gifCanvas = document.createElement('canvas');
+            gifCanvas.width = exportWidth;
+            gifCanvas.height = exportHeight;
+            const gifCtx = gifCanvas.getContext('2d');
+            gifCtx.imageSmoothingEnabled = true;
+            gifCtx.imageSmoothingQuality = 'high';
+
+            const savedScale = scale;
+            scale = 100;
+
+            const images = [];
+            const totalFrames = frameSequence.length;
+
+            for (let i = 0; i < totalFrames; i++) {
+                const seqValue = frameSequence[i];
+                if (seqValue === 0) {
+                    drawBg(gifCtx, exportWidth, exportHeight);
+                } else {
+                    compositeFrame(seqValue - 1, gifCtx, exportWidth, exportHeight);
+                }
+                images.push(gifCanvas.toDataURL('image/png'));
+
+                // Update progress
+                const pct = Math.round(((i + 1) / totalFrames) * 100);
+                exportGifBtn.textContent = `Rendering... ${pct}%`;
+
+                // Yield to keep UI responsive
+                if (i % 5 === 0) {
+                    await new Promise(r => setTimeout(r, 0));
+                }
+            }
+
+            scale = savedScale;
+
+            exportGifBtn.textContent = 'Encoding GIF...';
+
+            // Calculate GIF frame delay from speed preset
+            const gifFrameDelay = speedPresets[currentSpeed].exportDelay;
+
+            gifshot.createGIF({
+                images: images,
+                gifWidth: exportWidth,
+                gifHeight: exportHeight,
+                interval: gifFrameDelay / 1000,
+                numFrames: images.length,
+                frameDuration: 1,
+                sampleInterval: 1,
+            }, (obj) => {
+                if (!obj.error) {
+                    const link = document.createElement('a');
+                    link.href = obj.image;
+                    link.download = 'paper-folding.gif';
+                    link.click();
+                } else {
+                    console.error('GIF creation error:', obj.error);
+                    alert('Error creating GIF: ' + (obj.errorMsg || 'Unknown error'));
+                }
+                exportGifBtn.textContent = 'Export GIF';
+                exportGifBtn.disabled = false;
+                exportMp4Btn.disabled = false;
+            });
         });
     </script>
 </body>
