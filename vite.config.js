@@ -33,7 +33,7 @@ export default defineConfig({
         pure_funcs: ['console.log'],
       },
       mangle: {
-        toplevel: true,
+        toplevel: false,
       },
     },
   },
