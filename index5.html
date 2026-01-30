@@ -978,6 +978,25 @@
             font-size: 10px;
             padding: 1px 5px;
         }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 10px;
+            background: #f9fafb;
+            border-radius: 8px;
+            height: 36px;
+            cursor: pointer;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            accent-color: #6ba3ff;
+            cursor: pointer;
+            margin: 0;
+        }
     </style>
 </head>
 <body>
@@ -1157,6 +1176,10 @@
                         </div>
                         <input type="hidden" id="jiggleAmount" value="2">
                     </div>
+                    <label class="checkbox-group" id="applyToColorsGroup" style="display: none;">
+                        <input type="checkbox" id="applyToColors">
+                        <span class="label-text">Colors</span>
+                    </label>
                 </div>
 
                 <div class="settings-controls-row sliders-row">
@@ -1256,6 +1279,10 @@
         const lineWidthDisplay2 = document.getElementById('lineWidthDisplay2');
         const threshold = document.getElementById('threshold');
         const thresholdGroup = document.getElementById('thresholdGroup');
+
+        // Apply to Colors checkbox
+        const applyToColors = document.getElementById('applyToColors');
+        const applyToColorsGroup = document.getElementById('applyToColorsGroup');
 
         // Displays
         const frameCountDisplay = document.getElementById('frameCountDisplay');
@@ -1386,6 +1413,19 @@
 
         animSpeed.addEventListener('input', () => {
             speedDisplay.textContent = animSpeed.value + 'ms';
+        });
+
+        // Apply to Colors checkbox handler
+        applyToColors.addEventListener('change', () => {
+            if (isUploadedFile && uploadedImage) {
+                processUploadedImage().then(() => {
+                    if (isAnimating) {
+                        generateJiggleFrames();
+                    } else {
+                        drawOriginalImage();
+                    }
+                });
+            }
         });
 
         bgColor.addEventListener('input', () => {
@@ -1557,6 +1597,7 @@
             uploadSection.style.display = 'none';
             thresholdGroup.style.display = 'none';
             strokeThicknessSection.style.display = 'none';
+            applyToColorsGroup.style.display = 'none';
 
             // Clear preview and reset for draw mode
             if (isAnimating) stopAnimation();
@@ -1627,6 +1668,7 @@
                 // Show controls for uploaded images
                 thresholdGroup.style.display = 'block';
                 strokeThicknessSection.style.display = 'block';
+                applyToColorsGroup.style.display = 'flex';
 
                 // Auto-start animation
                 generateJiggleFrames();
@@ -1884,6 +1926,7 @@
                         // Show controls for all uploaded images (both JPG and PNG need processing)
                         thresholdGroup.style.display = 'block';
                         strokeThicknessSection.style.display = 'block';
+                        applyToColorsGroup.style.display = 'flex';
 
                         // Process the image to extract lines and remove background
                         // Then start animation after processing is complete
@@ -2009,16 +2052,100 @@
                 const strokeB = parseInt(strokeHex.substr(5, 2), 16);
 
                 // Convert mask back to image data
+                const keepColors = applyToColors.checked;
+
+                // If keeping colors, flood-fill from edges to find exterior pixels
+                let exterior = null;
+                let outlinePaint = adjustedMask;
+                if (keepColors) {
+                    // Build content mask: any pixel that is not background
+                    // For transparent images: alpha >= 128 means content
+                    // For opaque images: brightness below a generous threshold means content
+                    const contentMask = new Uint8Array(width * height);
+                    for (let i = 0; i < data.length; i += 4) {
+                        const a = data[i + 3];
+                        if (a < 128) continue; // transparent = not content
+                        const brightness = (data[i] + data[i + 1] + data[i + 2]) / 3;
+                        if (brightness < 240) {
+                            contentMask[i / 4] = 1;
+                        }
+                    }
+
+                    // Barrier for flood-fill: outline pixels OR content pixels
+                    // This prevents flood-fill from entering colored areas even without closed outlines
+                    const barrier = new Uint8Array(width * height);
+                    for (let i = 0; i < barrier.length; i++) {
+                        if (adjustedMask[i] || contentMask[i]) barrier[i] = 1;
+                    }
+
+                    // BFS distance transform from outline pixels for outlinePaint
+                    const dist = new Int32Array(width * height);
+                    const queue = [];
+                    let qHead = 0;
+                    for (let i = 0; i < adjustedMask.length; i++) {
+                        if (adjustedMask[i]) {
+                            dist[i] = 0;
+                            queue.push(i);
+                        } else {
+                            dist[i] = 3; // max we need
+                        }
+                    }
+                    while (qHead < queue.length) {
+                        const idx = queue[qHead++];
+                        const d = dist[idx] + 1;
+                        if (d > 1) continue;
+                        const px = idx % width;
+                        const py = (idx - px) / width;
+                        if (px > 0 && d < dist[idx - 1]) { dist[idx - 1] = d; queue.push(idx - 1); }
+                        if (px < width - 1 && d < dist[idx + 1]) { dist[idx + 1] = d; queue.push(idx + 1); }
+                        if (py > 0 && d < dist[idx - width]) { dist[idx - width] = d; queue.push(idx - width); }
+                        if (py < height - 1 && d < dist[idx + width]) { dist[idx + width] = d; queue.push(idx + width); }
+                    }
+
+                    // outlinePaint = pixels within 1px of outline for crisp stroke on top of colors
+                    outlinePaint = new Uint8Array(width * height);
+                    for (let i = 0; i < dist.length; i++) {
+                        if (dist[i] <= 1) outlinePaint[i] = 1;
+                    }
+
+                    // Flood-fill from edges to find exterior
+                    exterior = new Uint8Array(width * height);
+                    const stack = [];
+                    for (let x = 0; x < width; x++) {
+                        if (!barrier[x] && !exterior[x]) { stack.push(x); exterior[x] = 1; }
+                        const bottom = (height - 1) * width + x;
+                        if (!barrier[bottom] && !exterior[bottom]) { stack.push(bottom); exterior[bottom] = 1; }
+                    }
+                    for (let y = 1; y < height - 1; y++) {
+                        const left = y * width;
+                        if (!barrier[left] && !exterior[left]) { stack.push(left); exterior[left] = 1; }
+                        const right = y * width + width - 1;
+                        if (!barrier[right] && !exterior[right]) { stack.push(right); exterior[right] = 1; }
+                    }
+                    while (stack.length > 0) {
+                        const idx = stack.pop();
+                        const px = idx % width;
+                        const py = (idx - px) / width;
+                        if (px > 0 && !exterior[idx - 1] && !barrier[idx - 1]) { exterior[idx - 1] = 1; stack.push(idx - 1); }
+                        if (px < width - 1 && !exterior[idx + 1] && !barrier[idx + 1]) { exterior[idx + 1] = 1; stack.push(idx + 1); }
+                        if (py > 0 && !exterior[idx - width] && !barrier[idx - width]) { exterior[idx - width] = 1; stack.push(idx - width); }
+                        if (py < height - 1 && !exterior[idx + width] && !barrier[idx + width]) { exterior[idx + width] = 1; stack.push(idx + width); }
+                    }
+                }
+
                 for (let i = 0; i < adjustedMask.length; i++) {
                     const dataIdx = i * 4;
-                    if (adjustedMask[i]) {
-                        // Dark pixel - use selected stroke color
+                    if (outlinePaint[i]) {
+                        // Outline pixel - use selected stroke color (on top of everything)
                         data[dataIdx] = strokeR;
                         data[dataIdx + 1] = strokeG;
                         data[dataIdx + 2] = strokeB;
-                        data[dataIdx + 3] = 255; // Full alpha
+                        data[dataIdx + 3] = 255;
+                    } else if (keepColors && !exterior[i]) {
+                        // Interior pixel - keep original colors
+                        data[dataIdx + 3] = 255;
                     } else {
-                        // Light pixel - make transparent
+                        // Exterior or non-color mode - make transparent
                         data[dataIdx + 3] = 0;
                     }
                 }
@@ -2062,6 +2189,7 @@
             imageUpload.value = '';
             thresholdGroup.style.display = 'none';
             strokeThicknessSection.style.display = 'none';
+            applyToColorsGroup.style.display = 'none';
 
             // Clear saved upload state
             uploadState.image = null;
@@ -2346,9 +2474,21 @@
                 jiggleFrames.push(frameCanvas);
             }
 
-            // Show first frame
+            // Show first frame and ensure animation continues
             currentFrame = 0;
             drawFrame(0);
+
+            // Restart animation loop if it was running
+            // (the old setTimeout chain may have stalled during frame regeneration)
+            if (isAnimating) {
+                if (animationId) clearTimeout(animationId);
+                animationId = setTimeout(function animate() {
+                    if (!isAnimating) return;
+                    currentFrame = (currentFrame + 1) % jiggleFrames.length;
+                    drawFrame(currentFrame);
+                    animationId = setTimeout(animate, parseInt(animSpeed.value));
+                }, parseInt(animSpeed.value));
+            }
         }
 
         function drawFrame(frameIndex) {
