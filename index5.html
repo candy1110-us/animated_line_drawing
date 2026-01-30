@@ -2289,16 +2289,23 @@
                 const workCtx = workCanvas.getContext('2d');
                 const destData = workCtx.createImageData(imgWidth, imgHeight);
 
+                // Scale displacement relative to image size
+                // Reference size ~500px where the original jiggle values feel right
+                const refSize = 500;
+                const imgSize = Math.max(imgWidth, imgHeight);
+                const displacementScale = imgSize / refSize;
+
                 // Displacement frequency - lower = larger regions move together
                 // Higher jiggle = more variation
-                const frequency = 0.02 + (jiggle / 8) * 0.03;
+                // Scale frequency inversely so noise regions stay proportional to image
+                const frequency = (0.02 + (jiggle / 8) * 0.03) * (refSize / imgSize);
 
                 // Apply displacement to each pixel with bilinear interpolation
                 for (let y = 0; y < imgHeight; y++) {
                     for (let x = 0; x < imgWidth; x++) {
                         // Get displacement for this region using smooth noise
-                        const dispX = smoothNoise(x, y, seedX, frequency) * jiggle;
-                        const dispY = smoothNoise(x, y, seedY, frequency) * jiggle;
+                        const dispX = smoothNoise(x, y, seedX, frequency) * jiggle * displacementScale;
+                        const dispY = smoothNoise(x, y, seedY, frequency) * jiggle * displacementScale;
 
                         // Source coordinates (where to sample from)
                         const srcX = x - dispX;
