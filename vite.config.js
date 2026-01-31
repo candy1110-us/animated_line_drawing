@@ -23,6 +23,7 @@ export default defineConfig({
         morph: resolve(__dirname, 'index6.html'),
         highlighter: resolve(__dirname, 'index7.html'),
         paperfolding: resolve(__dirname, 'index8.html'),
+        fontcreator: resolve(__dirname, 'index9.html'),
       },
     },
     minify: 'terser',
