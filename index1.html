@@ -1377,22 +1377,18 @@
                             <input type="range" id="fontSize" min="40" max="120" step="10" value="60" class="slider-compact">
                             <span class="value-display min-w-45" id="fontSizeDisplay">60px</span>
                         </div>
+                        <div id="drawStrokeWidthSection" class="control-group cursor-auto">
+                            <span class="label-text">Stroke:</span>
+                            <input type="range" id="popupStrokeWidth" min="1" max="20" step="1" value="3" class="slider-compact">
+                            <span class="value-display min-w-45" id="popupStrokeWidthDisplay">3px</span>
+                        </div>
                         <div class="pos-relative">
                             <div class="control-group" id="strokeColorIndicator">
-                                <span class="label-text">Stroke:</span>
+                                <span class="label-text">Stroke Color:</span>
                                 <div id="strokeColorPreview" class="color-preview-box" style="background: #000000;"></div>
-                                <span class="label-text" id="strokeWidthPreview">3px</span>
                             </div>
                             <!-- Stroke color popup -->
                             <div id="strokeColorPopup" class="popup-menu">
-                                <!-- Stroke width slider (for draw mode) -->
-                                <div id="drawStrokeWidthSection" class="mb-16">
-                                    <div class="flex-space-between-gap-8">
-                                        <span class="label-text">Stroke Width</span>
-                                        <span class="value-display text-white-bold" id="popupStrokeWidthDisplay">3px</span>
-                                    </div>
-                                    <input type="range" id="popupStrokeWidth" min="1" max="20" step="1" value="3" class="slider-full">
-                                </div>
                                 <!-- Color square picker -->
                                 <div class="color-square" id="strokeColorSquare">
                                     <div class="color-overlay" id="strokeColorOverlay"></div>
@@ -1841,22 +1837,14 @@
             const textSection = document.getElementById('textSection');
             if (textSection) textSection.classList.remove('active');
             
-            // Show draw stroke width section, hide upload stroke section in popup
+            // Show draw stroke width slider, hide upload stroke section in popup
             const drawStrokeWidthSection = document.getElementById('drawStrokeWidthSection');
             const uploadStrokeSection = document.getElementById('uploadStrokeSection');
             const uploadStrokeDivider = document.getElementById('uploadStrokeDivider');
-            const strokeWidthPreview = document.getElementById('strokeWidthPreview');
-            const popupStrokeWidth = document.getElementById('popupStrokeWidth');
 
-            if (drawStrokeWidthSection) drawStrokeWidthSection.style.display = 'block';
+            if (drawStrokeWidthSection) drawStrokeWidthSection.style.display = 'flex';
             if (uploadStrokeSection) uploadStrokeSection.style.display = 'none';
             if (uploadStrokeDivider) uploadStrokeDivider.style.display = 'none';
-
-            // Show stroke width preview with draw mode value
-            if (strokeWidthPreview && popupStrokeWidth) {
-                strokeWidthPreview.style.display = 'inline';
-                strokeWidthPreview.textContent = popupStrokeWidth.value + 'px';
-            }
 
             // Hide font size slider for non-text modes
             const textFontSizeSlider = document.getElementById('textFontSizeSlider');
@@ -1917,21 +1905,14 @@
             const textSection = document.getElementById('textSection');
             if (textSection) textSection.classList.remove('active');
             
-            // Hide draw stroke width section, show upload stroke section in popup
+            // Hide draw stroke width slider, show upload stroke section in popup
             const drawStrokeWidthSection = document.getElementById('drawStrokeWidthSection');
             const uploadStrokeSection = document.getElementById('uploadStrokeSection');
             const uploadStrokeDivider = document.getElementById('uploadStrokeDivider');
-            const strokeWidthPreview = document.getElementById('strokeWidthPreview');
-            const uploadStrokeCheckbox = document.getElementById('uploadStrokeCheckbox');
 
             if (drawStrokeWidthSection) drawStrokeWidthSection.style.display = 'none';
             if (uploadStrokeSection) uploadStrokeSection.style.display = 'block';
             if (uploadStrokeDivider) uploadStrokeDivider.style.display = 'block';
-
-            // Hide stroke width preview if checkbox is not checked
-            if (strokeWidthPreview && uploadStrokeCheckbox) {
-                strokeWidthPreview.style.display = uploadStrokeCheckbox.checked ? 'inline' : 'none';
-            }
 
             // Hide font size slider for non-text modes
             const textFontSizeSlider = document.getElementById('textFontSizeSlider');
@@ -1998,30 +1979,23 @@
                 drawingSection.classList.remove('active');
                 uploadSection.classList.remove('active');
 
-                // Show draw stroke width section (text uses same controls as draw)
+                // Show draw stroke width slider (text uses same controls as draw)
                 const drawStrokeWidthSection = document.getElementById('drawStrokeWidthSection');
                 const uploadStrokeSection = document.getElementById('uploadStrokeSection');
                 const uploadStrokeDivider = document.getElementById('uploadStrokeDivider');
-                const strokeWidthPreview = document.getElementById('strokeWidthPreview');
                 const popupStrokeWidth = document.getElementById('popupStrokeWidth');
 
-                if (drawStrokeWidthSection) drawStrokeWidthSection.style.display = 'block';
+                if (drawStrokeWidthSection) drawStrokeWidthSection.style.display = 'flex';
                 if (uploadStrokeSection) uploadStrokeSection.style.display = 'none';
                 if (uploadStrokeDivider) uploadStrokeDivider.style.display = 'none';
 
                 // Set stroke width to 3 for text mode
                 if (popupStrokeWidth) {
                     popupStrokeWidth.value = '3';
-                    // Update the display
                     const popupStrokeWidthDisplay = document.getElementById('popupStrokeWidthDisplay');
                     if (popupStrokeWidthDisplay) {
                         popupStrokeWidthDisplay.textContent = '3px';
                     }
-                }
-
-                if (strokeWidthPreview && popupStrokeWidth) {
-                    strokeWidthPreview.style.display = 'inline';
-                    strokeWidthPreview.textContent = '3px';
                 }
 
                 // Show font size slider for text mode
@@ -2146,17 +2120,14 @@
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
 
-        // Popup stroke width control
+        // Stroke width control
         const popupStrokeWidth = document.getElementById('popupStrokeWidth');
         const popupStrokeWidthDisplay = document.getElementById('popupStrokeWidthDisplay');
-        const strokeWidthPreview = document.getElementById('strokeWidthPreview');
 
-        if (popupStrokeWidth && popupStrokeWidthDisplay && strokeWidthPreview) {
+        if (popupStrokeWidth && popupStrokeWidthDisplay) {
             popupStrokeWidth.addEventListener('input', (e) => {
                 const width = parseInt(e.target.value);
-                // Update all displays
                 popupStrokeWidthDisplay.textContent = width + 'px';
-                strokeWidthPreview.textContent = width + 'px';
             });
         }
 
@@ -2517,6 +2488,7 @@
                 const length = path.getTotalLength();
                 path.style.strokeDasharray = length;
                 path.style.strokeDashoffset = length;
+                path.style.visibility = 'hidden';
 
                 svg.appendChild(path);
             });
@@ -3329,6 +3301,7 @@
                 const length = pathElement.getTotalLength();
                 pathElement.style.strokeDasharray = length;
                 pathElement.style.strokeDashoffset = length;
+                pathElement.style.visibility = 'hidden';
                 renderedCount++;
             });
 
@@ -3378,7 +3351,6 @@
                 // Auto-adjust stroke width based on font size
                 const popupStrokeWidth = document.getElementById('popupStrokeWidth');
                 const popupStrokeWidthDisplay = document.getElementById('popupStrokeWidthDisplay');
-                const strokeWidthPreview = document.getElementById('strokeWidthPreview');
 
                 if (popupStrokeWidth) {
                     let newStrokeWidth = 3; // Default
@@ -3398,9 +3370,6 @@
 
                     if (popupStrokeWidthDisplay) {
                         popupStrokeWidthDisplay.textContent = newStrokeWidth + 'px';
-                    }
-                    if (strokeWidthPreview) {
-                        strokeWidthPreview.textContent = newStrokeWidth + 'px';
                     }
                 }
             });
@@ -3788,31 +3757,18 @@
         const uploadStrokeWidthDisplay = document.getElementById('uploadStrokeWidthDisplay');
         const uploadStrokeWidthControl = document.getElementById('uploadStrokeWidthControl');
 
-        // Show/hide stroke width slider and preview when checkbox is toggled
+        // Show/hide stroke width slider when checkbox is toggled
         if (uploadStrokeCheckbox && uploadStrokeWidthControl) {
             uploadStrokeCheckbox.addEventListener('change', (e) => {
                 uploadStrokeWidthControl.style.display = e.target.checked ? 'block' : 'none';
-                // Update the stroke width preview indicator
-                if (strokeWidthPreview) {
-                    if (e.target.checked) {
-                        strokeWidthPreview.textContent = uploadStrokeWidth.value + 'px';
-                        strokeWidthPreview.style.display = 'inline';
-                    } else {
-                        strokeWidthPreview.style.display = 'none';
-                    }
-                }
             });
         }
 
-        // Update stroke width display and preview
+        // Update stroke width display
         if (uploadStrokeWidth && uploadStrokeWidthDisplay) {
             uploadStrokeWidth.addEventListener('input', (e) => {
                 const width = parseFloat(e.target.value);
                 uploadStrokeWidthDisplay.textContent = width + 'px';
-                // Also update the preview indicator
-                if (strokeWidthPreview && uploadStrokeCheckbox && uploadStrokeCheckbox.checked) {
-                    strokeWidthPreview.textContent = width + 'px';
-                }
             });
         }
 
@@ -4021,7 +3977,9 @@
                 const length = path.getTotalLength();
                 path.style.transition = 'none';
                 path.style.strokeDasharray = length;
-                path.style.strokeDashoffset = length; // Hide paths initially
+                path.style.strokeDashoffset = length;
+                // Fully hide to avoid dot artifacts from stroke-linecap: round
+                path.style.visibility = 'hidden';
             });
 
             // Force reflow to apply the reset
@@ -4074,12 +4032,14 @@
 
                 path.style.strokeDasharray = length;
                 path.style.strokeDashoffset = length;
-                
+                path.style.visibility = 'hidden';
+
                 setTimeout(() => {
+                    path.style.visibility = 'visible';
                     path.style.transition = `stroke-dashoffset ${strokeDuration}s linear`;
                     path.style.strokeDashoffset = '0';
                 }, currentTime * 1000);
-                
+
                 currentTime += strokeDuration;
             });
 
@@ -4321,8 +4281,10 @@
 
                 path.style.strokeDasharray = length;
                 path.style.strokeDashoffset = length;
+                path.style.visibility = 'hidden';
 
                 setTimeout(() => {
+                    path.style.visibility = 'visible';
                     path.style.transition = `stroke-dashoffset ${pathDuration}s linear`;
                     path.style.strokeDashoffset = '0';
                 }, currentTime * 1000);
@@ -4376,7 +4338,7 @@
             }
 
             const animDuration = parseFloat(duration.value);
-            const fps = 12; // Frames per second
+            const fps = 20; // Frames per second
             const frameInterval = 1000 / fps;
 
             // Check if hand should be included (need this early for timing calculations)
@@ -4585,10 +4547,16 @@
                         pathProgress = (drawingProgress - pathStart) / (pathEnd - pathStart);
                     }
 
-                    // Set stroke-dasharray and offset
-                    const dashOffset = length * (1 - pathProgress);
-                    pathClone.style.strokeDasharray = length;
-                    pathClone.style.strokeDashoffset = dashOffset;
+                    if (pathProgress === 0) {
+                        // Fully hide paths that haven't started drawing yet
+                        // to avoid dot artifacts from stroke-linecap: round
+                        pathClone.style.visibility = 'hidden';
+                    } else {
+                        // Set stroke-dasharray and offset
+                        const dashOffset = length * (1 - pathProgress);
+                        pathClone.style.strokeDasharray = length;
+                        pathClone.style.strokeDashoffset = dashOffset;
+                    }
                     pathClone.style.transition = 'none';
                 });
 
@@ -4711,7 +4679,9 @@
                     interval: 1 / fps,
                     frameDuration: 1,
                     numFrames: images.length,
-                    repeat: 0  // 0 = play once, -1 = loop forever
+                    repeat: 0,  // 0 = play once, -1 = loop forever
+                    sampleInterval: 1,
+                    quality: 1
                 }, (obj) => {
                     if (!obj.error) {
                         const a = document.createElement('a');
