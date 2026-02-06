@@ -4,845 +4,101 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Wiggly Outline Animator</title>
+    <link rel="stylesheet" href="css/index8.css">
     <style>
-        @font-face {
-            font-family: 'Be Vietnam Pro';
-            src: url('fonts/BeVietnamPro-Regular.ttf') format('truetype');
-            font-weight: normal;
-            font-style: normal;
-        }
-
-        @font-face {
-            font-family: 'Hmt Regular';
-            src: url('fonts/HmtRegular-WRrv.ttf') format('truetype');
-            font-weight: normal;
-            font-style: normal;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background-color: #ecebe4;
-            background-image: url('data:image/svg+xml;utf8,<svg width="28" height="28" xmlns="http://www.w3.org/2000/svg"><circle cx="14" cy="14" r="1" fill="%23d2d1c7"/></svg>');
-            background-size: 28px 28px;
-            min-height: 100vh;
-            padding: 40px 20px;
-            position: relative;
-            overflow-x: hidden;
-        }
-
-        body::before,
-        body::after {
-            content: '';
-            position: fixed;
-            border-radius: 50%;
-            opacity: 0.15;
-            pointer-events: none;
-            z-index: 0;
-        }
-
-        body::before {
-            background: #6ba3ff;
-            width: 50vh;
-            height: 50vh;
-            top: 20%;
-            left: -10vh;
-            animation: float 6s ease-in-out infinite;
-        }
-
-        body::after {
-            background: #f59e0b;
-            width: 150px;
-            height: 150px;
-            bottom: 15%;
-            right: 8%;
-            animation: float 8s ease-in-out infinite reverse;
-        }
-
-        @keyframes float {
-            0%, 100% { transform: translateY(0px) rotate(0deg); }
-            50% { transform: translateY(-20px) rotate(5deg); }
-        }
-
-        .container {
-            max-width: 1600px;
-            margin: 0 auto;
-            position: relative;
-            z-index: 1;
-        }
-
-        .header {
-            background: transparent;
-            padding: 20px 30px;
-            margin-bottom: 30px;
-            text-align: center;
-            position: relative;
-        }
-
-        .logo-link {
-            position: fixed;
-            top: 20px;
-            left: 20px;
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            overflow: hidden;
-            background: white;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            z-index: 100;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-
-        .logo-link:hover {
-            transform: scale(1.1);
-            box-shadow: 0 6px 16px rgba(0,0,0,0.25);
-        }
-
-        .header-logo {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .header h1 {
-            font-family: 'Hmt Regular', 'Inter', sans-serif;
-            font-size: 3.5rem;
-            color: #2d3436;
-            margin-bottom: 12px;
-            text-shadow: 3px 3px 0px rgba(107, 163, 255, 0.3);
-        }
-
-        .header p {
-            color: #636e72;
-            font-size: 1.1rem;
-        }
-
-        .main-layout {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-
-        @media (min-width: 1024px) {
-            .main-layout {
-                flex-direction: row;
-                align-items: stretch;
-            }
-
-            .sidebar {
-                flex: 1;
-                display: flex;
-                flex-direction: column;
-                min-width: 0;
-            }
-
-            .preview-section {
-                flex: 2;
-                display: flex;
-                flex-direction: column;
-                min-width: 0;
-            }
-        }
-
-        .sidebar, .preview-section {
-            background: white;
-            border-radius: 20px;
-            padding: 24px;
-            box-shadow:
-                3px 3px 0px rgba(0, 0, 0, 0.05),
-                6px 6px 0px rgba(107, 163, 255, 0.08);
-            border: 1px solid rgba(45, 52, 54, 0.15);
-        }
-
-        .section-header {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            margin-bottom: 24px;
-        }
-
-        .numbered-badge {
-            width: 50px;
-            height: 50px;
-            background: #6ba3ff;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            color: white;
-            font-size: 24px;
-            box-shadow: 3px 3px 0px rgba(107, 163, 255, 0.3);
-            flex-shrink: 0;
-        }
-
-        .gradient-text {
-            margin: 0;
-            padding: 0;
-            font-family: 'Hmt Regular', 'Inter', sans-serif;
-            font-size: 2.5rem;
-            font-weight: 800;
-            color: #2d3436;
-            line-height: 50px;
-            height: 50px;
-            display: flex;
-            align-items: center;
-        }
-
-        .upload-section {
-            border: 2px dashed rgba(107, 163, 255, 0.4);
-            border-radius: 20px;
-            padding: 30px 20px;
-            text-align: center;
-            background: white;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-            min-height: 300px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            box-shadow: 3px 3px 0px rgba(107, 163, 255, 0.1);
-        }
-
-        .upload-section:hover {
-            border-color: #6ba3ff;
-            background: #f8f9ff;
-            transform: translateY(-3px) rotate(1deg);
-            box-shadow: 5px 5px 0px rgba(107, 163, 255, 0.2);
-        }
-
-        .upload-section.has-image {
-            border-style: solid;
-            border-color: #6ba3ff;
-        }
-
-        input[type="file"] {
-            display: none;
-        }
-
-        .upload-label {
-            font-size: 16px;
-            color: #5a92ee;
-            font-weight: 600;
-            display: block;
-            margin-bottom: 8px;
-        }
-
-        .helper-text {
-            font-size: 12px;
-            color: #6b7280;
-            margin-top: 4px;
-            line-height: 1.4;
-        }
-
-        .upload-preview {
-            display: none;
-        }
-
-        .upload-preview.visible {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .upload-preview img {
-            max-width: 200px;
-            max-height: 200px;
-            object-fit: contain;
-            border-radius: 8px;
-            background: repeating-conic-gradient(#e5e7eb 0% 25%, transparent 0% 50%) 50% / 16px 16px;
-        }
-
-        .upload-actions {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-        }
-
-        .setting-group {
-            margin-bottom: 18px;
-        }
-
-        .setting-group label {
-            display: block;
-            font-size: 13px;
-            font-weight: 600;
-            color: #374151;
-            margin-bottom: 8px;
-        }
-
-        .setting-group input[type="range"] {
-            width: 100%;
-            height: 6px;
-            border-radius: 3px;
-            background: #e3f2ff;
-            outline: none;
-            -webkit-appearance: none;
-        }
-
-        .setting-group input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 18px;
-            height: 18px;
-            border-radius: 50%;
-            background: #6ba3ff;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .value-display {
-            display: inline-block;
-            background: #6ba3ff;
-            color: white;
-            padding: 2px 8px;
-            border-radius: 6px;
-            font-size: 12px;
-            font-weight: 600;
-            margin-left: 8px;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, #6ba3ff 0%, #5a92ee 100%);
-            color: white;
-            border: none;
-            padding: 14px 24px;
-            border-radius: 12px;
-            font-weight: 600;
-            font-size: 14px;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-            box-shadow: 3px 3px 0px rgba(107, 163, 255, 0.3);
-            width: 100%;
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-3px);
-            box-shadow: 5px 5px 0px rgba(107, 163, 255, 0.4);
-        }
-
-        .btn-primary:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .btn-secondary {
-            background: white;
-            color: #dd6143;
-            border: 2px solid #dd6143;
-            padding: 12px 24px;
-            border-radius: 12px;
-            font-weight: 600;
-            font-size: 14px;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-            box-shadow: 2px 2px 0px rgba(221, 97, 67, 0.2);
-        }
-
-        .btn-secondary:hover {
-            background: #fff5f2;
-            transform: translateY(-2px);
-            box-shadow: 3px 3px 0px rgba(221, 97, 67, 0.3);
-        }
-
-        .preview-content-wrapper {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 300px;
-        }
-
         .preview-content {
-            position: relative;
-            background: #f9fafb;
-            border-radius: 12px;
-            width: 100%;
-            max-width: 640px;
-            aspect-ratio: 16 / 9;
-            display: flex;
-            overflow: hidden;
-            background: repeating-conic-gradient(#e5e7eb 0% 25%, #f9fafb 0% 50%) 50% / 20px 20px;
             cursor: grab;
         }
-
         .preview-content:active {
             cursor: grabbing;
         }
-
-        .preview-content.ratio-16-9 {
-            aspect-ratio: 16 / 9;
-            max-width: 640px;
+        .setting-group {
+            padding: 0 20px;
         }
-
-        .preview-content.ratio-9-16 {
-            aspect-ratio: 9 / 16;
-            max-width: 280px;
-        }
-
-        .preview-canvas {
-            position: absolute;
-            top: 0;
-            left: 0;
+        .setting-group input[type="range"] {
             width: 100%;
-            height: 100%;
-        }
-
-        .placeholder {
-            text-align: center;
-            color: #9ca3af;
-            margin: auto;
-        }
-
-        .placeholder svg {
-            width: 100px;
-            height: 100px;
-            margin: 0 auto 16px;
-            opacity: 0.3;
-        }
-
-        .controls-row {
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
-            align-items: center;
-            margin-bottom: 16px;
-        }
-
-        .control-group {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 8px 12px;
-            background: #f9fafb;
-            border-radius: 8px;
-        }
-
-        .label-text {
-            font-size: 12px;
-            font-weight: 600;
-            color: #374151;
-        }
-
-        .slider-compact {
-            width: 100px;
             height: 4px;
             border-radius: 2px;
-            background: #e3f2ff;
+            background: #e5e7eb;
             outline: none;
             -webkit-appearance: none;
             cursor: pointer;
         }
-
-        .slider-compact::-webkit-slider-thumb {
+        .setting-group input[type="range"]::-webkit-slider-thumb {
             -webkit-appearance: none;
             width: 14px;
             height: 14px;
             border-radius: 50%;
-            background: #6ba3ff;
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
             cursor: pointer;
         }
-
-        .color-preview-box {
-            width: 24px;
-            height: 24px;
-            border-radius: 4px;
-            border: 2px solid #e5e7eb;
-            cursor: pointer;
-        }
-
-        .popup-menu {
-            display: none;
-            position: absolute;
-            top: 100%;
-            right: 0;
-            margin-top: 8px;
-            background: white;
-            border-radius: 12px;
-            padding: 16px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            width: 280px;
-            z-index: 1000;
-        }
-
-        .popup-menu.visible {
-            display: block;
-        }
-
-        /* Color Picker Elements */
-        .color-square {
-            position: relative;
-            width: 100%;
-            height: 150px;
-            background: linear-gradient(to right, white, red);
-            border-radius: 8px;
-            margin-bottom: 12px;
-            cursor: crosshair;
-            border: 2px solid #e5e7eb;
-        }
-
-        .color-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(to bottom, transparent, black);
-            border-radius: 6px;
-        }
-
-        .color-cursor {
-            position: absolute;
-            width: 12px;
-            height: 12px;
-            border: 2px solid white;
-            border-radius: 50%;
-            pointer-events: none;
-            transform: translate(-50%, -50%);
-            box-shadow: 0 0 3px rgba(0,0,0,0.5);
-        }
-
-        .hue-slider {
-            height: 20px;
-            border-radius: 6px;
-            background: linear-gradient(to right, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000);
-            position: relative;
-            cursor: pointer;
-            border: 2px solid #e5e7eb;
-            margin-bottom: 12px;
-        }
-
-        .hue-cursor {
-            position: absolute;
-            width: 4px;
-            height: 24px;
-            background: white;
-            border: 2px solid #666;
+        #outlineThickness {
+            height: 4px;
             border-radius: 2px;
-            top: -2px;
-            transform: translateX(-50%);
-            pointer-events: none;
-        }
-
-        .hex-input {
-            flex: 1;
-            padding: 6px 10px;
-            border: 2px solid #e5e7eb;
-            border-radius: 6px;
-            font-family: monospace;
-            font-size: 13px;
-        }
-
-        .style-options {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .style-option {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 10px 12px;
-            border: 2px solid #e5e7eb;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .style-option:hover {
-            border-color: #6ba3ff;
-            background: #f8f9ff;
-        }
-
-        .style-option:has(input:checked) {
-            border-color: #6ba3ff;
-            background: #f0f7ff;
-        }
-
-        .style-option input {
-            accent-color: #6ba3ff;
-        }
-
-        .style-label {
-            font-size: 13px;
-            color: #374151;
-        }
-
-        .color-input {
-            width: 40px;
-            height: 32px;
-            border: 2px solid #e5e7eb;
-            border-radius: 6px;
-            cursor: pointer;
-            padding: 0;
-        }
-
-        .mb-12 {
-            margin-bottom: 12px;
-        }
-
-        .settings-controls-row {
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
-            align-items: center;
-            margin-bottom: 16px;
-        }
-
-        .slider-item {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            padding: 6px 10px;
-            background: #f9fafb;
-            border-radius: 8px;
-            height: 36px;
-        }
-
-        .flex-center-gap-8 {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .pos-relative {
-            position: relative;
-        }
-
-        .action-buttons {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            margin-top: 24px;
-        }
-
-        .hidden {
-            display: none !important;
-        }
-
-        .checkbox-input {
-            width: 18px;
-            height: 18px;
-            cursor: pointer;
-            accent-color: #6ba3ff;
-        }
-
-        @keyframes drawOutline {
-            from {
-                stroke-dashoffset: var(--dash-length);
-            }
-            to {
-                stroke-dashoffset: 0;
-            }
-        }
-
-        .animate-outline {
-            animation: drawOutline var(--duration) ease-out forwards;
-        }
-
-        .export-buttons {
-            display: flex;
-            gap: 10px;
-            margin-top: 16px;
-            justify-content: center;
-        }
-
-        .export-buttons .btn-primary {
-            width: auto;
-        }
-
-        /* Background upload styles */
-        .bg-upload-area {
-            border: 2px dashed #e5e7eb;
-            border-radius: 8px;
-            padding: 12px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.2s;
-            min-height: 60px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .bg-upload-area:hover {
-            border-color: #6ba3ff;
-            background: #f8f9ff;
-        }
-
-        .text-tiny-gray {
-            font-size: 11px;
-            color: #9ca3af;
-        }
-
-        .text-tiny-blue {
-            font-size: 11px;
-            color: #5a92ee;
+            background: #e5e7eb;
+            outline: none;
+            -webkit-appearance: none;
             cursor: pointer;
         }
-
-        .text-small-blue {
-            font-size: 12px;
-            color: #5a92ee;
-        }
-
-        .img-thumb {
-            max-width: 60px;
-            max-height: 40px;
-            object-fit: contain;
-            border-radius: 4px;
-            margin-bottom: 4px;
-        }
-
-        .flex-col-center {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 4px;
-        }
-
-        /* Aspect ratio buttons - like index5.html */
-        .aspect-ratio-group {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-        }
-
-        .aspect-ratio-btn {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 2px;
-            padding: 4px 6px;
-            background: none;
-            border: none;
+        #outlineThickness::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
             cursor: pointer;
-            opacity: 0.4;
-            transition: opacity 0.2s;
-        }
-
-        .aspect-ratio-btn:hover {
-            opacity: 0.7;
-        }
-
-        .aspect-ratio-btn.selected {
-            opacity: 1;
-        }
-
-        .aspect-ratio-btn span {
-            font-size: 9px;
-            font-weight: 500;
-        }
-
-        /* Style toggle buttons */
-        .style-toggle {
-            display: flex;
-            gap: 4px;
-        }
-
-        .style-btn {
-            padding: 6px 12px;
-            border: 1px solid #e5e7eb;
-            background: white;
-            border-radius: 6px;
-            font-size: 11px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .style-btn:hover {
-            border-color: #6ba3ff;
-        }
-
-        .style-btn.active {
-            background: #6ba3ff;
-            color: white;
-            border-color: #6ba3ff;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <a href="index.html" class="logo-link">
-                <img src="images/mefn.gif" alt="Logo" class="header-logo">
-            </a>
-            <div class="header-content">
-                <h1>Wiggly Outline Animator</h1>
-                <!-- <p>Upload a transparent image and watch a hand-drawn style outline animate around it</p> -->
-            </div>
-        </div>
-
         <div class="main-layout">
-            <!-- LEFT - Controls -->
+            <!-- LEFT - Sidebar -->
             <div class="sidebar">
-                <div class="section-header">
-                    <div class="numbered-badge">1</div>
-                    <h3 class="gradient-text">Upload Image</h3>
-                </div>
-
+                <a href="index.html" class="logo-link">
+                    <img src="images/mefn.gif" alt="Logo" class="header-logo">
+                    <span class="logo-title">Wiggly Outline Animator</span>
+                </a>
                 <div class="upload-section" id="uploadSection">
                     <input type="file" id="imageUpload" accept="image/*">
                     <div id="uploadPlaceholder">
                         <label for="imageUpload" class="upload-label">
-                            Click to Upload Image
+                            Upload Your Image
                         </label>
                         <div class="helper-text">
-                            PNG with transparency or any image (JPG, etc.)
+                            Click to upload (PNG, JPG, GIF)
                         </div>
                     </div>
-                    <div id="uploadPreview" class="upload-preview">
-                        <img id="previewImg" />
-                        <div class="label-text" id="imageName"></div>
+                    <div id="uploadPreview" class="hidden">
+                        <div class="image-preview-container">
+                            <img id="previewImg" class="image-preview" />
+                        </div>
                         <div class="upload-actions">
-                            <label for="imageUpload" class="helper-text" style="color: #5a92ee; cursor: pointer;">Change</label>
+                            <label for="imageUpload" class="helper-text" style="color: #f59e0b; cursor: pointer;">Change image</label>
                             <span class="helper-text" style="color: #9ca3af;">|</span>
                             <span id="removeImage" class="helper-text" style="color: #dd6143; cursor: pointer;">Remove</span>
                         </div>
                     </div>
                 </div>
 
-                <div class="setting-group" style="margin-top: 16px; display: none;" id="thresholdGroup">
-                    <label>
-                        Edge Detection <span class="value-display" id="thresholdDisplay">128</span>
-                    </label>
+                <div class="setting-group hidden" id="thresholdGroup">
+                    <div class="sidebar-control-row" style="margin-bottom: 6px;">
+                        <span class="label-text">Edge Detection</span>
+                        <span class="value-display" id="thresholdDisplay">128</span>
+                    </div>
                     <input type="range" id="threshold" min="30" max="220" value="128">
-                    <div class="helper-text">Higher = removes more background. Adjust until only the object remains.</div>
+                    <div class="helper-text" style="margin-top: 6px;">Higher = removes more background</div>
                 </div>
 
-                </div>
-
-            <!-- RIGHT - Preview -->
-            <div class="preview-section">
-                <div class="section-header">
-                    <div class="numbered-badge">2</div>
-                    <h3 class="gradient-text">Animate</h3>
-                </div>
-                <!-- Row 1: Style, Show Image, Background, Stroke, Ratio -->
-                <div class="controls-row">
-                    <div class="control-group">
-                        <span class="label-text">Style:</span>
-                        <div class="style-toggle">
-                            <button class="style-btn active" data-style="line">Simple</button>
-                            <button class="style-btn" data-style="line-dash">Sketchy</button>
-                        </div>
-                        <input type="hidden" id="lineStyleSelect" value="line">
+                <!-- Canvas Settings -->
+                <div class="sidebar-section">
+                    <div class="sidebar-section-label">
+                        <span class="sidebar-section-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="3" x2="9" y2="21"/></svg></span>
+                        Canvas
                     </div>
-                    <div class="control-group">
-                        <input type="checkbox" id="showImage" class="checkbox-input" checked>
-                        <span class="label-text">Show Image</span>
-                    </div>
-                    <div class="pos-relative">
-                        <div class="control-group" id="bgIndicator" style="cursor: pointer;">
-                            <span class="label-text">Background:</span>
+                    <div class="sidebar-control pos-relative">
+                        <div class="sidebar-control-row" id="bgIndicator" style="cursor: pointer;">
+                            <span class="label-text">Background</span>
                             <div id="bgPreview" class="color-preview-box" style="background: #00ff00;"></div>
                         </div>
                         <div id="bgPopup" class="popup-menu">
@@ -858,28 +114,65 @@
                                 <input type="text" id="bgColorHexInput" value="#00ff00" class="hex-input">
                                 <input type="color" id="bgColor" value="#00ff00" class="color-input">
                             </div>
-                            <div style="border-top: 1px solid #e5e7eb; padding-top: 12px;">
-                                <div class="text-tiny-gray" style="margin-bottom: 6px;">Or use background image:</div>
+                            <div style="border-top: 1px solid #e5e7eb; padding-top: 10px;">
+                                <div style="font-size: 11px; color: #9ca3af; margin-bottom: 6px;">Or use background image:</div>
                                 <div class="bg-upload-area" id="bgImageUploadArea">
                                     <input type="file" id="bgImageUpload" accept="image/*" style="display: none;">
-                                    <div id="bgUploadPlaceholder" class="flex-col-center">
-                                        <span class="text-small-blue">Click to upload</span>
+                                    <div id="bgUploadPlaceholder">
+                                        <span style="font-size: 12px; color: #f59e0b; font-weight: 600;">Click to upload</span>
                                     </div>
-                                    <div id="bgImagePreview" class="flex-col-center" style="display: none;">
-                                        <img id="bgPreviewImg" class="img-thumb" />
-                                        <span class="text-tiny-gray" id="bgImageName"></span>
-                                        <div class="flex-center-gap-8">
-                                            <span class="text-tiny-blue" id="changeBgImage">Change</span>
-                                            <span class="text-tiny-blue" id="removeBgImage" style="color: #dd6143;">Remove</span>
+                                    <div id="bgImagePreview" style="display: none; text-align: center;">
+                                        <img id="bgPreviewImg" class="bg-thumb" />
+                                        <div class="bg-upload-actions">
+                                            <span id="changeBgImage" style="color: #f59e0b;">Change</span>
+                                            <span style="color: #d1d5db;">|</span>
+                                            <span id="removeBgImage" style="color: #dd6143;">Remove</span>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <div class="pos-relative">
-                        <div class="control-group" id="strokeIndicator" style="cursor: pointer;">
-                            <span class="label-text">Stroke:</span>
+                    <div class="sidebar-control">
+                        <div class="sidebar-control-row">
+                            <span class="label-text">Ratio</span>
+                            <div class="aspect-ratio-group">
+                                <button class="aspect-ratio-btn selected" id="ratio16x9" title="16:9 Landscape">
+                                    <svg width="20" height="12" viewBox="0 0 20 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <rect x="0.5" y="0.5" width="19" height="11" rx="1" stroke="currentColor" fill="none"/>
+                                    </svg>
+                                    <span>16:9</span>
+                                </button>
+                                <button class="aspect-ratio-btn" id="ratio9x16" title="9:16 Portrait">
+                                    <svg width="12" height="20" viewBox="0 0 12 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <rect x="0.5" y="0.5" width="11" height="19" rx="1" stroke="currentColor" fill="none"/>
+                                    </svg>
+                                    <span>9:16</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stroke Settings -->
+                <div class="sidebar-section">
+                    <div class="sidebar-section-label">
+                        <span class="sidebar-section-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="M2 2l7.586 7.586"/><circle cx="11" cy="11" r="2"/></svg></span>
+                        Stroke
+                    </div>
+                    <div class="sidebar-control">
+                        <div class="sidebar-control-row">
+                            <span class="label-text">Style</span>
+                            <div class="style-toggle">
+                                <button class="style-btn active" data-style="line">Simple</button>
+                                <button class="style-btn" data-style="line-dash">Sketchy</button>
+                            </div>
+                            <input type="hidden" id="lineStyleSelect" value="line">
+                        </div>
+                    </div>
+                    <div class="sidebar-control pos-relative">
+                        <div class="sidebar-control-row" id="strokeIndicator" style="cursor: pointer;">
+                            <span class="label-text">Color</span>
                             <div id="strokePreview" class="color-preview-box" style="background: #2d3436;"></div>
                         </div>
                         <div id="strokePopup" class="popup-menu">
@@ -895,54 +188,68 @@
                                 <input type="text" id="strokeColorHexInput" value="#2d3436" class="hex-input">
                                 <input type="color" id="outlineColor" value="#2d3436" class="color-input">
                             </div>
-                            <div style="border-top: 1px solid #e5e7eb; padding-top: 12px;">
-                                <div class="label-text" style="margin-bottom: 8px;">Thickness <span class="value-display" id="thicknessDisplay">3px</span></div>
+                            <div style="border-top: 1px solid #e5e7eb; padding-top: 10px;">
+                                <div class="sidebar-control-row" style="margin-bottom: 8px;">
+                                    <span class="label-text">Thickness</span>
+                                    <span class="value-display" id="thicknessDisplay">3px</span>
+                                </div>
                                 <input type="range" id="outlineThickness" min="1" max="10" value="3" style="width: 100%;">
                             </div>
                         </div>
                     </div>
-                    <div class="control-group">
-                        <span class="label-text">Ratio:</span>
-                        <div class="aspect-ratio-group">
-                            <button class="aspect-ratio-btn selected" id="ratio16x9" title="16:9 Landscape">
-                                <svg width="20" height="12" viewBox="0 0 20 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <rect x="0.5" y="0.5" width="19" height="11" rx="1" stroke="currentColor" fill="none"/>
-                                </svg>
-                                <span>16:9</span>
-                            </button>
-                            <button class="aspect-ratio-btn" id="ratio9x16" title="9:16 Portrait">
-                                <svg width="12" height="20" viewBox="0 0 12 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <rect x="0.5" y="0.5" width="11" height="19" rx="1" stroke="currentColor" fill="none"/>
-                                </svg>
-                                <span>9:16</span>
-                            </button>
+                    <div class="sidebar-control">
+                        <div class="sidebar-control-row">
+                            <span class="label-text">Gap from object</span>
+                            <input type="range" id="outlineGap" min="2" max="50" value="10" class="slider-compact">
+                            <span class="value-display" id="gapDisplay">10</span>
+                        </div>
+                    </div>
+                    <div class="sidebar-control">
+                        <div class="sidebar-control-row">
+                            <span class="label-text">Roughness</span>
+                            <input type="range" id="wiggleAmount" min="0" max="15" value="4" class="slider-compact">
+                            <span class="value-display" id="wiggleDisplay">4</span>
+                        </div>
+                    </div>
+                    <div class="sidebar-control">
+                        <div class="sidebar-control-row">
+                            <span class="label-text">Length</span>
+                            <input type="range" id="tailLength" min="1" max="20" value="8" class="slider-compact">
+                            <span class="value-display" id="tailDisplay">8%</span>
                         </div>
                     </div>
                 </div>
-                <!-- Row 2: All sliders -->
-                <div class="settings-controls-row">
-                    <div class="slider-item">
-                        <span class="label-text">Gap:</span>
-                        <input type="range" id="outlineGap" min="2" max="50" value="10" class="slider-compact">
-                        <span class="value-display" id="gapDisplay">10</span>
+
+                <!-- Animation -->
+                <div class="sidebar-section">
+                    <div class="sidebar-section-label">
+                        <span class="sidebar-section-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg></span>
+                        Animation
                     </div>
-                    <div class="slider-item">
-                        <span class="label-text">Wiggle:</span>
-                        <input type="range" id="wiggleAmount" min="0" max="15" value="4" class="slider-compact">
-                        <span class="value-display" id="wiggleDisplay">4</span>
+
+                    <div class="sidebar-control">
+                        <div class="sidebar-control-row">
+                            <span class="label-text">Duration</span>
+                            <input type="range" id="duration" min="0.5" max="5" step="0.1" value="2" class="slider-compact">
+                            <span class="value-display" id="durationDisplay">2.0s</span>
+                        </div>
                     </div>
-                    <div class="slider-item">
-                        <span class="label-text">Tail:</span>
-                        <input type="range" id="tailLength" min="1" max="20" value="8" class="slider-compact">
-                        <span class="value-display" id="tailDisplay">8%</span>
-                    </div>
-                    <div class="slider-item">
-                        <span class="label-text">Duration:</span>
-                        <input type="range" id="duration" min="0.5" max="5" step="0.1" value="2" class="slider-compact">
-                        <span class="value-display" id="durationDisplay">2.0s</span>
+                    <div class="sidebar-control">
+                        <div class="sidebar-control-row">
+                            <input type="checkbox" id="showImage" class="checkbox-input" checked>
+                            <span class="label-text">Show Image</span>
+                        </div>
                     </div>
                 </div>
 
+                <div class="export-buttons">
+                    <button class="btn-primary" id="animateBtn" disabled>Start Animation</button>
+                    <button class="btn-primary" id="exportGifBtn" disabled style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">Export GIF</button>
+                </div>
+            </div>
+
+            <!-- RIGHT - Preview -->
+            <div class="preview-section">
                 <div class="preview-content-wrapper">
                     <div class="preview-content ratio-16-9" id="previewContent">
                         <canvas id="bgCanvas" class="preview-canvas"></canvas>
@@ -954,14 +261,9 @@
                                 <polyline points="17 8 12 3 7 8"></polyline>
                                 <line x1="12" y1="3" x2="12" y2="15"></line>
                             </svg>
-                            <p>Upload a transparent image to get started</p>
+                            <p>Upload an image to get started</p>
                         </div>
                     </div>
-                </div>
-
-                <div class="export-buttons">
-                    <button class="btn-primary" id="animateBtn" disabled>Start Animation</button>
-                    <button class="btn-primary" id="exportGifBtn" disabled style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); box-shadow: 3px 3px 0px rgba(245, 158, 11, 0.3);">Export GIF</button>
                 </div>
             </div>
         </div>
@@ -989,7 +291,7 @@
         const uploadPlaceholder = document.getElementById('uploadPlaceholder');
         const uploadPreview = document.getElementById('uploadPreview');
         const previewImg = document.getElementById('previewImg');
-        const imageName = document.getElementById('imageName');
+        // imageName element removed in sidebar redesign
         const removeImage = document.getElementById('removeImage');
         const previewPlaceholder = document.getElementById('previewPlaceholder');
         const previewContent = document.getElementById('previewContent');
@@ -1120,7 +422,7 @@
             bgImageData = null; // Clear background image when color is changed
             cachedBgImage = null;
             document.getElementById('bgImagePreview').style.display = 'none';
-            document.getElementById('bgUploadPlaceholder').style.display = 'flex';
+            document.getElementById('bgUploadPlaceholder').style.display = '';
             drawBackground();
         });
 
@@ -1141,9 +443,8 @@
                 reader.onload = (event) => {
                     bgImageData = event.target.result;
                     document.getElementById('bgPreviewImg').src = bgImageData;
-                    document.getElementById('bgImageName').textContent = file.name;
                     document.getElementById('bgUploadPlaceholder').style.display = 'none';
-                    document.getElementById('bgImagePreview').style.display = 'flex';
+                    document.getElementById('bgImagePreview').style.display = '';
 
                     // Cache the background image
                     const img = new Image();
@@ -1167,7 +468,7 @@
             bgImageData = null;
             cachedBgImage = null;
             document.getElementById('bgImagePreview').style.display = 'none';
-            document.getElementById('bgUploadPlaceholder').style.display = 'flex';
+            document.getElementById('bgUploadPlaceholder').style.display = '';
             bgImageUpload.value = '';
             drawBackground();
         });
@@ -1241,9 +542,9 @@
 
         // Upload handling
         uploadSection.addEventListener('click', (e) => {
-            // Don't trigger file input if clicking remove button
-            if (e.target.id === 'removeImage') return;
-            imageUpload.click();
+            if (!uploadSection.classList.contains('has-file')) {
+                imageUpload.click();
+            }
         });
 
         imageUpload.addEventListener('change', (e) => {
@@ -1255,15 +556,19 @@
                     img.onload = async () => {
                         uploadedImage = img;
                         previewImg.src = event.target.result;
-                        imageName.textContent = file.name;
+                        // file name display removed in sidebar redesign
                         uploadPlaceholder.classList.add('hidden');
-                        uploadPreview.classList.add('visible');
-                        uploadSection.classList.add('has-image');
+                        uploadPreview.classList.remove('hidden');
+                        uploadSection.classList.add('has-file');
                         previewPlaceholder.classList.add('hidden');
 
                         // Check if image has transparency
                         isNonTransparentImage = !checkImageHasTransparency(img);
-                        thresholdGroup.style.display = isNonTransparentImage ? 'block' : 'none';
+                        if (isNonTransparentImage) {
+                            thresholdGroup.classList.remove('hidden');
+                        } else {
+                            thresholdGroup.classList.add('hidden');
+                        }
 
                         // Process non-transparent images to extract strokes
                         if (isNonTransparentImage) {
@@ -1392,13 +697,13 @@
             imageOffsetX = 0;
             imageOffsetY = 0;
             uploadPlaceholder.classList.remove('hidden');
-            uploadPreview.classList.remove('visible');
-            uploadSection.classList.remove('has-image');
+            uploadPreview.classList.add('hidden');
+            uploadSection.classList.remove('has-file');
             previewPlaceholder.classList.remove('hidden');
             animateBtn.disabled = true;
             exportGifBtn.disabled = true;
             imageUpload.value = '';
-            thresholdGroup.style.display = 'none';
+            thresholdGroup.classList.add('hidden');
 
             const imageCtx = imageCanvas.getContext('2d');
             const outlineCtx = outlineCanvas.getContext('2d');
@@ -2308,7 +1613,7 @@
             bgImageData = null;
             cachedBgImage = null;
             document.getElementById('bgImagePreview').style.display = 'none';
-            document.getElementById('bgUploadPlaceholder').style.display = 'flex';
+            document.getElementById('bgUploadPlaceholder').style.display = '';
             drawBackground();
         }
 
@@ -2388,7 +1693,7 @@
                 bgImageData = null;
                 cachedBgImage = null;
                 document.getElementById('bgImagePreview').style.display = 'none';
-                document.getElementById('bgUploadPlaceholder').style.display = 'flex';
+                document.getElementById('bgUploadPlaceholder').style.display = '';
                 updateBgColorSquare();
                 updateBgCursors();
                 drawBackground();
