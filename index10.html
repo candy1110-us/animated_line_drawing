@@ -1181,7 +1181,7 @@
                 <div class="objects-list" id="objectsList">
                     <!-- Object items will be added here dynamically -->
                 </div>
-                <div class="helper-text" id="noObjectsHint">Click "Add Object" to upload images for animation</div>
+                <!-- <div class="helper-text" id="noObjectsHint">Click "Add Object" to upload images for animation</div> -->
 
                 <!-- Drawing Section -->
                 <div class="drawing-section">
@@ -1472,7 +1472,7 @@
                             <span class="object-size-value" data-index="${index}">${obj.size}px</span>
                         </div>
                         <div class="object-align-group">
-                            <span class="object-toggle-label">Align:</span>
+                            <span class="object-toggle-label">Align to path drawn:</span>
                             <label class="toggle-switch">
                                 <input type="checkbox" class="align-toggle" data-index="${index}" ${obj.alignToPath ? 'checked' : ''}>
                                 <span class="toggle-slider"></span>
@@ -2386,22 +2386,23 @@
             const wiggleAmount = parseInt(wiggleSlider.value);
             const wiggleSpeed = parseInt(wiggleSpeedSlider.value);
 
-            // Higher resolution for better quality GIF (2x the drawing canvas)
-            const canvasWidth = currentAspectRatio === '16:9' ? 1280 : 720;
-            const canvasHeight = currentAspectRatio === '16:9' ? 720 : 1280;
+            // GIF resolution - balanced for quality and file size
+            const canvasWidth = currentAspectRatio === '16:9' ? 640 : 360;
+            const canvasHeight = currentAspectRatio === '16:9' ? 360 : 640;
 
             // Scale factors (from drawing canvas coordinates to GIF coordinates)
             const scaleX = canvasWidth / drawingCanvas.width;
             const scaleY = canvasHeight / drawingCanvas.height;
 
-            // Size scale factor (2x for higher resolution)
-            const sizeScale = 2;
+            // Size scale factor (1x since we're using smaller resolution)
+            const sizeScale = 1;
 
-            // Determine duration and frame count (include 2s hold at end)
+            // Determine duration and frame count (include 1s hold at end)
             const duration = totalRecordedDuration;
-            const holdTime = 2000; // 2 seconds hold at end
+            const holdTime = 1000; // 1 second hold at end
             const totalDuration = duration + holdTime;
-            const frameCount = Math.min(150, Math.max(30, Math.ceil(totalDuration / 33))); // ~30fps
+            // Target ~15fps for smaller file size while maintaining smoothness
+            const frameCount = Math.min(60, Math.max(15, Math.ceil(totalDuration / 67))); // ~15fps
 
             // Pre-load all images
             const imagePromises = objectsWithPaths.map(obj => {
@@ -2503,7 +2504,7 @@
                     frames.push(frameCanvas.toDataURL('image/png'));
                 }
 
-                // Create GIF with higher quality settings
+                // Create GIF with balanced quality/size settings
                 gifshot.createGIF({
                     images: frames,
                     gifWidth: canvasWidth,
@@ -2511,7 +2512,7 @@
                     interval: totalDuration / frameCount / 1000,
                     numFrames: frameCount,
                     frameDuration: 1,
-                    sampleInterval: 5 // Lower = better quality (was 10)
+                    sampleInterval: 10 // Higher = smaller file (10 is good balance)
                 }, (result) => {
                     // Reset button state
                     downloadBtn.textContent = originalText;
