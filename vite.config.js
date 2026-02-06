@@ -24,6 +24,7 @@ export default defineConfig({
         highlighter: resolve(__dirname, 'index7.html'),
         paperfolding: resolve(__dirname, 'index8.html'),
         fontcreator: resolve(__dirname, 'index9.html'),
+        pathanimation: resolve(__dirname, 'index10.html'),
       },
     },
     minify: 'terser',
