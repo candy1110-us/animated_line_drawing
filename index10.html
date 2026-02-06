@@ -1,0 +1,2536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Path Animation - Move Objects Along Drawn Paths</title>
+    <style>
+        @font-face {
+            font-family: 'Be Vietnam Pro';
+            src: url('fonts/BeVietnamPro-Regular.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        @font-face {
+            font-family: 'Hmt Regular';
+            src: url('fonts/HmtRegular-WRrv.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background-color: #ecebe4;
+            background-image: url('data:image/svg+xml;utf8,<svg width="28" height="28" xmlns="http://www.w3.org/2000/svg"><circle cx="14" cy="14" r="1" fill="%23d2d1c7"/></svg>');
+            background-size: 28px 28px;
+            min-height: 100vh;
+            padding: 40px 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before,
+        body::after {
+            content: '';
+            position: fixed;
+            border-radius: 50%;
+            opacity: 0.15;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        body::before {
+            background: #6ba3ff;
+            width: 50vh;
+            height: 50vh;
+            top: 20%;
+            left: -10vh;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        body::after {
+            background: #f59e0b;
+            width: 150px;
+            height: 150px;
+            bottom: 15%;
+            right: 8%;
+            animation: float 8s ease-in-out infinite reverse;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(5deg); }
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header {
+            background: transparent;
+            padding: 20px 30px;
+            margin-bottom: 30px;
+            text-align: center;
+            position: relative;
+        }
+
+        .logo-link {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            overflow: hidden;
+            background: white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 100;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .logo-link:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.25);
+        }
+
+        .header-logo {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .header h1 {
+            font-family: 'Hmt Regular', 'Inter', sans-serif;
+            font-size: 3.5rem;
+            color: #2d3436;
+            margin-bottom: 12px;
+            text-shadow: 3px 3px 0px rgba(107, 163, 255, 0.3);
+        }
+
+        .header p {
+            color: #636e72;
+            font-size: 1.1rem;
+        }
+
+        .main-layout {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        @media (min-width: 1024px) {
+            .main-layout {
+                flex-direction: row;
+                align-items: stretch;
+            }
+
+            .sidebar {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                min-width: 0;
+            }
+
+            .preview-section {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                min-width: 0;
+            }
+        }
+
+        .sidebar, .preview-section {
+            background: white;
+            border-radius: 20px;
+            padding: 24px;
+            box-shadow:
+                3px 3px 0px rgba(0, 0, 0, 0.05),
+                6px 6px 0px rgba(107, 163, 255, 0.08);
+            border: 1px solid rgba(45, 52, 54, 0.15);
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .numbered-badge {
+            width: 50px;
+            height: 50px;
+            background: #6ba3ff;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: white;
+            font-size: 24px;
+            box-shadow: 3px 3px 0px rgba(107, 163, 255, 0.3);
+            flex-shrink: 0;
+        }
+
+        .gradient-text {
+            margin: 0;
+            padding: 0;
+            font-family: 'Hmt Regular', 'Inter', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #2d3436;
+            line-height: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+        }
+
+        .upload-section {
+            border: 2px dashed rgba(107, 163, 255, 0.4);
+            border-radius: 20px;
+            padding: 30px 20px;
+            text-align: center;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            min-height: 150px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 3px 3px 0px rgba(107, 163, 255, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .upload-section:hover {
+            border-color: #6ba3ff;
+            background: #f8f9ff;
+            transform: translateY(-3px) rotate(1deg);
+            box-shadow: 5px 5px 0px rgba(107, 163, 255, 0.2);
+        }
+
+        .upload-section.has-image {
+            border-style: solid;
+            border-color: #6ba3ff;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .upload-label {
+            font-size: 16px;
+            color: #5a92ee;
+            font-weight: 600;
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .helper-text {
+            font-size: 12px;
+            color: #6b7280;
+            margin-top: 4px;
+            line-height: 1.4;
+        }
+
+        .upload-preview {
+            display: none;
+        }
+
+        .upload-preview.visible {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .upload-preview img {
+            max-width: 150px;
+            max-height: 150px;
+            object-fit: contain;
+            border-radius: 8px;
+            background: repeating-conic-gradient(#e5e7eb 0% 25%, transparent 0% 50%) 50% / 16px 16px;
+        }
+
+        .upload-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        /* Drawing Section */
+        .drawing-section {
+            margin-bottom: 20px;
+        }
+
+        .drawing-section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .drawing-section-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .canvas-container {
+            position: relative;
+            border: 2px solid rgba(45, 52, 54, 0.15);
+            border-radius: 12px;
+            overflow: hidden;
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            box-shadow: 3px 3px 0px rgba(107, 163, 255, 0.1);
+            background: white;
+        }
+
+        #drawingCanvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            cursor: crosshair;
+            touch-action: none;
+        }
+
+        .drawing-controls {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+            flex-wrap: wrap;
+        }
+
+        .btn-small {
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 2px solid;
+        }
+
+        .btn-undo {
+            background: white;
+            color: #f59e0b;
+            border-color: #f59e0b;
+        }
+
+        .btn-undo:hover {
+            background: #f59e0b;
+            color: white;
+        }
+
+        .btn-clear {
+            background: white;
+            color: #dd6143;
+            border-color: #dd6143;
+        }
+
+        .btn-clear:hover {
+            background: #dd6143;
+            color: white;
+        }
+
+        .setting-group {
+            margin-bottom: 18px;
+        }
+
+        .setting-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 8px;
+        }
+
+        .setting-group input[type="range"] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #e3f2ff;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .setting-group input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #6ba3ff;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .value-display {
+            display: inline-block;
+            background: #6ba3ff;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #6ba3ff 0%, #5a92ee 100%);
+            color: white;
+            border: none;
+            padding: 14px 24px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 3px 3px 0px rgba(107, 163, 255, 0.3);
+            width: 100%;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 5px 5px 0px rgba(107, 163, 255, 0.4);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #dd6143;
+            border: 2px solid #dd6143;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 2px 2px 0px rgba(221, 97, 67, 0.2);
+        }
+
+        .btn-secondary:hover {
+            background: #fff5f2;
+            transform: translateY(-2px);
+            box-shadow: 3px 3px 0px rgba(221, 97, 67, 0.3);
+        }
+
+        .btn-secondary.loading {
+            pointer-events: none;
+            opacity: 0.7;
+        }
+
+        .btn-secondary.loading::after {
+            content: '';
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            margin-left: 8px;
+            border: 2px solid #dd6143;
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .preview-content-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 300px;
+            flex: 1;
+        }
+
+        .preview-content {
+            position: relative;
+            background: #f9fafb;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 640px;
+            aspect-ratio: 16 / 9;
+            display: flex;
+            overflow: hidden;
+            background: repeating-conic-gradient(#e5e7eb 0% 25%, #f9fafb 0% 50%) 50% / 20px 20px;
+        }
+
+        .preview-content.ratio-16-9 {
+            aspect-ratio: 16 / 9;
+            max-width: 640px;
+        }
+
+        .preview-content.ratio-9-16 {
+            aspect-ratio: 9 / 16;
+            max-width: 280px;
+        }
+
+        .preview-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .animated-object {
+            position: absolute;
+            pointer-events: none;
+            transform-origin: center center;
+        }
+
+        .placeholder {
+            text-align: center;
+            color: #9ca3af;
+            margin: auto;
+        }
+
+        .placeholder svg {
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 16px;
+            opacity: 0.3;
+        }
+
+        .controls-row {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: #f9fafb;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .control-group.no-cursor {
+            cursor: default;
+        }
+
+        .label-text {
+            font-size: 12px;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .slider-compact {
+            width: 100px;
+            height: 4px;
+            border-radius: 2px;
+            background: #e3f2ff;
+            outline: none;
+            -webkit-appearance: none;
+            cursor: pointer;
+        }
+
+        .slider-compact::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: #6ba3ff;
+            cursor: pointer;
+        }
+
+        .color-preview-box {
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+            border: 2px solid #e5e7eb;
+            cursor: pointer;
+        }
+
+        .popup-menu {
+            display: none;
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 8px;
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            width: 280px;
+            z-index: 1000;
+        }
+
+        .popup-menu.visible {
+            display: block;
+        }
+
+        .popup-menu.left {
+            right: auto;
+            left: 0;
+        }
+
+        /* Color Picker Elements */
+        .color-square {
+            position: relative;
+            width: 100%;
+            height: 150px;
+            background: linear-gradient(to right, white, red);
+            border-radius: 8px;
+            margin-bottom: 12px;
+            cursor: crosshair;
+            border: 2px solid #e5e7eb;
+        }
+
+        .color-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(to bottom, transparent, black);
+            border-radius: 6px;
+        }
+
+        .color-cursor {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            border: 2px solid white;
+            border-radius: 50%;
+            pointer-events: none;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 3px rgba(0,0,0,0.5);
+        }
+
+        .hue-slider {
+            height: 20px;
+            border-radius: 6px;
+            background: linear-gradient(to right, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000);
+            position: relative;
+            cursor: pointer;
+            border: 2px solid #e5e7eb;
+            margin-bottom: 12px;
+        }
+
+        .hue-cursor {
+            position: absolute;
+            width: 4px;
+            height: 24px;
+            background: white;
+            border: 2px solid #666;
+            border-radius: 2px;
+            top: -2px;
+            transform: translateX(-50%);
+            pointer-events: none;
+        }
+
+        .hex-input {
+            flex: 1;
+            padding: 6px 10px;
+            border: 2px solid #e5e7eb;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 13px;
+        }
+
+        .color-input {
+            width: 40px;
+            height: 32px;
+            border: 2px solid #e5e7eb;
+            border-radius: 6px;
+            cursor: pointer;
+            padding: 2px;
+        }
+
+        .flex-center-gap-8 {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .mb-12 {
+            margin-bottom: 12px;
+        }
+
+        .mt-12 {
+            margin-top: 12px;
+        }
+
+        .border-top {
+            border-top: 1px solid #e5e7eb;
+            padding-top: 12px;
+        }
+
+        .text-small-indigo {
+            font-size: 11px;
+            color: #5a92ee;
+        }
+
+        .text-tiny-gray {
+            font-size: 10px;
+            color: #6b7280;
+        }
+
+        .text-tiny-indigo {
+            font-size: 9px;
+            color: #6ba3ff;
+            cursor: pointer;
+        }
+
+        .text-tiny-red {
+            font-size: 9px;
+            color: #dd6143;
+            cursor: pointer;
+        }
+
+        .upload-area-small {
+            border: 2px dashed #c7d2fe;
+            border-radius: 8px;
+            padding: 12px;
+            text-align: center;
+            background: #faf5ff;
+            cursor: pointer;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .img-thumb {
+            max-width: 60px;
+            max-height: 60px;
+            object-fit: contain;
+        }
+
+        .aspect-btns {
+            display: flex;
+            gap: 8px;
+        }
+
+        .aspect-btn {
+            padding: 6px 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 6px;
+            background: white;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: 600;
+            color: #374151;
+            transition: all 0.2s;
+        }
+
+        .aspect-btn:hover {
+            border-color: #6ba3ff;
+        }
+
+        .aspect-btn.active {
+            border-color: #6ba3ff;
+            background: #6ba3ff;
+            color: white;
+        }
+
+        .checkbox-input {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: #6ba3ff;
+        }
+
+        .action-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .action-buttons-row {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .action-buttons-row .btn-primary,
+        .action-buttons-row .btn-secondary {
+            flex: none;
+            width: auto;
+            padding: 10px 20px;
+            font-size: 13px;
+        }
+
+        .pos-relative {
+            position: relative;
+        }
+
+        /* Recording controls */
+        .btn-record {
+            background: white;
+            color: #10b981;
+            border-color: #10b981;
+        }
+
+        .btn-record:hover {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-record.recording {
+            background: #10b981;
+            color: white;
+            animation: pulse 1s infinite;
+        }
+
+        .btn-stop {
+            background: white;
+            color: #ef4444;
+            border-color: #ef4444;
+        }
+
+        .btn-stop:hover:not(:disabled) {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-stop:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .recording-indicator {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(239, 68, 68, 0.9);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            display: none;
+            align-items: center;
+            gap: 6px;
+            z-index: 10;
+        }
+
+        .recording-indicator.visible {
+            display: flex;
+        }
+
+        .recording-dot {
+            width: 8px;
+            height: 8px;
+            background: white;
+            border-radius: 50%;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        .canvas-container.recording {
+            border-color: #ef4444;
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2);
+        }
+
+        .timing-info {
+            margin-top: 8px;
+            padding: 8px 12px;
+            background: #f0fdf4;
+            border-radius: 8px;
+            border: 1px solid #bbf7d0;
+        }
+
+        /* Multi-object styles */
+        .objects-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 16px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .object-item {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding: 10px 12px;
+            background: #f9fafb;
+            border-radius: 10px;
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .object-item-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            width: 100%;
+        }
+
+        .object-settings-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            width: 100%;
+            padding-left: 50px;
+        }
+
+        .object-size-group {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .object-size-label {
+            font-size: 10px;
+            color: #6b7280;
+            white-space: nowrap;
+        }
+
+        .object-size-slider {
+            flex: 1;
+            min-width: 50px;
+            height: 4px;
+            border-radius: 2px;
+            background: #e3f2ff;
+            outline: none;
+            -webkit-appearance: none;
+            cursor: pointer;
+        }
+
+        .object-size-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #6ba3ff;
+            cursor: pointer;
+        }
+
+        .object-size-value {
+            font-size: 10px;
+            font-weight: 600;
+            color: #6ba3ff;
+            min-width: 28px;
+            text-align: right;
+        }
+
+        .object-align-group {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+
+        .object-item:hover {
+            background: #f0f4ff;
+        }
+
+        .object-item.active {
+            border-color: #6ba3ff;
+            background: #f0f4ff;
+        }
+
+        .object-item.has-path {
+            border-left: 4px solid;
+        }
+
+        .object-thumb {
+            width: 40px;
+            height: 40px;
+            object-fit: contain;
+            border-radius: 6px;
+            background: repeating-conic-gradient(#e5e7eb 0% 25%, transparent 0% 50%) 50% / 8px 8px;
+        }
+
+        .object-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .object-name {
+            font-size: 12px;
+            font-weight: 600;
+            color: #374151;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .object-status {
+            font-size: 10px;
+            color: #6b7280;
+        }
+
+        .object-color-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .object-remove {
+            font-size: 16px;
+            color: #9ca3af;
+            cursor: pointer;
+            padding: 4px;
+            line-height: 1;
+        }
+
+        .object-remove:hover {
+            color: #ef4444;
+        }
+
+        /* Drag handle styles */
+        .object-drag-handle {
+            cursor: grab;
+            color: #9ca3af;
+            padding: 4px 2px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            user-select: none;
+        }
+
+        .object-drag-handle:hover {
+            color: #6b7280;
+        }
+
+        .object-drag-handle:active {
+            cursor: grabbing;
+        }
+
+        .drag-handle-line {
+            width: 12px;
+            height: 2px;
+            background: currentColor;
+            border-radius: 1px;
+        }
+
+        .object-item.dragging {
+            opacity: 0.5;
+            background: #e0e7ff;
+        }
+
+        .object-item.drag-over {
+            border-top: 2px solid #6ba3ff;
+        }
+
+        .object-item.drag-over-bottom {
+            border-bottom: 2px solid #6ba3ff;
+        }
+
+        .btn-add-object {
+            background: white;
+            color: #6ba3ff;
+            border-color: #6ba3ff;
+            width: 100%;
+            margin-bottom: 12px;
+        }
+
+        .btn-add-object:hover {
+            background: #6ba3ff;
+            color: white;
+        }
+
+        .objects-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .objects-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .path-color-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 6px;
+        }
+
+        /* Drawing panel object markers */
+        .drawing-object-marker {
+            position: absolute;
+            pointer-events: none;
+            transform: translate(-50%, -50%);
+            z-index: 5;
+            transition: none;
+        }
+
+        .drawing-object-marker img {
+            width: 30px;
+            height: 30px;
+            object-fit: contain;
+            border-radius: 4px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+        }
+
+        /* Toggle switch styles */
+        .object-toggle-label {
+            font-size: 10px;
+            color: #6b7280;
+            white-space: nowrap;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 36px;
+            height: 20px;
+            flex-shrink: 0;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #e5e7eb;
+            transition: 0.3s;
+            border-radius: 20px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 14px;
+            width: 14px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: 0.3s;
+            border-radius: 50%;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+
+        .toggle-switch input:checked + .toggle-slider {
+            background-color: #6ba3ff;
+        }
+
+        .toggle-switch input:checked + .toggle-slider:before {
+            transform: translateX(16px);
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/gifshot@0.4.5/dist/gifshot.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <a href="index.html" class="logo-link">
+                <img src="images/mefn.gif" alt="Logo" class="header-logo">
+            </a>
+            <h1>Path Animation</h1>
+            <p>Upload an image and draw a path to animate it along</p>
+        </div>
+
+        <div class="main-layout">
+            <!-- LEFT - Controls -->
+            <div class="sidebar">
+                <div class="section-header">
+                    <div class="numbered-badge">1</div>
+                    <h3 class="gradient-text">Upload & Draw Path</h3>
+                </div>
+
+                <!-- Objects List -->
+                <div class="objects-header">
+                    <span class="objects-title">Objects</span>
+                </div>
+                <input type="file" id="imageUpload" accept="image/*" style="display: none;">
+                <button class="btn-small btn-add-object" id="addObjectBtn">+ Add Object</button>
+                <div class="objects-list" id="objectsList">
+                    <!-- Object items will be added here dynamically -->
+                </div>
+                <div class="helper-text" id="noObjectsHint">Click "Add Object" to upload images for animation</div>
+
+                <!-- Drawing Section -->
+                <div class="drawing-section">
+                    <div class="drawing-section-header">
+                        <span class="drawing-section-title">Draw animation path below:</span>
+                    </div>
+                    <div class="canvas-container" id="canvasContainer">
+                        <canvas id="drawingCanvas" width="640" height="360"></canvas>
+                        <div class="recording-indicator" id="recordingIndicator">
+                            <span class="recording-dot"></span>
+                            <span>Recording...</span>
+                        </div>
+                    </div>
+                    <div class="drawing-controls">
+                        <button class="btn-small btn-record" id="startRecordBtn">Start Recording</button>
+                        <button class="btn-small btn-stop" id="stopRecordBtn" disabled>Stop Recording</button>
+                        <button class="btn-small btn-undo" id="undoBtn">Undo</button>
+                        <button class="btn-small btn-clear" id="clearBtn">Clear</button>
+                    </div>
+                    <div class="timing-info" id="timingInfo" style="display: none;">
+                        <span class="text-tiny-gray">Recorded duration: <span id="recordedDuration">0.0s</span></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT - Preview -->
+            <div class="preview-section">
+                <div class="controls-row">
+                    <div class="section-header" style="margin-bottom: 0;">
+                        <div class="numbered-badge">2</div>
+                        <h3 class="gradient-text">Preview</h3>
+                    </div>
+                </div>
+
+                <div class="controls-row">
+                    <div class="control-group no-cursor">
+                        <span class="label-text">Wiggle:</span>
+                        <input type="range" id="wiggle" min="0" max="30" step="1" value="0" class="slider-compact">
+                        <span class="value-display" id="wiggleDisplay">0</span>
+                    </div>
+
+                    <div class="control-group no-cursor">
+                        <span class="label-text">Speed:</span>
+                        <input type="range" id="wiggleSpeed" min="50" max="300" step="25" value="150" class="slider-compact">
+                        <span class="value-display" id="wiggleSpeedDisplay">150ms</span>
+                    </div>
+
+                    <div class="pos-relative">
+                        <div class="control-group" id="bgColorIndicator">
+                            <span class="label-text">Background:</span>
+                            <div id="bgColorPreview" class="color-preview-box" style="background: #ffffff;"></div>
+                        </div>
+                        <div id="bgColorPopup" class="popup-menu">
+                            <div class="color-square" id="bgColorSquare">
+                                <div class="color-overlay" id="bgColorOverlay"></div>
+                                <div id="bgColorCursor" class="color-cursor"></div>
+                            </div>
+                            <div class="hue-slider" id="bgHueSlider">
+                                <div id="bgHueCursor" class="hue-cursor"></div>
+                            </div>
+                            <div class="flex-center-gap-8">
+                                <span class="label-text">Hex:</span>
+                                <input type="text" id="bgColorHexInput" value="#ffffff" class="hex-input">
+                                <input type="color" id="bgColor" value="#ffffff" class="color-input">
+                            </div>
+                            <div class="mt-12 border-top">
+                                <div class="text-tiny-gray mb-12">Or use background image:</div>
+                                <div class="upload-area-small" id="bgImageUploadArea">
+                                    <input type="file" id="bgImageUpload" accept="image/*">
+                                    <div id="bgUploadPlaceholder">
+                                        <span class="text-small-indigo">Click to upload</span>
+                                    </div>
+                                    <div id="bgImagePreview" style="display: none;">
+                                        <img id="bgPreviewImg" class="img-thumb">
+                                        <div class="flex-center-gap-8" style="margin-top: 4px;">
+                                            <span class="text-tiny-indigo" id="changeBgImage">Change</span>
+                                            <span class="text-tiny-red" id="removeBgImage">Remove</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="control-group no-cursor">
+                        <span class="label-text">Ratio:</span>
+                        <div class="aspect-btns">
+                            <button class="aspect-btn active" data-ratio="16:9">16:9</button>
+                            <button class="aspect-btn" data-ratio="9:16">9:16</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="action-buttons-row">
+                    <button class="btn-primary" id="animateBtn" disabled>Animate</button>
+                    <button class="btn-secondary" id="downloadBtn" disabled>Download GIF</button>
+                </div>
+
+                <div class="preview-content-wrapper">
+                    <div class="preview-content ratio-16-9" id="previewContent">
+                        <canvas id="previewCanvas" class="preview-canvas"></canvas>
+                        <div class="placeholder" id="placeholder">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                                <path d="M2 17l10 5 10-5M2 12l10 5 10-5"/>
+                            </svg>
+                            <p>Upload an image and draw a path to get started!</p>
+                        </div>
+                        <div id="animatedObjectsContainer"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Path colors for different objects
+        const pathColors = [
+            '#6ba3ff', // Blue
+            '#f59e0b', // Orange
+            '#10b981', // Green
+            '#ef4444', // Red
+            '#8b5cf6', // Purple
+            '#ec4899', // Pink
+            '#06b6d4', // Cyan
+            '#84cc16', // Lime
+        ];
+
+        // State - Multi-object support
+        let animationObjects = []; // Array of {id, image, pathPoints, allPaths, color, size}
+        let activeObjectIndex = -1;
+        let isDrawing = false;
+        let currentPath = [];
+        let animationId = null;
+        let bgImageData = null;
+        let bgImageLoaded = null; // Preloaded background image for drawing canvas
+        let currentAspectRatio = '16:9';
+
+        // Timing recording state
+        let isRecording = false;
+        let recordingStartTime = null;
+        let totalRecordedDuration = 0;
+
+        // Drawing panel preview animation state
+        let drawingPreviewAnimationId = null;
+        let drawingPreviewStartTime = null;
+
+        // DOM Elements
+        const imageUpload = document.getElementById('imageUpload');
+        const objectsList = document.getElementById('objectsList');
+        const addObjectBtn = document.getElementById('addObjectBtn');
+        const noObjectsHint = document.getElementById('noObjectsHint');
+
+        const drawingCanvas = document.getElementById('drawingCanvas');
+        const drawingCtx = drawingCanvas.getContext('2d');
+        const canvasContainer = document.getElementById('canvasContainer');
+
+        const previewContent = document.getElementById('previewContent');
+        const previewCanvas = document.getElementById('previewCanvas');
+        const previewCtx = previewCanvas.getContext('2d');
+        const animatedObjectsContainer = document.getElementById('animatedObjectsContainer');
+        const placeholder = document.getElementById('placeholder');
+
+        const undoBtn = document.getElementById('undoBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const animateBtn = document.getElementById('animateBtn');
+        const downloadBtn = document.getElementById('downloadBtn');
+
+        // Recording controls
+        const startRecordBtn = document.getElementById('startRecordBtn');
+        const stopRecordBtn = document.getElementById('stopRecordBtn');
+        const recordingIndicator = document.getElementById('recordingIndicator');
+        const timingInfo = document.getElementById('timingInfo');
+        const recordedDurationDisplay = document.getElementById('recordedDuration');
+
+        const wiggleSlider = document.getElementById('wiggle');
+        const wiggleDisplay = document.getElementById('wiggleDisplay');
+        const wiggleSpeedSlider = document.getElementById('wiggleSpeed');
+        const wiggleSpeedDisplay = document.getElementById('wiggleSpeedDisplay');
+
+        const bgColorIndicator = document.getElementById('bgColorIndicator');
+        const bgColorPopup = document.getElementById('bgColorPopup');
+        const bgColorPreview = document.getElementById('bgColorPreview');
+        const bgColor = document.getElementById('bgColor');
+        const bgColorHexInput = document.getElementById('bgColorHexInput');
+        const bgColorSquare = document.getElementById('bgColorSquare');
+        const bgColorCursor = document.getElementById('bgColorCursor');
+        const bgHueSlider = document.getElementById('bgHueSlider');
+        const bgHueCursor = document.getElementById('bgHueCursor');
+
+        const bgImageUploadArea = document.getElementById('bgImageUploadArea');
+        const bgImageUpload = document.getElementById('bgImageUpload');
+        const bgUploadPlaceholder = document.getElementById('bgUploadPlaceholder');
+        const bgImagePreview = document.getElementById('bgImagePreview');
+        const bgPreviewImg = document.getElementById('bgPreviewImg');
+        const changeBgImage = document.getElementById('changeBgImage');
+        const removeBgImage = document.getElementById('removeBgImage');
+
+        // Initialize canvas sizes
+        function initCanvasSizes() {
+            const rect = previewContent.getBoundingClientRect();
+            previewCanvas.width = rect.width;
+            previewCanvas.height = rect.height;
+        }
+
+        // Setup drawing canvas
+        drawingCtx.strokeStyle = '#6ba3ff';
+        drawingCtx.lineWidth = 3;
+        drawingCtx.lineCap = 'round';
+        drawingCtx.lineJoin = 'round';
+
+        // Generate unique ID
+        function generateId() {
+            return Date.now().toString(36) + Math.random().toString(36).substr(2);
+        }
+
+        // Add Object button
+        addObjectBtn.addEventListener('click', () => {
+            imageUpload.click();
+        });
+
+        // Image Upload - creates new object
+        imageUpload.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const colorIndex = animationObjects.length % pathColors.length;
+                const newObject = {
+                    id: generateId(),
+                    name: file.name.substring(0, 20),
+                    image: event.target.result,
+                    pathPoints: [],
+                    allPaths: [],
+                    color: pathColors[colorIndex],
+                    size: 50, // Default size
+                    alignToPath: false // Default: don't rotate along path
+                };
+                animationObjects.push(newObject);
+                activeObjectIndex = animationObjects.length - 1;
+
+                renderObjectsList();
+                redrawCanvas();
+                updateAnimateButton();
+                noObjectsHint.style.display = 'none';
+            };
+            reader.readAsDataURL(file);
+            imageUpload.value = ''; // Reset for same file selection
+        });
+
+        // Render objects list
+        function renderObjectsList() {
+            objectsList.innerHTML = '';
+
+            animationObjects.forEach((obj, index) => {
+                const hasPath = obj.pathPoints.length > 1;
+                const item = document.createElement('div');
+                item.className = `object-item${index === activeObjectIndex ? ' active' : ''}${hasPath ? ' has-path' : ''}`;
+                item.draggable = true;
+                item.dataset.index = index;
+                if (hasPath) {
+                    item.style.borderLeftColor = obj.color;
+                }
+
+                item.innerHTML = `
+                    <div class="object-item-row">
+                        <div class="object-drag-handle" draggable="false">
+                            <div class="drag-handle-line"></div>
+                            <div class="drag-handle-line"></div>
+                            <div class="drag-handle-line"></div>
+                        </div>
+                        <img src="${obj.image}" class="object-thumb" alt="${obj.name}">
+                        <div class="object-info">
+                            <div class="object-name">${obj.name}</div>
+                            <div class="object-status">
+                                <span class="path-color-indicator" style="background: ${obj.color};"></span>
+                                ${hasPath ? `Path: ${obj.pathPoints.length} points` : 'No path yet'}
+                            </div>
+                        </div>
+                        <span class="object-remove" data-index="${index}">&times;</span>
+                    </div>
+                    <div class="object-settings-row">
+                        <div class="object-size-group">
+                            <span class="object-size-label">Size:</span>
+                            <input type="range" class="object-size-slider" data-index="${index}" min="10" max="300" step="5" value="${obj.size}">
+                            <span class="object-size-value" data-index="${index}">${obj.size}px</span>
+                        </div>
+                        <div class="object-align-group">
+                            <span class="object-toggle-label">Align:</span>
+                            <label class="toggle-switch">
+                                <input type="checkbox" class="align-toggle" data-index="${index}" ${obj.alignToPath ? 'checked' : ''}>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                `;
+
+                item.addEventListener('click', (e) => {
+                    if (!e.target.classList.contains('object-remove') &&
+                        !e.target.classList.contains('object-size-slider') &&
+                        !e.target.classList.contains('align-toggle') &&
+                        !e.target.closest('.toggle-switch') &&
+                        !e.target.closest('.object-drag-handle')) {
+                        selectObject(index);
+                    }
+                });
+
+                objectsList.appendChild(item);
+            });
+
+            // Add remove handlers
+            objectsList.querySelectorAll('.object-remove').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const index = parseInt(btn.dataset.index);
+                    removeObject(index);
+                });
+            });
+
+            // Add size slider handlers
+            objectsList.querySelectorAll('.object-size-slider').forEach(slider => {
+                slider.addEventListener('input', (e) => {
+                    e.stopPropagation();
+                    const index = parseInt(slider.dataset.index);
+                    const newSize = parseInt(slider.value);
+                    animationObjects[index].size = newSize;
+                    // Update the display value
+                    const valueDisplay = objectsList.querySelector(`.object-size-value[data-index="${index}"]`);
+                    if (valueDisplay) {
+                        valueDisplay.textContent = newSize + 'px';
+                    }
+                    // Update animation if running
+                    updateAnimatedObjectSizes();
+                });
+                slider.addEventListener('click', (e) => e.stopPropagation());
+            });
+
+            // Add align-to-path toggle handlers
+            objectsList.querySelectorAll('.align-toggle').forEach(toggle => {
+                toggle.addEventListener('change', (e) => {
+                    e.stopPropagation();
+                    const index = parseInt(toggle.dataset.index);
+                    animationObjects[index].alignToPath = toggle.checked;
+                });
+                toggle.addEventListener('click', (e) => e.stopPropagation());
+            });
+
+            // Add drag-and-drop handlers
+            let draggedIndex = null;
+
+            objectsList.querySelectorAll('.object-item').forEach(item => {
+                item.addEventListener('dragstart', (e) => {
+                    draggedIndex = parseInt(item.dataset.index);
+                    item.classList.add('dragging');
+                    e.dataTransfer.effectAllowed = 'move';
+                    e.dataTransfer.setData('text/plain', draggedIndex);
+                });
+
+                item.addEventListener('dragend', () => {
+                    item.classList.remove('dragging');
+                    objectsList.querySelectorAll('.object-item').forEach(el => {
+                        el.classList.remove('drag-over', 'drag-over-bottom');
+                    });
+                    draggedIndex = null;
+                });
+
+                item.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    e.dataTransfer.dropEffect = 'move';
+                    const targetIndex = parseInt(item.dataset.index);
+                    if (targetIndex !== draggedIndex) {
+                        // Clear all drag-over classes
+                        objectsList.querySelectorAll('.object-item').forEach(el => {
+                            el.classList.remove('drag-over', 'drag-over-bottom');
+                        });
+                        // Determine if dropping above or below
+                        const rect = item.getBoundingClientRect();
+                        const midY = rect.top + rect.height / 2;
+                        if (e.clientY < midY) {
+                            item.classList.add('drag-over');
+                        } else {
+                            item.classList.add('drag-over-bottom');
+                        }
+                    }
+                });
+
+                item.addEventListener('dragleave', () => {
+                    item.classList.remove('drag-over', 'drag-over-bottom');
+                });
+
+                item.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    const targetIndex = parseInt(item.dataset.index);
+                    if (draggedIndex !== null && targetIndex !== draggedIndex) {
+                        // Determine drop position
+                        const rect = item.getBoundingClientRect();
+                        const midY = rect.top + rect.height / 2;
+                        let insertIndex = e.clientY < midY ? targetIndex : targetIndex + 1;
+
+                        // Adjust insertIndex if dragging from above
+                        if (draggedIndex < insertIndex) {
+                            insertIndex--;
+                        }
+
+                        // Reorder the array
+                        const [movedObj] = animationObjects.splice(draggedIndex, 1);
+                        animationObjects.splice(insertIndex, 0, movedObj);
+
+                        // Update activeObjectIndex to follow the selected object
+                        if (activeObjectIndex === draggedIndex) {
+                            activeObjectIndex = insertIndex;
+                        } else if (draggedIndex < activeObjectIndex && insertIndex >= activeObjectIndex) {
+                            activeObjectIndex--;
+                        } else if (draggedIndex > activeObjectIndex && insertIndex <= activeObjectIndex) {
+                            activeObjectIndex++;
+                        }
+
+                        renderObjectsList();
+                        redrawCanvas();
+                    }
+                    item.classList.remove('drag-over', 'drag-over-bottom');
+                });
+            });
+        }
+
+        // Update animated object sizes in real-time
+        function updateAnimatedObjectSizes() {
+            animatedObjectsContainer.querySelectorAll('.animated-object').forEach(el => {
+                const objId = el.dataset.objectId;
+                const obj = animationObjects.find(o => o.id === objId);
+                if (obj) {
+                    el.style.width = obj.size + 'px';
+                }
+            });
+        }
+
+        // Select object
+        function selectObject(index) {
+            // Save current object's path data before switching
+            if (activeObjectIndex >= 0 && activeObjectIndex < animationObjects.length) {
+                // Path data is already saved in stopDrawing
+            }
+
+            activeObjectIndex = index;
+            renderObjectsList();
+            redrawCanvas();
+            updateRecordedDuration();
+        }
+
+        // Remove object
+        function removeObject(index) {
+            animationObjects.splice(index, 1);
+
+            if (animationObjects.length === 0) {
+                activeObjectIndex = -1;
+                noObjectsHint.style.display = 'block';
+            } else if (activeObjectIndex >= animationObjects.length) {
+                activeObjectIndex = animationObjects.length - 1;
+            } else if (activeObjectIndex === index) {
+                activeObjectIndex = Math.max(0, index - 1);
+            }
+
+            renderObjectsList();
+            redrawCanvas();
+            updateAnimateButton();
+        }
+
+        // Get active object
+        function getActiveObject() {
+            if (activeObjectIndex >= 0 && activeObjectIndex < animationObjects.length) {
+                return animationObjects[activeObjectIndex];
+            }
+            return null;
+        }
+
+        // Drawing functions
+        function getCanvasCoords(e) {
+            const rect = drawingCanvas.getBoundingClientRect();
+            const scaleX = drawingCanvas.width / rect.width;
+            const scaleY = drawingCanvas.height / rect.height;
+
+            if (e.touches) {
+                return {
+                    x: (e.touches[0].clientX - rect.left) * scaleX,
+                    y: (e.touches[0].clientY - rect.top) * scaleY
+                };
+            }
+            return {
+                x: (e.clientX - rect.left) * scaleX,
+                y: (e.clientY - rect.top) * scaleY
+            };
+        }
+
+        function startDrawing(e) {
+            const activeObj = getActiveObject();
+            if (!activeObj) return;
+
+            // Only allow drawing if recording is active
+            if (!isRecording) return;
+
+            e.preventDefault();
+            isDrawing = true;
+            const pos = getCanvasCoords(e);
+            // Store time relative to recording start
+            const relativeTime = Date.now() - recordingStartTime;
+            currentPath = [{ x: pos.x, y: pos.y, time: relativeTime }];
+
+            // Use the active object's color
+            drawingCtx.strokeStyle = activeObj.color;
+            drawingCtx.beginPath();
+            drawingCtx.moveTo(pos.x, pos.y);
+        }
+
+        function draw(e) {
+            if (!isDrawing) return;
+            e.preventDefault();
+
+            const pos = getCanvasCoords(e);
+            // Store time relative to recording start
+            const relativeTime = Date.now() - recordingStartTime;
+            currentPath.push({ x: pos.x, y: pos.y, time: relativeTime });
+
+            drawingCtx.lineTo(pos.x, pos.y);
+            drawingCtx.stroke();
+        }
+
+        function stopDrawing(e) {
+            if (!isDrawing) return;
+            e.preventDefault();
+
+            isDrawing = false;
+            const activeObj = getActiveObject();
+
+            if (currentPath.length > 1 && activeObj) {
+                activeObj.allPaths.push([...currentPath]);
+                // Combine all paths into one continuous path for animation
+                rebuildPathPointsForObject(activeObj);
+                renderObjectsList();
+                updateAnimateButton();
+                updateRecordedDuration();
+            }
+            currentPath = [];
+        }
+
+        function rebuildPathPointsForObject(obj) {
+            obj.pathPoints = [];
+            obj.allPaths.forEach(path => {
+                obj.pathPoints.push(...path);
+            });
+        }
+
+        function updateRecordedDuration() {
+            // Find the maximum duration across all objects
+            let maxDuration = 0;
+            animationObjects.forEach(obj => {
+                if (obj.pathPoints.length > 0) {
+                    const objDuration = obj.pathPoints[obj.pathPoints.length - 1].time;
+                    if (objDuration > maxDuration) {
+                        maxDuration = objDuration;
+                    }
+                }
+            });
+            totalRecordedDuration = maxDuration;
+            recordedDurationDisplay.textContent = (totalRecordedDuration / 1000).toFixed(1) + 's';
+        }
+
+        function redrawCanvas() {
+            drawingCtx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
+
+            // Draw background (color or image)
+            if (bgImageLoaded) {
+                // Draw background image with "cover" behavior (maintain aspect ratio, fill canvas)
+                const canvasWidth = drawingCanvas.width;
+                const canvasHeight = drawingCanvas.height;
+                const imgWidth = bgImageLoaded.width;
+                const imgHeight = bgImageLoaded.height;
+
+                const canvasRatio = canvasWidth / canvasHeight;
+                const imgRatio = imgWidth / imgHeight;
+
+                let drawWidth, drawHeight, offsetX, offsetY;
+
+                if (imgRatio > canvasRatio) {
+                    // Image is wider - fit height, crop width
+                    drawHeight = canvasHeight;
+                    drawWidth = imgWidth * (canvasHeight / imgHeight);
+                    offsetX = (canvasWidth - drawWidth) / 2;
+                    offsetY = 0;
+                } else {
+                    // Image is taller - fit width, crop height
+                    drawWidth = canvasWidth;
+                    drawHeight = imgHeight * (canvasWidth / imgWidth);
+                    offsetX = 0;
+                    offsetY = (canvasHeight - drawHeight) / 2;
+                }
+
+                drawingCtx.drawImage(bgImageLoaded, offsetX, offsetY, drawWidth, drawHeight);
+            } else {
+                drawingCtx.fillStyle = bgColor.value;
+                drawingCtx.fillRect(0, 0, drawingCanvas.width, drawingCanvas.height);
+            }
+
+            drawingCtx.lineWidth = 3;
+            drawingCtx.lineCap = 'round';
+            drawingCtx.lineJoin = 'round';
+
+            // Draw paths for ALL objects (so user can see previous paths)
+            animationObjects.forEach((obj, index) => {
+                // Use lighter color for non-active objects
+                if (index === activeObjectIndex) {
+                    drawingCtx.strokeStyle = obj.color;
+                    drawingCtx.lineWidth = 3;
+                    drawingCtx.globalAlpha = 1;
+                } else {
+                    drawingCtx.strokeStyle = obj.color;
+                    drawingCtx.lineWidth = 2;
+                    drawingCtx.globalAlpha = 0.4; // Dimmed for non-active
+                }
+
+                obj.allPaths.forEach(path => {
+                    if (path.length < 2) return;
+                    drawingCtx.beginPath();
+                    drawingCtx.moveTo(path[0].x, path[0].y);
+                    path.forEach(point => {
+                        drawingCtx.lineTo(point.x, point.y);
+                    });
+                    drawingCtx.stroke();
+                });
+            });
+
+            drawingCtx.globalAlpha = 1; // Reset alpha
+        }
+
+        // Drawing panel preview animation - shows other objects animating while recording
+        function startDrawingPreview() {
+            // Only run if there are other objects with paths
+            const otherObjectsWithPaths = animationObjects.filter((obj, index) =>
+                index !== activeObjectIndex && obj.pathPoints.length > 1
+            );
+            if (otherObjectsWithPaths.length === 0) return;
+
+            // Clear existing markers
+            clearDrawingMarkers();
+
+            // Create markers for other objects
+            const rect = drawingCanvas.getBoundingClientRect();
+            const scaleX = rect.width / drawingCanvas.width;
+            const scaleY = rect.height / drawingCanvas.height;
+
+            otherObjectsWithPaths.forEach(obj => {
+                const marker = document.createElement('div');
+                marker.className = 'drawing-object-marker';
+                marker.dataset.objectId = obj.id;
+                marker.innerHTML = `<img src="${obj.image}" alt="${obj.name}" style="border: 2px solid ${obj.color};">`;
+                canvasContainer.appendChild(marker);
+            });
+
+            drawingPreviewStartTime = null;
+
+            function stepDrawingPreview(timestamp) {
+                if (!drawingPreviewStartTime) drawingPreviewStartTime = timestamp;
+                const elapsed = timestamp - drawingPreviewStartTime;
+
+                // Find the max duration (no looping - just play once)
+                let maxDuration = 0;
+                otherObjectsWithPaths.forEach(obj => {
+                    if (obj.pathPoints.length > 0) {
+                        const d = obj.pathPoints[obj.pathPoints.length - 1].time;
+                        if (d > maxDuration) maxDuration = d;
+                    }
+                });
+
+                if (maxDuration === 0) {
+                    drawingPreviewAnimationId = requestAnimationFrame(stepDrawingPreview);
+                    return;
+                }
+
+                // Update each marker position (no looping - clamp to end)
+                otherObjectsWithPaths.forEach(obj => {
+                    const marker = canvasContainer.querySelector(`[data-object-id="${obj.id}"]`);
+                    if (!marker) return;
+
+                    const objDuration = obj.pathPoints.length > 0 ? obj.pathPoints[obj.pathPoints.length - 1].time : 0;
+                    // Clamp elapsed time to object duration (no looping)
+                    const objElapsed = Math.min(elapsed, objDuration);
+                    const pos = getPositionAtTime(obj.pathPoints, objElapsed);
+
+                    // Scale to container coordinates
+                    const scaledX = pos.x * scaleX;
+                    const scaledY = pos.y * scaleY;
+
+                    marker.style.left = scaledX + 'px';
+                    marker.style.top = scaledY + 'px';
+                });
+
+                drawingPreviewAnimationId = requestAnimationFrame(stepDrawingPreview);
+            }
+
+            drawingPreviewAnimationId = requestAnimationFrame(stepDrawingPreview);
+        }
+
+        function stopDrawingPreview() {
+            if (drawingPreviewAnimationId) {
+                cancelAnimationFrame(drawingPreviewAnimationId);
+                drawingPreviewAnimationId = null;
+            }
+            clearDrawingMarkers();
+        }
+
+        function clearDrawingMarkers() {
+            canvasContainer.querySelectorAll('.drawing-object-marker').forEach(m => m.remove());
+        }
+
+        // Recording controls
+        startRecordBtn.addEventListener('click', () => {
+            const activeObj = getActiveObject();
+            if (!activeObj) {
+                alert('Please add an object first before recording.');
+                return;
+            }
+
+            // Clear previous recording for active object only
+            activeObj.allPaths = [];
+            activeObj.pathPoints = [];
+            redrawCanvas(); // Redraw to show other objects' paths
+
+            // Start recording
+            isRecording = true;
+            recordingStartTime = Date.now();
+
+            // Update UI
+            startRecordBtn.disabled = true;
+            startRecordBtn.classList.add('recording');
+            stopRecordBtn.disabled = false;
+            canvasContainer.classList.add('recording');
+            recordingIndicator.classList.add('visible');
+            timingInfo.style.display = 'block';
+            recordedDurationDisplay.textContent = '0.0s';
+
+            // Start preview animation of other objects in drawing panel
+            startDrawingPreview();
+
+            renderObjectsList();
+            updateAnimateButton();
+        });
+
+        stopRecordBtn.addEventListener('click', () => {
+            if (!isRecording) return;
+
+            // Stop recording
+            isRecording = false;
+            const recordedTime = Date.now() - recordingStartTime;
+
+            // Stop drawing preview animation
+            stopDrawingPreview();
+
+            // Update UI
+            startRecordBtn.disabled = false;
+            startRecordBtn.classList.remove('recording');
+            stopRecordBtn.disabled = true;
+            canvasContainer.classList.remove('recording');
+            recordingIndicator.classList.remove('visible');
+
+            // Update duration based on all objects
+            updateRecordedDuration();
+
+            renderObjectsList();
+            updateAnimateButton();
+        });
+
+        // Mouse events
+        drawingCanvas.addEventListener('mousedown', startDrawing);
+        drawingCanvas.addEventListener('mousemove', draw);
+        drawingCanvas.addEventListener('mouseup', stopDrawing);
+        drawingCanvas.addEventListener('mouseleave', stopDrawing);
+
+        // Touch events
+        drawingCanvas.addEventListener('touchstart', startDrawing);
+        drawingCanvas.addEventListener('touchmove', draw);
+        drawingCanvas.addEventListener('touchend', stopDrawing);
+
+        // Undo - removes last path from active object
+        undoBtn.addEventListener('click', () => {
+            const activeObj = getActiveObject();
+            if (activeObj && activeObj.allPaths.length > 0) {
+                activeObj.allPaths.pop();
+                rebuildPathPointsForObject(activeObj);
+                redrawCanvas();
+                renderObjectsList();
+                updateAnimateButton();
+                updateRecordedDuration();
+            }
+        });
+
+        // Clear - clears path for active object only
+        clearBtn.addEventListener('click', () => {
+            const activeObj = getActiveObject();
+            if (activeObj) {
+                activeObj.allPaths = [];
+                activeObj.pathPoints = [];
+            }
+            redrawCanvas();
+            renderObjectsList();
+            updateAnimateButton();
+            stopAnimation();
+            stopDrawingPreview();
+
+            // Reset recording state
+            isRecording = false;
+            recordingStartTime = null;
+            startRecordBtn.disabled = false;
+            startRecordBtn.classList.remove('recording');
+            stopRecordBtn.disabled = true;
+            canvasContainer.classList.remove('recording');
+            recordingIndicator.classList.remove('visible');
+            updateRecordedDuration();
+        });
+
+        // Update animate button state
+        function updateAnimateButton() {
+            // Can animate if at least one object has a path
+            const canAnimate = animationObjects.some(obj => obj.pathPoints.length > 1);
+            animateBtn.disabled = !canAnimate;
+            if (canAnimate) {
+                placeholder.style.display = 'none';
+            }
+        }
+
+        // Sliders
+        wiggleSlider.addEventListener('input', () => {
+            wiggleDisplay.textContent = wiggleSlider.value;
+        });
+
+        wiggleSpeedSlider.addEventListener('input', () => {
+            wiggleSpeedDisplay.textContent = wiggleSpeedSlider.value + 'ms';
+        });
+
+        // Background color picker
+        let bgHue = 0;
+        let bgSaturation = 0;
+        let bgValue = 100;
+
+        function hsvToHex(h, s, v) {
+            s /= 100;
+            v /= 100;
+            const f = (n) => {
+                const k = (n + h / 60) % 6;
+                return v - v * s * Math.max(Math.min(k, 4 - k, 1), 0);
+            };
+            const r = Math.round(f(5) * 255);
+            const g = Math.round(f(3) * 255);
+            const b = Math.round(f(1) * 255);
+            return '#' + [r, g, b].map(x => x.toString(16).padStart(2, '0')).join('');
+        }
+
+        function updateBgColor() {
+            const hex = hsvToHex(bgHue, bgSaturation, bgValue);
+            bgColor.value = hex;
+            bgColorHexInput.value = hex;
+            bgColorPreview.style.background = hex;
+            bgColorSquare.style.background = `linear-gradient(to top, #000, transparent), linear-gradient(to right, #fff, hsl(${bgHue}, 100%, 50%))`;
+            updatePreviewBackground();
+        }
+
+        function updatePreviewBackground() {
+            if (bgImageData) {
+                previewContent.style.background = `url(${bgImageData}) center/cover`;
+            } else {
+                previewContent.style.background = bgColor.value;
+            }
+            // Also update the drawing canvas background
+            redrawCanvas();
+        }
+
+        bgColorIndicator.addEventListener('click', (e) => {
+            e.stopPropagation();
+            bgColorPopup.classList.toggle('visible');
+        });
+
+        bgColorSquare.addEventListener('mousedown', (e) => {
+            function pickColor(event) {
+                const rect = bgColorSquare.getBoundingClientRect();
+                const x = Math.max(0, Math.min(event.clientX - rect.left, rect.width));
+                const y = Math.max(0, Math.min(event.clientY - rect.top, rect.height));
+
+                bgSaturation = (x / rect.width) * 100;
+                bgValue = 100 - (y / rect.height) * 100;
+
+                bgColorCursor.style.left = x + 'px';
+                bgColorCursor.style.top = y + 'px';
+                updateBgColor();
+            }
+
+            pickColor(e);
+
+            function onMouseMove(event) { pickColor(event); }
+            function onMouseUp() {
+                document.removeEventListener('mousemove', onMouseMove);
+                document.removeEventListener('mouseup', onMouseUp);
+            }
+
+            document.addEventListener('mousemove', onMouseMove);
+            document.addEventListener('mouseup', onMouseUp);
+        });
+
+        bgHueSlider.addEventListener('mousedown', (e) => {
+            function pickHue(event) {
+                const rect = bgHueSlider.getBoundingClientRect();
+                const x = Math.max(0, Math.min(event.clientX - rect.left, rect.width));
+                bgHue = (x / rect.width) * 360;
+                bgHueCursor.style.left = x + 'px';
+                updateBgColor();
+            }
+
+            pickHue(e);
+
+            function onMouseMove(event) { pickHue(event); }
+            function onMouseUp() {
+                document.removeEventListener('mousemove', onMouseMove);
+                document.removeEventListener('mouseup', onMouseUp);
+            }
+
+            document.addEventListener('mousemove', onMouseMove);
+            document.addEventListener('mouseup', onMouseUp);
+        });
+
+        bgColorHexInput.addEventListener('input', (e) => {
+            let hex = e.target.value;
+            if (hex.match(/^#[0-9A-Fa-f]{6}$/)) {
+                bgColor.value = hex;
+                bgColorPreview.style.background = hex;
+                updatePreviewBackground();
+            }
+        });
+
+        bgColor.addEventListener('input', () => {
+            bgColorHexInput.value = bgColor.value;
+            bgColorPreview.style.background = bgColor.value;
+            updatePreviewBackground();
+        });
+
+        // Background image upload
+        bgImageUploadArea.addEventListener('click', (e) => {
+            if (e.target !== changeBgImage && e.target !== removeBgImage) {
+                bgImageUpload.click();
+            }
+        });
+
+        changeBgImage.addEventListener('click', (e) => {
+            e.stopPropagation();
+            bgImageUpload.click();
+        });
+
+        removeBgImage.addEventListener('click', (e) => {
+            e.stopPropagation();
+            bgImageData = null;
+            bgImageLoaded = null;
+            bgPreviewImg.src = '';
+            bgImagePreview.style.display = 'none';
+            bgUploadPlaceholder.style.display = 'block';
+            updatePreviewBackground();
+        });
+
+        bgImageUpload.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                bgImageData = event.target.result;
+                bgPreviewImg.src = bgImageData;
+                bgUploadPlaceholder.style.display = 'none';
+                bgImagePreview.style.display = 'block';
+
+                // Preload the image for drawing canvas
+                const img = new Image();
+                img.onload = () => {
+                    bgImageLoaded = img;
+                    updatePreviewBackground();
+                };
+                img.src = bgImageData;
+            };
+            reader.readAsDataURL(file);
+        });
+
+        // Close popups when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!bgColorPopup.contains(e.target) && !bgColorIndicator.contains(e.target)) {
+                bgColorPopup.classList.remove('visible');
+            }
+        });
+
+        // Aspect ratio buttons
+        document.querySelectorAll('.aspect-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.aspect-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+
+                currentAspectRatio = btn.dataset.ratio;
+
+                if (currentAspectRatio === '16:9') {
+                    previewContent.classList.remove('ratio-9-16');
+                    previewContent.classList.add('ratio-16-9');
+                } else {
+                    previewContent.classList.remove('ratio-16-9');
+                    previewContent.classList.add('ratio-9-16');
+                }
+
+                initCanvasSizes();
+            });
+        });
+
+        // Animation
+        function stopAnimation() {
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+                animationId = null;
+            }
+            // Clear all animated objects
+            animatedObjectsContainer.innerHTML = '';
+            downloadBtn.disabled = true;
+        }
+
+        // Helper to get position and angle along a path at a given time (for timing mode)
+        function getPositionAtTime(pathPoints, elapsed) {
+            if (pathPoints.length < 2) return { x: 0, y: 0, angle: 0 };
+
+            let pointIndex = 0;
+            for (let i = 0; i < pathPoints.length - 1; i++) {
+                if (elapsed >= pathPoints[i].time && elapsed <= pathPoints[i + 1].time) {
+                    pointIndex = i;
+                    break;
+                }
+                if (elapsed > pathPoints[i].time) {
+                    pointIndex = i;
+                }
+            }
+
+            const p1 = pathPoints[pointIndex];
+            const p2 = pathPoints[Math.min(pointIndex + 1, pathPoints.length - 1)];
+
+            const timeDiff = p2.time - p1.time;
+            const segmentProgress = timeDiff > 0 ? (elapsed - p1.time) / timeDiff : 0;
+            const clampedProgress = Math.max(0, Math.min(1, segmentProgress));
+
+            // Calculate smooth angle by looking at a wider range of points
+            // Use points further apart to get a more stable direction
+            const lookAhead = 10; // Number of points to look ahead/behind for angle calculation
+            const startIdx = Math.max(0, pointIndex - lookAhead);
+            const endIdx = Math.min(pathPoints.length - 1, pointIndex + lookAhead);
+
+            const pStart = pathPoints[startIdx];
+            const pEnd = pathPoints[endIdx];
+
+            const dx = pEnd.x - pStart.x;
+            const dy = pEnd.y - pStart.y;
+            // atan2 returns 0 when moving right, but most images have their "front" pointing up
+            // Add 90 degrees so upward-facing images align correctly with the path direction
+            const angle = Math.atan2(dy, dx) * (180 / Math.PI) + 90;
+
+            return {
+                x: p1.x + (p2.x - p1.x) * clampedProgress,
+                y: p1.y + (p2.y - p1.y) * clampedProgress,
+                angle: angle
+            };
+        }
+
+        function animate() {
+            // Check if any object has a path
+            const objectsWithPaths = animationObjects.filter(obj => obj.pathPoints.length > 1);
+            if (objectsWithPaths.length === 0) return;
+
+            stopAnimation();
+
+            // Get preview dimensions for scaling
+            const previewRect = previewContent.getBoundingClientRect();
+            const scaleX = previewRect.width / drawingCanvas.width;
+            const scaleY = previewRect.height / drawingCanvas.height;
+
+            // Create animated object elements for each object with a path
+            const animatedElements = [];
+            objectsWithPaths.forEach(obj => {
+                const imgEl = document.createElement('img');
+                imgEl.src = obj.image;
+                imgEl.className = 'animated-object';
+                imgEl.dataset.objectId = obj.id; // Store object ID for size updates
+                imgEl.style.width = obj.size + 'px'; // Use per-object size
+                imgEl.style.height = 'auto';
+                imgEl.style.display = 'block';
+                animatedObjectsContainer.appendChild(imgEl);
+                animatedElements.push({ el: imgEl, obj: obj, smoothedAngle: null });
+            });
+
+            // Helper to smoothly interpolate angles (handles wraparound at 180/-180)
+            function lerpAngle(from, to, t) {
+                // Normalize the difference to handle wraparound
+                let diff = to - from;
+                while (diff > 180) diff -= 360;
+                while (diff < -180) diff += 360;
+                return from + diff * t;
+            }
+
+            let startTime = null;
+            let lastElapsed = 0;
+            const duration = totalRecordedDuration;
+            const holdTime = 2000; // 2 seconds hold at end before looping
+            const totalCycleTime = duration + holdTime;
+
+            function step(timestamp) {
+                if (!startTime) startTime = timestamp;
+                let elapsed = timestamp - startTime;
+
+                // Loop with hold time at end
+                if (totalCycleTime > 0) {
+                    elapsed = elapsed % totalCycleTime;
+                }
+
+                // Reset smoothed angles when animation loops back to start
+                if (elapsed < lastElapsed && elapsed < 100) {
+                    animatedElements.forEach(animObj => {
+                        animObj.smoothedAngle = null;
+                    });
+                }
+                lastElapsed = elapsed;
+
+                // Clamp elapsed to duration (hold at end position during holdTime)
+                const animElapsed = Math.min(elapsed, duration);
+
+                // Read wiggle values in real-time so changes apply immediately
+                const wiggleAmount = parseInt(wiggleSlider.value);
+                const wiggleSpeed = parseInt(wiggleSpeedSlider.value);
+
+                // Update each animated object
+                animatedElements.forEach((animObj) => {
+                    const { el, obj } = animObj;
+                    const objDuration = obj.pathPoints.length > 0 ? obj.pathPoints[obj.pathPoints.length - 1].time : 0;
+                    const objElapsed = Math.min(animElapsed, objDuration);
+                    const pos = getPositionAtTime(obj.pathPoints, objElapsed);
+
+                    // Use per-object size for centering
+                    const objSize = obj.size;
+
+                    // Scale to preview and center the object
+                    const scaledX = pos.x * scaleX - objSize / 2;
+                    const scaledY = pos.y * scaleY - objSize / 2;
+
+                    el.style.left = scaledX + 'px';
+                    el.style.top = scaledY + 'px';
+
+                    // Calculate base rotation (path alignment if enabled)
+                    let baseAngle = 0;
+                    if (obj.alignToPath) {
+                        // Smooth the angle using lerp to prevent jittery rotation
+                        if (animObj.smoothedAngle === null) {
+                            animObj.smoothedAngle = pos.angle;
+                        } else {
+                            // Smoothing factor: lower = smoother but more lag, higher = more responsive
+                            animObj.smoothedAngle = lerpAngle(animObj.smoothedAngle, pos.angle, 0.15);
+                        }
+                        baseAngle = animObj.smoothedAngle;
+                    }
+
+                    // Apply wiggle rotation (stop-motion style with abrupt discrete jumps)
+                    let wiggleAngle = 0;
+                    if (wiggleAmount > 0) {
+                        // Use floor to create sudden jumps instead of smooth transitions
+                        // Change direction based on wiggle speed setting
+                        const wiggleFrame = Math.floor(elapsed / wiggleSpeed);
+                        // Alternate between discrete angles: -1, 0, 1 pattern with randomness
+                        const patterns = [-1, 1, 0, 1, -1, 0, -1, 1];
+                        const patternIndex = wiggleFrame % patterns.length;
+                        wiggleAngle = patterns[patternIndex] * wiggleAmount;
+                    }
+
+                    // Combine base rotation and wiggle
+                    const totalAngle = baseAngle + wiggleAngle;
+                    el.style.transform = `rotate(${totalAngle}deg)`;
+                });
+
+                animationId = requestAnimationFrame(step);
+            }
+
+            animationId = requestAnimationFrame(step);
+            downloadBtn.disabled = false;
+        }
+
+        animateBtn.addEventListener('click', animate);
+
+        // Download GIF
+        downloadBtn.addEventListener('click', () => {
+            const objectsWithPaths = animationObjects.filter(obj => obj.pathPoints.length > 1);
+            if (objectsWithPaths.length === 0) return;
+
+            // Show loading state
+            const originalText = downloadBtn.textContent;
+            downloadBtn.textContent = 'Preparing GIF';
+            downloadBtn.classList.add('loading');
+            downloadBtn.disabled = true;
+
+            const wiggleAmount = parseInt(wiggleSlider.value);
+            const wiggleSpeed = parseInt(wiggleSpeedSlider.value);
+
+            // Higher resolution for better quality GIF (2x the drawing canvas)
+            const canvasWidth = currentAspectRatio === '16:9' ? 1280 : 720;
+            const canvasHeight = currentAspectRatio === '16:9' ? 720 : 1280;
+
+            // Scale factors (from drawing canvas coordinates to GIF coordinates)
+            const scaleX = canvasWidth / drawingCanvas.width;
+            const scaleY = canvasHeight / drawingCanvas.height;
+
+            // Size scale factor (2x for higher resolution)
+            const sizeScale = 2;
+
+            // Determine duration and frame count (include 2s hold at end)
+            const duration = totalRecordedDuration;
+            const holdTime = 2000; // 2 seconds hold at end
+            const totalDuration = duration + holdTime;
+            const frameCount = Math.min(150, Math.max(30, Math.ceil(totalDuration / 33))); // ~30fps
+
+            // Pre-load all images
+            const imagePromises = objectsWithPaths.map(obj => {
+                return new Promise((resolve) => {
+                    const img = new Image();
+                    img.onload = () => resolve({ img, obj });
+                    img.src = obj.image;
+                });
+            });
+
+            Promise.all(imagePromises).then(loadedImages => {
+                const frames = [];
+
+                // Generate frames
+                for (let i = 0; i < frameCount; i++) {
+                    const frameCanvas = document.createElement('canvas');
+                    frameCanvas.width = canvasWidth;
+                    frameCanvas.height = canvasHeight;
+                    const ctx = frameCanvas.getContext('2d');
+
+                    // Draw background
+                    if (bgImageData) {
+                        const bgImg = new Image();
+                        bgImg.src = bgImageData;
+
+                        // Draw background image with "cover" behavior (maintain aspect ratio, fill canvas)
+                        const imgWidth = bgImg.width;
+                        const imgHeight = bgImg.height;
+                        const imgRatio = imgWidth / imgHeight;
+                        const canvasRatio = canvasWidth / canvasHeight;
+
+                        let drawWidth, drawHeight, offsetX = 0, offsetY = 0;
+
+                        if (imgRatio > canvasRatio) {
+                            // Image is wider - fit height, crop width
+                            drawHeight = canvasHeight;
+                            drawWidth = imgWidth * (canvasHeight / imgHeight);
+                            offsetX = (canvasWidth - drawWidth) / 2;
+                        } else {
+                            // Image is taller - fit width, crop height
+                            drawWidth = canvasWidth;
+                            drawHeight = imgHeight * (canvasWidth / imgWidth);
+                            offsetY = (canvasHeight - drawHeight) / 2;
+                        }
+
+                        ctx.drawImage(bgImg, offsetX, offsetY, drawWidth, drawHeight);
+                    } else {
+                        ctx.fillStyle = bgColor.value;
+                        ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+                    }
+
+                    // Calculate frame time including hold period
+                    const rawFrameTime = (i / Math.max(1, frameCount - 1)) * totalDuration;
+                    // Clamp to duration (hold at end position during holdTime)
+                    const frameTime = Math.min(rawFrameTime, duration);
+
+                    // Draw each object
+                    loadedImages.forEach(({ img, obj }) => {
+                        const objDuration = obj.pathPoints.length > 0 ? obj.pathPoints[obj.pathPoints.length - 1].time : 0;
+                        const objFrameTime = Math.min(frameTime, objDuration);
+                        const pos = getPositionAtTime(obj.pathPoints, objFrameTime);
+
+                        const x = pos.x * scaleX;
+                        const y = pos.y * scaleY;
+
+                        // Draw image centered at position with wiggle rotation
+                        // Use per-object size, scaled up for higher resolution
+                        const imgAspect = img.width / img.height;
+                        const drawWidth = obj.size * sizeScale;
+                        const drawHeight = drawWidth / imgAspect;
+
+                        // Calculate base rotation (path alignment if enabled)
+                        let baseAngle = 0;
+                        if (obj.alignToPath) {
+                            baseAngle = pos.angle;
+                        }
+
+                        // Calculate wiggle angle for this frame (stop-motion style with abrupt jumps)
+                        // Use rawFrameTime so wiggle continues during hold period
+                        let wiggleAngle = 0;
+                        if (wiggleAmount > 0) {
+                            const wiggleFrame = Math.floor(rawFrameTime / wiggleSpeed);
+                            const patterns = [-1, 1, 0, 1, -1, 0, -1, 1];
+                            const patternIndex = wiggleFrame % patterns.length;
+                            wiggleAngle = patterns[patternIndex] * wiggleAmount;
+                        }
+
+                        // Combine base rotation and wiggle
+                        const totalAngle = baseAngle + wiggleAngle;
+
+                        // Save context, translate to position, rotate, draw, restore
+                        ctx.save();
+                        ctx.translate(x, y);
+                        ctx.rotate(totalAngle * Math.PI / 180);
+                        ctx.drawImage(img, -drawWidth / 2, -drawHeight / 2, drawWidth, drawHeight);
+                        ctx.restore();
+                    });
+
+                    frames.push(frameCanvas.toDataURL('image/png'));
+                }
+
+                // Create GIF with higher quality settings
+                gifshot.createGIF({
+                    images: frames,
+                    gifWidth: canvasWidth,
+                    gifHeight: canvasHeight,
+                    interval: totalDuration / frameCount / 1000,
+                    numFrames: frameCount,
+                    frameDuration: 1,
+                    sampleInterval: 5 // Lower = better quality (was 10)
+                }, (result) => {
+                    // Reset button state
+                    downloadBtn.textContent = originalText;
+                    downloadBtn.classList.remove('loading');
+                    downloadBtn.disabled = false;
+
+                    if (!result.error) {
+                        const link = document.createElement('a');
+                        link.download = 'path-animation.gif';
+                        link.href = result.image;
+                        link.click();
+                    }
+                });
+            });
+        });
+
+        // Initialize
+        initCanvasSizes();
+        window.addEventListener('resize', initCanvasSizes);
+    </script>
+</body>
+</html>
