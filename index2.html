@@ -4,1096 +4,34 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Animated Bar Chart - Sketch Style</title>
+    <link rel="stylesheet" href="css/index8.css">
     <script src="https://cdn.jsdelivr.net/npm/roughjs@4.6.6/bundled/rough.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/gifshot@0.4.5/dist/gifshot.min.js"></script>
-    <style>
-        @font-face {
-            font-family: 'HMT Regular';
-            src: url('fonts/HmtRegular-WRrv.ttf') format('truetype');
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background-color: #ecebe4;
-            background-image: url('data:image/svg+xml;utf8,<svg width="28" height="28" xmlns="http://www.w3.org/2000/svg"><circle cx="14" cy="14" r="1" fill="%23d2d1c7"/></svg>');
-            background-size: 28px 28px;
-            min-height: 100vh;
-            padding: 40px 20px;
-            position: relative;
-            overflow-x: hidden;
-        }
-
-        /* Doodle decorations */
-        body::before,
-        body::after {
-            content: '';
-            position: fixed;
-            border-radius: 50%;
-            opacity: 0.15;
-            pointer-events: none;
-            z-index: 0;
-        }
-
-        body::before {
-            background: #6ba3ff;
-            width: 50vh;
-            height: 50vh;
-            top: 20%;
-            left: -10vh;
-            animation: float 6s ease-in-out infinite;
-        }
-
-        body::after {
-            background: #f59e0b;
-            width: 150px;
-            height: 150px;
-            bottom: 15%;
-            right: 8%;
-            animation: float 8s ease-in-out infinite reverse;
-        }
-
-        @keyframes float {
-            0%, 100% { transform: translateY(0px) rotate(0deg); }
-            50% { transform: translateY(-20px) rotate(5deg); }
-        }
-
-        .container {
-            max-width: 1600px;
-            margin: 0 auto;
-            position: relative;
-            z-index: 1;
-        }
-
-        .header {
-            background: transparent;
-            padding: 20px 30px;
-            margin-bottom: 30px;
-            text-align: center;
-            position: relative;
-        }
-
-        .logo-link {
-            position: fixed;
-            top: 20px;
-            left: 20px;
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            overflow: hidden;
-            background: white;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            z-index: 100;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-
-        .logo-link:hover {
-            transform: scale(1.1);
-            box-shadow: 0 6px 16px rgba(0,0,0,0.25);
-        }
-
-        .header-logo {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .header-content {
-            text-align: center;
-        }
-
-        .header h1 {
-            font-family: 'HMT Regular', 'Inter', sans-serif;
-            font-size: 3.5rem;
-            color: #2d3436;
-            margin-bottom: 12px;
-            text-shadow: 3px 3px 0px rgba(107, 163, 255, 0.3);
-        }
-
-        .header p {
-            color: #636e72;
-            font-size: 1.1rem;
-        }
-
-        .main-layout {
-            display: grid;
-            grid-template-columns: 1fr 2fr;
-            gap: 20px;
-            height: calc(100vh - 180px); /* Full height minus header/title space */
-            align-items: start;
-        }
-
-        .left-column {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            max-height: 100%;
-            overflow-y: auto;
-            overflow-x: hidden;
-            padding-right: 8px;
-            min-width: 0; /* Prevents flex items from overflowing */
-        }
-
-        .left-column::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        .left-column::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 4px;
-        }
-
-        .left-column::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 4px;
-        }
-
-        .left-column::-webkit-scrollbar-thumb:hover {
-            background: #94a3b8;
-        }
-
-        .right-column {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            position: sticky;
-            top: 20px;
-        }
-
-        .sidebar-panel {
-            background: white;
-            border-radius: 20px;
-            padding: 24px;
-            box-shadow:
-                3px 3px 0px rgba(0, 0, 0, 0.05),
-                6px 6px 0px rgba(107, 163, 255, 0.08);
-            border: 1px solid rgba(45, 52, 54, 0.15);
-            overflow-x: hidden;
-            min-width: 0;
-            flex-shrink: 0;
-        }
-
-        .sidebar-panel h3 {
-            font-size: 16px;
-            color: #2d3436;
-            margin-bottom: 16px;
-            font-weight: 600;
-        }
-
-        .chart-area {
-            width: 100%;
-        }
-
-        .chart-container-wrapper {
-            background: transparent;
-            border-radius: 0;
-            padding: 0;
-            box-shadow: none;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 0;
-        }
-
-        .chart-container {
-            position: relative;
-            width: 100%;
-            height: auto;
-            max-width: 900px;
-            aspect-ratio: 16 / 9; /* Will be updated dynamically */
-            background: #ffffff; /* Default white background */
-            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-            border-radius: 20px;
-            overflow: hidden;
-        }
-
-        #chartSvg {
-            width: 100%;
-            height: 100%;
-            display: block;
-            margin: 0 auto;
-        }
-
-        .empty-state {
-            text-align: center;
-            color: #999;
-            padding: 50px;
-            font-size: 18px;
-        }
-
-        /* Mode/Chart Type Buttons */
-        .mode-btn {
-            flex: 1;
-            padding: 12px;
-            border: 2px solid rgba(45, 52, 54, 0.15);
-            border-radius: 12px;
-            background: white;
-            color: #2d3436;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-            box-shadow: 2px 2px 0px rgba(107, 163, 255, 0.1);
-            font-size: 14px;
-        }
-
-        .mode-btn:hover {
-            border-color: #6ba3ff;
-            background: #f8f9ff;
-            transform: translateY(-2px);
-            box-shadow: 3px 3px 0px rgba(107, 163, 255, 0.2);
-        }
-
-        .mode-btn.active,
-        .mode-btn.selected {
-            border-color: #6ba3ff;
-            background: #6ba3ff;
-            color: white;
-            transform: translateY(-2px);
-            box-shadow: 3px 3px 0px rgba(0, 0, 0, 0.1);
-        }
-
-        .chart-type-btns {
-            display: flex;
-            gap: 10px;
-        }
-
-        /* Aspect Ratio Buttons */
-        .aspect-ratio-btn {
-            color: #6ba3ff;
-            transition: opacity 0.2s;
-        }
-
-        .aspect-ratio-btn:hover {
-            opacity: 0.7 !important;
-        }
-
-        .aspect-ratio-btn.selected {
-            opacity: 1 !important;
-        }
-
-
-        /* Data Input Section */
-        .input-row {
-            display: grid;
-            grid-template-columns: 1fr minmax(70px, 90px) minmax(50px, 60px) minmax(50px, 60px);
-            gap: 8px;
-            align-items: center;
-            margin-bottom: 12px;
-            min-width: 0;
-        }
-
-        .input-row input[type="text"] {
-            padding: 10px 12px;
-            border: 2px solid rgba(45, 52, 54, 0.15);
-            border-radius: 12px;
-            font-size: 14px;
-            transition: all 0.2s;
-            position: relative;
-            z-index: 50;
-            min-width: 0;
-        }
-
-        .input-row input[type="number"] {
-            padding: 10px 12px;
-            border: 2px solid rgba(45, 52, 54, 0.15);
-            border-radius: 12px;
-            font-size: 14px;
-            transition: all 0.2s;
-            position: relative;
-            z-index: 50;
-            min-width: 0;
-        }
-
-        .input-row input:focus {
-            outline: none;
-            border-color: #6ba3ff;
-            box-shadow: 0 0 0 3px rgba(107, 163, 255, 0.1);
-        }
-
-        .color-pattern-preview {
-            width: 100%;
-            max-width: 60px;
-            min-width: 50px;
-            height: 44px;
-            border: 2px solid rgba(45, 52, 54, 0.15);
-            border-radius: 12px;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-            flex-shrink: 0;
-            position: relative;
-            z-index: 10;
-            overflow: hidden;
-            box-shadow: 2px 2px 0px rgba(107, 163, 255, 0.1);
-        }
-
-        .color-pattern-preview:hover {
-            border-color: #6ba3ff;
-            transform: translateY(-2px);
-            box-shadow: 3px 3px 0px rgba(107, 163, 255, 0.2);
-        }
-
-        .color-pattern-preview svg {
-            pointer-events: none;
-        }
-
-        /* Ensure chart settings panel has proper isolation */
-        .settings-column {
-            position: relative;
-            z-index: auto;
-            isolation: isolate;
-        }
-
-        .plus-icon {
-            width: 24px;
-            height: 24px;
-            cursor: pointer;
-            opacity: 0.6;
-            transition: opacity 0.2s;
-        }
-
-        .plus-icon:hover {
-            opacity: 1;
-        }
-
-        /* Data Table */
-        .data-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 12px;
-            font-size: 13px;
-        }
-
-        .data-table thead {
-            background: #f3f4f6;
-        }
-
-        .data-table th {
-            padding: 8px 6px;
-            text-align: left;
-            font-weight: 600;
-            color: #374151;
-            border-bottom: 2px solid #e0e7ff;
-        }
-
-        .data-table td {
-            padding: 6px;
-            border-bottom: 1px solid #e5e7eb;
-        }
-
-        .data-table input[type="text"],
-        .data-table input[type="number"] {
-            width: 100%;
-            padding: 6px 8px;
-            border: 1px solid rgba(45, 52, 54, 0.15);
-            border-radius: 8px;
-            font-size: 13px;
-            transition: all 0.2s;
-        }
-
-        .data-table input:focus {
-            outline: none;
-            border-color: #6ba3ff;
-            box-shadow: 0 0 0 2px rgba(107, 163, 255, 0.1);
-        }
-
-        .data-table svg {
-            cursor: pointer;
-        }
-
-        .trash-icon {
-            width: 24px;
-            height: 24px;
-            cursor: pointer;
-            opacity: 0.6;
-            transition: opacity 0.2s;
-        }
-
-        .trash-icon:hover {
-            opacity: 1;
-        }
-
-        /* Move icon for data reordering */
-        .move-icon {
-            width: 20px;
-            height: 20px;
-            cursor: grab;
-            opacity: 0.6;
-            transition: opacity 0.2s;
-        }
-
-        .move-icon:hover {
-            opacity: 1;
-        }
-
-        .move-icon:active {
-            cursor: grabbing;
-        }
-
-        /* Custom Palette Dropdown */
-        .custom-palette-dropdown {
-            position: relative;
-            z-index: 100;
-        }
-
-        .palette-dropdown-selected {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 10px 12px;
-            border: 2px solid rgba(45, 52, 54, 0.15);
-            border-radius: 12px;
-            background: white;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 500;
-            color: #374151;
-            transition: all 0.2s;
-            box-shadow: 2px 2px 0px rgba(107, 163, 255, 0.1);
-        }
-
-        .palette-dropdown-selected:hover {
-            border-color: #6ba3ff;
-            transform: translateY(-2px);
-            box-shadow: 3px 3px 0px rgba(107, 163, 255, 0.2);
-        }
-
-        .palette-dropdown-options {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            right: 0;
-            margin-top: 4px;
-            background: white;
-            border: 2px solid #6ba3ff;
-            border-radius: 12px;
-            box-shadow: 0 6px 16px rgba(107, 163, 255, 0.25);
-            max-height: 300px;
-            overflow-y: auto;
-            z-index: 1000;
-        }
-
-        .palette-option {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 10px 12px;
-            cursor: pointer;
-            font-size: 14px;
-            color: #374151;
-            transition: background 0.2s;
-        }
-
-        .palette-option:hover {
-            background: #f3f4f6;
-        }
-
-        /* Chart Labels Section */
-        .label-input-group {
-            margin-bottom: 12px;
-        }
-
-        .label-input-group label {
-            display: block;
-            font-size: 13px;
-            font-weight: 600;
-            color: #374151;
-            margin-bottom: 6px;
-        }
-
-        .label-input-group input {
-            width: 100%;
-            padding: 10px 12px;
-            border: 2px solid rgba(45, 52, 54, 0.15);
-            border-radius: 12px;
-            font-size: 14px;
-            transition: all 0.2s;
-        }
-
-        .label-input-group input:focus {
-            outline: none;
-            border-color: #6ba3ff;
-            box-shadow: 0 0 0 3px rgba(107, 163, 255, 0.1);
-        }
-
-        /* Background Section */
-        .bg-type-toggle {
-            display: flex;
-            gap: 16px;
-            margin-bottom: 12px;
-        }
-
-        .bg-type-toggle label {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            cursor: pointer;
-            font-size: 14px;
-            color: #374151;
-        }
-
-        .bg-color-display {
-            width: 60px;
-            height: 40px;
-            border: 2px solid rgba(45, 52, 54, 0.15);
-            border-radius: 12px;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-            box-shadow: 2px 2px 0px rgba(107, 163, 255, 0.1);
-        }
-
-        .bg-color-display:hover {
-            border-color: #6ba3ff;
-            transform: translateY(-2px);
-            box-shadow: 3px 3px 0px rgba(107, 163, 255, 0.2);
-        }
-
-        .bg-image-input {
-            width: 100%;
-            padding: 8px;
-            border: 2px solid rgba(45, 52, 54, 0.15);
-            border-radius: 12px;
-            font-size: 13px;
-        }
-
-        /* Animation Settings */
-        .slider-group {
-            margin-bottom: 14px;
-        }
-
-        .slider-group label {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 13px;
-            font-weight: 600;
-            color: #374151;
-            margin-bottom: 6px;
-        }
-
-        .slider-value {
-            color: #6ba3ff;
-            font-weight: 700;
-        }
-
-        .slider-group input[type="range"] {
-            width: 100%;
-            height: 6px;
-            border-radius: 3px;
-            background: #e0e7ff;
-            outline: none;
-            -webkit-appearance: none;
-        }
-
-        .slider-group input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 16px;
-            height: 16px;
-            border-radius: 50%;
-            background: #6ba3ff;
-            cursor: pointer;
-        }
-
-        .slider-group input[type="range"]::-moz-range-thumb {
-            width: 16px;
-            height: 16px;
-            border-radius: 50%;
-            background: #6ba3ff;
-            cursor: pointer;
-            border: none;
-        }
-
-        /* Animate Button */
-        .animate-btn {
-            padding: 10px 24px;
-            border: none;
-            border-radius: 8px;
-            background: linear-gradient(135deg, #6ba3ff 0%, #5a92ee 100%);
-            color: white;
-            font-weight: 600;
-            font-size: 14px;
-            cursor: pointer;
-            transition: all 0.2s;
-            box-shadow: 0 2px 8px rgba(107, 163, 255, 0.3);
-            display: inline-block;
-        }
-
-        .animate-btn:hover:not(:disabled) {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(107, 163, 255, 0.4);
-        }
-
-        .animate-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        .animate-btn-container {
-            text-align: right;
-            margin-bottom: 16px;
-        }
-
-        /* Edit Popup */
-        .edit-popup {
-            display: none;
-            position: fixed;
-            background: white;
-            border: 3px solid #6ba3ff;
-            border-radius: 12px;
-            padding: 16px;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
-            z-index: 10000;
-            min-width: 280px;
-            max-width: 400px;
-            pointer-events: none;
-        }
-
-        .edit-popup.active {
-            display: block;
-            pointer-events: auto;
-        }
-
-        .input-row {
-            position: relative;
-            z-index: 1;
-        }
-
-        .data-table {
-            position: relative;
-            z-index: 1;
-        }
-
-        .color-picker-container {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 12px;
-        }
-
-        .color-canvas {
-            width: 180px;
-            height: 180px;
-            border: 2px solid #e0e7ff;
-            border-radius: 8px;
-            cursor: crosshair;
-        }
-
-        .color-hue-slider {
-            width: 20px;
-            height: 180px;
-            border: 2px solid #e0e7ff;
-            border-radius: 8px;
-            cursor: pointer;
-            background: linear-gradient(to bottom,
-                #ff0000 0%,
-                #ffff00 17%,
-                #00ff00 33%,
-                #00ffff 50%,
-                #0000ff 67%,
-                #ff00ff 83%,
-                #ff0000 100%);
-        }
-
-        .color-hex-input {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 12px;
-        }
-
-        .color-hex-input label {
-            font-size: 12px;
-            font-weight: 700;
-            color: #374151;
-        }
-
-        .color-hex-input input {
-            flex: 1;
-            padding: 6px 10px;
-            border: 2px solid #e0e7ff;
-            border-radius: 6px;
-            font-size: 13px;
-            font-family: monospace;
-            text-transform: uppercase;
-        }
-
-        .color-display-small {
-            width: 40px;
-            height: 28px;
-            border: 2px solid #e0e7ff;
-            border-radius: 6px;
-        }
-
-        .edit-popup-patterns {
-            display: flex;
-            gap: 6px;
-            flex-wrap: wrap;
-        }
-
-        .edit-popup-pattern {
-            width: 50px;
-            height: 50px;
-            cursor: pointer;
-            position: relative;
-        }
-
-        .edit-popup-pattern svg {
-            width: 50px;
-            height: 50px;
-            display: block;
-            transition: all 0.2s;
-        }
-
-        .edit-popup-pattern:hover svg {
-            transform: scale(1.08);
-        }
-
-        .edit-popup-pattern.selected::after {
-            content: '';
-            position: absolute;
-            top: -3px;
-            left: -3px;
-            right: -3px;
-            bottom: -3px;
-            border: 2px solid #6ba3ff;
-            border-radius: 6px;
-            pointer-events: none;
-        }
-
-        /* Reusable Utility Classes */
-
-        /* Grid layouts */
-        .grid-2col-gap12 {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-        }
-
-        .grid-2col-100-gap8 {
-            display: grid;
-            grid-template-columns: 1fr 1fr 100px;
-            gap: 8px;
-            align-items: end;
-        }
-
-        .grid-4col-gap8 {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 8px;
-        }
-
-        /* Flex layouts */
-        .flex-gap12 {
-            display: flex;
-            gap: 12px;
-        }
-
-        .flex-gap8-center {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-        }
-
-        .flex-gap16-center {
-            display: flex;
-            gap: 16px;
-            align-items: center;
-        }
-
-        .flex-col-center-gap3 {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 3px;
-        }
-
-        .flex-center {
-            display: flex;
-            justify-content: center;
-        }
-
-        /* Spacing utilities */
-        .mb-0 {
-            margin-bottom: 0;
-        }
-
-        .mb-8 {
-            margin-bottom: 8px;
-        }
-
-        .mb-12 {
-            margin-bottom: 12px;
-        }
-
-        .mt-16 {
-            margin-top: 16px;
-        }
-
-        /* Common label styles */
-        .section-label {
-            display: block;
-            font-size: 13px;
-            font-weight: 600;
-            color: #374151;
-            margin-bottom: 8px;
-        }
-
-        .label-fontsize-10 {
-            font-size: 10px;
-            color: currentColor;
-            font-weight: 600;
-        }
-
-        .popup-heading {
-            margin: 0 0 12px 0;
-            font-size: 14px;
-            font-weight: 700;
-            color: #374151;
-        }
-
-        /* Common input/button styles */
-        .compact-mode-btn {
-            padding: 8px;
-            font-size: 13px;
-        }
-
-        .full-width-input {
-            width: 100%;
-            padding: 10px 8px;
-            border: 2px solid #e0e7ff;
-            border-radius: 8px;
-            font-size: 14px;
-        }
-
-        .full-width-select {
-            width: 100%;
-            padding: 10px 12px;
-            border: 2px solid #e0e7ff;
-            border-radius: 8px;
-            font-size: 14px;
-            background: white;
-            cursor: pointer;
-        }
-
-        .full-width-select-sm {
-            width: 100%;
-            padding: 10px 8px;
-            border: 2px solid #e0e7ff;
-            border-radius: 8px;
-            font-size: 13px;
-            background: white;
-            cursor: pointer;
-        }
-
-        .full-width-slider {
-            width: 100%;
-        }
-
-        /* Aspect ratio button base */
-        .aspect-btn-base {
-            padding: 0;
-            border: none;
-            background: transparent;
-            cursor: pointer;
-        }
-
-        /* Background pattern option */
-        .bg-pattern-base {
-            cursor: pointer;
-            border: 2px solid #e0e7ff;
-            border-radius: 6px;
-            background: white;
-            transition: all 0.2s;
-        }
-
-        .bg-pattern-text {
-            padding: 8px;
-            text-align: center;
-            font-size: 12px;
-        }
-
-        .bg-pattern-image {
-            overflow: hidden;
-            aspect-ratio: 2;
-            position: relative;
-        }
-
-        .bg-pattern-img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            opacity: 0.8;
-        }
-
-        /* Palette strip */
-        .palette-strip {
-            width: 70px;
-            height: 20px;
-            border-radius: 4px;
-        }
-
-        /* Upload section */
-        .upload-flex {
-            flex: 1;
-            padding: 6px;
-            border: 2px solid #e0e7ff;
-            border-radius: 6px;
-            font-size: 12px;
-        }
-
-        .clear-btn {
-            padding: 8px 12px;
-            background: #ef4444;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 12px;
-            font-weight: 600;
-            white-space: nowrap;
-        }
-
-        /* Dividers */
-        .hr-divider {
-            border: none;
-            border-top: 2px solid #e0e7ff;
-            margin: 16px 0;
-        }
-
-        /* Specific layout utilities */
-        .span-2 {
-            grid-column: span 2;
-        }
-
-        .overflow-scroll {
-            max-height: 340px;
-            overflow-y: auto;
-        }
-
-        .bg-white-full {
-            background: #ffffff;
-            width: 100%;
-            height: 40px;
-            cursor: pointer;
-            border: 2px solid #e0e7ff;
-            border-radius: 8px;
-        }
-
-        .empty-icon {
-            font-size: 20px;
-            margin-bottom: 10px;
-        }
-
-        /* Table utilities */
-        .th-width-32 {
-            width: 32%;
-        }
-
-        .th-width-18 {
-            width: 18%;
-        }
-
-        .th-width-28 {
-            width: 28%;
-        }
-
-        .th-width-10 {
-            width: 10%;
-        }
-
-        .th-width-12 {
-            width: 12%;
-        }
-
-        .text-center {
-            text-align: center;
-        }
-
-        .cursor-pointer {
-            cursor: pointer;
-        }
-
-        .cursor-move {
-            cursor: move;
-        }
-
-        .cursor-text {
-            cursor: text;
-        }
-
-        .no-data-message {
-            text-align: center;
-            color: #9ca3af;
-            padding: 20px;
-            font-size: 13px;
-        }
-
-        .ml-auto {
-            margin-left: auto;
-        }
-
-        /* Bar Chart Specific Styles */
-        .bar-label {
-            font-family: var(--chart-font-family, 'Noteworthy', sans-serif);
-            font-weight: 600;
-            color: #333;
-            text-align: center;
-            /* font-size set inline via JavaScript */
-        }
-
-        .bar-value {
-            font-family: var(--chart-font-family, 'Noteworthy', sans-serif);
-            font-weight: 700;
-            color: #333;
-            /* font-size set inline via JavaScript */
-        }
-
-        /* Responsive */
-        @media (max-width: 1024px) {
-            .main-layout {
-                grid-template-columns: 1fr;
-                height: auto;
-            }
-
-            .left-column {
-                max-height: none;
-                overflow-y: visible;
-            }
-
-            .right-column {
-                position: static;
-            }
-        }
-    </style>
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <a href="index.html" class="logo-link">
-                <img src="images/mefn.gif" alt="Logo" class="header-logo">
-            </a>
-            <div class="header-content">
-                <h1>Animated Chart Generator</h1>
-                <p>Create beautiful sketch-style animated charts with customizable patterns and colors</p>
-            </div>
-        </div>
-
         <div class="main-layout">
-            <!-- Left Column: Data and Settings Panels -->
-            <div class="left-column">
-                <!-- Data Panel -->
-                <div class="sidebar-panel">
-                    <h3>Data</h3>
+            <!-- LEFT - Sidebar -->
+            <div class="sidebar">
+                <a href="index.html" class="logo-link">
+                    <img src="images/baconegg.gif" alt="Logo" class="header-logo">
+                    <span class="logo-title">Animated Chart Generator</span>
+                </a>
 
-                        <!-- Chart Type Selection (Moved to top) -->
-                        <div class="label-input-group mb-12">
+                <!-- Data Section -->
+                <div class="sidebar-section">
+                    <div class="sidebar-section-label">
+                        <span class="sidebar-section-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="3" x2="9" y2="21"/></svg></span>
+                        Data
+                    </div>
+
+                    <!-- Chart Type Selection -->
+                    <div class="sidebar-control mb-12">
+                        <div class="label-input-group mb-8">
                             <label>Chart Type</label>
-                            <div class="chart-type-btns" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">
+                        </div>
+                        <div class="chart-type-btns">
                                 <button class="mode-btn selected compact-mode-btn" data-chart="bar" onclick="selectChartType('bar', this)">Bar</button>
                                 <button class="mode-btn compact-mode-btn" data-chart="pie" onclick="selectChartType('pie', this)">Pie</button>
                                 <button class="mode-btn compact-mode-btn" data-chart="line" onclick="selectChartType('line', this)">Line</button>
@@ -1187,7 +125,7 @@
                             <div class="color-pattern-preview" id="colorPatternPreview" onclick="openEditPopup(event)">
                                 <svg id="currentPatternPreview"></svg>
                             </div>
-                            <svg class="plus-icon" onclick="addData(event)" viewBox="0 0 24 24" fill="none" stroke="#6ba3ff" stroke-width="2">
+                            <svg class="plus-icon" onclick="addData(event)" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2">
                                 <circle cx="12" cy="12" r="10"/>
                                 <line x1="12" y1="8" x2="12" y2="16"/>
                                 <line x1="8" y1="12" x2="16" y2="12"/>
@@ -1202,7 +140,7 @@
                             <div class="color-pattern-preview" id="scatterColorPatternPreview" onclick="openEditPopup(event)">
                                 <svg id="scatterPatternPreview"></svg>
                             </div>
-                            <svg class="plus-icon" onclick="addData(event)" viewBox="0 0 24 24" fill="none" stroke="#6ba3ff" stroke-width="2">
+                            <svg class="plus-icon" onclick="addData(event)" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2">
                                 <circle cx="12" cy="12" r="10"/>
                                 <line x1="12" y1="8" x2="12" y2="16"/>
                                 <line x1="8" y1="12" x2="16" y2="12"/>
@@ -1213,7 +151,7 @@
                         <div class="input-row" id="areaInputRow" style="display: none; grid-template-columns: 1fr 90px auto; gap: 8px;">
                             <input type="text" id="areaLabelInput" placeholder="Label" onclick="if(document.getElementById('editPopup').classList.contains('active')) closeEditPopup();" />
                             <input type="number" id="areaValueInput" placeholder="Value" min="0" onclick="if(document.getElementById('editPopup').classList.contains('active')) closeEditPopup();" />
-                            <svg class="plus-icon" onclick="addData(event)" viewBox="0 0 24 24" fill="none" stroke="#6ba3ff" stroke-width="2">
+                            <svg class="plus-icon" onclick="addData(event)" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2">
                                 <circle cx="12" cy="12" r="10"/>
                                 <line x1="12" y1="8" x2="12" y2="16"/>
                                 <line x1="8" y1="12" x2="16" y2="12"/>
@@ -1223,174 +161,188 @@
                         <input type="hidden" id="colorInput" value="#e63946" />
                         <input type="hidden" id="patternInput" value="solid" />
 
-                        <div id="dataList" class="mt-16 overflow-scroll"></div>
+                    <div id="dataList" class="mt-16 overflow-scroll"></div>
                 </div>
 
-                <!-- Settings Panel -->
-                <div class="sidebar-panel" id="chartSettingsPanel">
-                    <h3>Settings</h3>
-
-                        <!-- Row 1: Aspect Ratio + Background (half width), Text Font (half width) -->
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;" class="mb-12">
-                            <div style="display: flex; gap: 12px;">
-                                <div style="flex: 1;">
-                                    <label class="section-label">Aspect Ratio</label>
-                                    <div class="flex-gap16-center">
-                                        <button data-ratio="16:9" onclick="selectAspectRatio('16:9', this)" class="aspect-ratio-btn selected aspect-btn-base flex-col-center-gap3" style="opacity: 1;">
-                                            <svg width="32" height="20" viewBox="0 0 32 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                <rect x="1" y="1" width="30" height="18" rx="1" stroke="currentColor" stroke-width="2" fill="none"/>
-                                            </svg>
-                                            <span class="label-fontsize-10">16:9</span>
-                                        </button>
-                                        <button data-ratio="9:16" onclick="selectAspectRatio('9:16', this)" class="aspect-ratio-btn aspect-btn-base flex-col-center-gap3" style="opacity: 0.4;">
-                                            <svg width="20" height="32" viewBox="0 0 20 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                <rect x="1" y="1" width="18" height="30" rx="1" stroke="currentColor" stroke-width="2" fill="none"/>
-                                            </svg>
-                                            <span class="label-fontsize-10">9:16</span>
-                                        </button>
-                                    </div>
-                                </div>
-                                <div class="label-input-group mb-0" style="flex-shrink: 0;">
-                                    <label>Background</label>
-                                    <div class="color-pattern-preview" id="bgColorDisplay" onclick="openBgColorPicker()" style="width: 60px; height: 44px; cursor: pointer; background: #ffffff; border: 2px solid rgba(45, 52, 54, 0.15); border-radius: 12px;"></div>
-                                    <input type="hidden" id="bgColor" value="#ffffff">
-                                    <input type="hidden" id="bgPattern" value="">
-                                </div>
-                            </div>
-                            <div class="label-input-group mb-0">
-                                <label for="fontFamily">Text Font</label>
-                                <select id="fontFamily" onchange="updatePreview()" class="full-width-select-sm">
-                                    <option value="Comic Sans MS, cursive">Comic Sans MS</option>
-                                    <option value="Bradley Hand, Comic Sans MS, cursive">Bradley Hand</option>
-                                    <option value="Marker Felt, Comic Sans MS, cursive">Marker Felt</option>
-                                    <option value="Noteworthy, sans-serif" selected>Noteworthy</option>
-                                    <option value="Snell Roundhand, cursive">Snell Roundhand</option>
-                                    <option value="Apple Chancery, cursive">Apple Chancery</option>
-                                    <option value="Papyrus, fantasy">Papyrus</option>
-                                    <option value="Segoe Script, Comic Sans MS, cursive">Segoe Script</option>
-                                    <option value="Lucida Handwriting, cursive">Lucida Handwriting</option>
-                                    <option value="Segoe Print, Comic Sans MS, sans-serif">Segoe Print</option>
-                                </select>
+                <!-- Canvas Section -->
+                <div class="sidebar-section">
+                    <div class="sidebar-section-label">
+                        <span class="sidebar-section-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="3" x2="9" y2="21"/></svg></span>
+                        Canvas
+                    </div>
+                    <div class="sidebar-control">
+                        <div class="sidebar-control-row">
+                            <span class="label-text">Aspect Ratio</span>
+                            <div class="aspect-ratio-group">
+                                <button data-ratio="16:9" onclick="selectAspectRatio('16:9', this)" class="aspect-ratio-btn selected" title="16:9 Landscape">
+                                    <svg width="20" height="12" viewBox="0 0 20 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <rect x="0.5" y="0.5" width="19" height="11" rx="1" stroke="currentColor" fill="none"/>
+                                    </svg>
+                                    <span>16:9</span>
+                                </button>
+                                <button data-ratio="9:16" onclick="selectAspectRatio('9:16', this)" class="aspect-ratio-btn" title="9:16 Portrait">
+                                    <svg width="12" height="20" viewBox="0 0 12 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <rect x="0.5" y="0.5" width="11" height="19" rx="1" stroke="currentColor" fill="none"/>
+                                    </svg>
+                                    <span>9:16</span>
+                                </button>
                             </div>
                         </div>
+                    </div>
+                    <div class="sidebar-control pos-relative">
+                        <div class="sidebar-control-row" id="bgIndicator" style="cursor: pointer;" onclick="openBgColorPicker()">
+                            <span class="label-text">Background</span>
+                            <div id="bgColorDisplay" class="color-preview-box" style="background: #ffffff;"></div>
+                        </div>
+                        <input type="hidden" id="bgColor" value="#ffffff">
+                        <input type="hidden" id="bgPattern" value="">
+                    </div>
+                </div>
 
-                        <!-- Row 2: Chart Width and Height (for Bar/Line) or Chart Size (for Pie) -->
-                        <div class="grid-2col-gap12 mb-12">
-                            <!-- Chart Size (for Pie chart only) -->
-                            <div class="slider-group mb-0 span-2" id="chartSizeSliderGroup" style="display: none;">
-                                <label>
-                                    <span>Chart Size</span>
-                                    <span class="slider-value" id="chartSizeDisplay">90%</span>
-                                </label>
-                                <input type="range" id="chartSizeSlider" min="50" max="100" value="90" step="5" oninput="updateChartSizeDisplay(this.value)" class="full-width-slider">
-                            </div>
-                            <!-- Chart Width (for Bar and Line charts) -->
-                            <div class="slider-group mb-0" id="chartWidthSliderGroup">
-                                <label>
-                                    <span>Chart Width</span>
-                                    <span class="slider-value" id="chartWidthDisplay">90%</span>
-                                </label>
-                                <input type="range" id="chartWidthSlider" min="50" max="100" value="90" step="5" oninput="updateChartWidthDisplay(this.value)" class="full-width-slider">
-                            </div>
-                            <!-- Chart Height (for Bar and Line charts) -->
-                            <div class="slider-group mb-0" id="chartHeightSliderGroup">
-                                <label>
-                                    <span>Chart Height</span>
-                                    <span class="slider-value" id="chartHeightDisplay">90%</span>
-                                </label>
-                                <input type="range" id="chartHeightSlider" min="50" max="100" value="90" step="5" oninput="updateChartHeightDisplay(this.value)" class="full-width-slider">
+                <!-- Chart Settings Section -->
+                <div class="sidebar-section" id="chartSettingsPanel">
+                    <div class="sidebar-section-label">
+                        <span class="sidebar-section-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span>
+                        Chart Settings
+                    </div>
+                    <!-- Font -->
+                    <div class="sidebar-control">
+                        <div class="sidebar-control-row">
+                            <span class="label-text">Font</span>
+                            <select id="fontFamily" onchange="updatePreview()" class="full-width-select-sm" style="flex: 1;">
+                                <option value="Comic Sans MS, cursive">Comic Sans MS</option>
+                                <option value="Bradley Hand, Comic Sans MS, cursive">Bradley Hand</option>
+                                <option value="Marker Felt, Comic Sans MS, cursive">Marker Felt</option>
+                                <option value="Noteworthy, sans-serif" selected>Noteworthy</option>
+                                <option value="Snell Roundhand, cursive">Snell Roundhand</option>
+                                <option value="Apple Chancery, cursive">Apple Chancery</option>
+                                <option value="Papyrus, fantasy">Papyrus</option>
+                                <option value="Segoe Script, Comic Sans MS, cursive">Segoe Script</option>
+                                <option value="Lucida Handwriting, cursive">Lucida Handwriting</option>
+                                <option value="Segoe Print, Comic Sans MS, sans-serif">Segoe Print</option>
+                            </select>
+                        </div>
+                    </div>
+                    <!-- Title -->
+                    <div class="sidebar-control">
+                        <div class="sidebar-control-row">
+                            <span class="label-text">Title</span>
+                            <input type="text" id="chartTitle" placeholder="Chart title" oninput="updatePreview()" onclick="event.stopPropagation()" style="flex: 1;" class="full-width-input">
+                        </div>
+                    </div>
+                    <!-- Title Size -->
+                    <div class="sidebar-control">
+                        <div class="sidebar-control-row">
+                            <span class="label-text">Title Size</span>
+                            <input type="number" id="titleFontSize" min="10" max="80" value="50" step="2" oninput="updatePreview()" onclick="event.stopPropagation()" class="full-width-input" style="width: 70px;">
+                        </div>
+                    </div>
+                    <!-- Pie Chart Data Label Font Size -->
+                    <div id="pieDataLabelFontSizeSetting" class="sidebar-control" style="display: none;">
+                        <div class="sidebar-control-row">
+                            <span class="label-text">Label Size</span>
+                            <input type="number" id="pieDataLabelFontSize" min="10" max="50" value="35" step="2" oninput="updatePreview()" onclick="event.stopPropagation()" class="full-width-input" style="width: 70px;">
+                        </div>
+                    </div>
+                    <!-- Axis Settings -->
+                    <div id="axisSettings">
+                        <div class="sidebar-control">
+                            <div class="sidebar-control-row">
+                                <span class="label-text">X-Axis</span>
+                                <input type="text" id="xAxisLabel" placeholder="X-axis label" oninput="updatePreview()" onclick="event.stopPropagation()" style="flex: 1;" class="full-width-input">
                             </div>
                         </div>
-
-                        <!-- Row 3: Line Roughness and Duration -->
-                        <div class="grid-2col-gap12 mb-12">
-                            <div class="slider-group mb-0">
-                                <label>
-                                    <span>Line Roughness</span>
-                                    <span class="slider-value" id="roughnessDisplay">2.0</span>
-                                </label>
-                                <input type="range" id="roughnessSlider" min="0" max="5" value="2" step="0.5" oninput="updateRoughnessDisplay(this.value); updatePreview()" class="full-width-slider">
-                            </div>
-                            <div class="slider-group mb-0">
-                                <label>
-                                    <span>Duration</span>
-                                    <span class="slider-value" id="durationDisplay">0.8s</span>
-                                </label>
-                                <input type="range" id="durationSlider" min="300" max="5000" value="800" step="100" oninput="updateDurationDisplay(this.value); updatePreview()" class="full-width-slider">
+                        <div class="sidebar-control">
+                            <div class="sidebar-control-row">
+                                <span class="label-text">Y-Axis</span>
+                                <input type="text" id="yAxisLabel" placeholder="Y-axis label" oninput="updatePreview()" onclick="event.stopPropagation()" style="flex: 1;" class="full-width-input">
                             </div>
                         </div>
-
-                        <!-- Title Row -->
-                        <div class="grid-2col-100-gap8 mb-12">
-                            <div class="label-input-group mb-0 span-2">
-                                <label for="chartTitle">Title</label>
-                                <input type="text" id="chartTitle" placeholder="Chart title" oninput="updatePreview()" onclick="event.stopPropagation()">
-                            </div>
-                            <div class="label-input-group mb-0">
-                                <label>Font Size</label>
-                                <input type="number" id="titleFontSize" min="10" max="80" value="50" step="2" oninput="updatePreview()" onclick="event.stopPropagation()" class="full-width-input">
+                        <div class="sidebar-control">
+                            <div class="sidebar-control-row">
+                                <span class="label-text">Axis Size</span>
+                                <input type="number" id="axisFontSize" min="10" max="50" value="35" step="2" oninput="updatePreview()" onclick="event.stopPropagation()" class="full-width-input" style="width: 70px;">
                             </div>
                         </div>
-
-                        <!-- Pie Chart Data Label Font Size (shown only for pie chart) -->
-                        <div id="pieDataLabelFontSizeSetting" class="mb-12" style="display: none;">
-                            <div class="label-input-group mb-0">
-                                <label>Data Label Font Size</label>
-                                <input type="number" id="pieDataLabelFontSize" min="10" max="50" value="35" step="2" oninput="updatePreview()" onclick="event.stopPropagation()" class="full-width-input">
-                            </div>
-                        </div>
-
-                        <!-- Axis Settings (shown only for bar and line charts) -->
-                        <div id="axisSettings" class="grid-2col-100-gap8 mb-12">
-                            <div class="label-input-group mb-0">
-                                <label for="xAxisLabel">X-Axis</label>
-                                <input type="text" id="xAxisLabel" placeholder="X-axis" oninput="updatePreview()" onclick="event.stopPropagation()">
-                            </div>
-                            <div class="label-input-group mb-0">
-                                <label for="yAxisLabel">Y-Axis</label>
-                                <input type="text" id="yAxisLabel" placeholder="Y-axis" oninput="updatePreview()" onclick="event.stopPropagation()">
-                            </div>
-                            <div class="label-input-group mb-0">
-                                <label>Font Size</label>
-                                <input type="number" id="axisFontSize" min="10" max="50" value="35" step="2" oninput="updatePreview()" onclick="event.stopPropagation()" class="full-width-input">
-                            </div>
-                        </div>
-
-                        <div id="lineshapeSettings" class="mb-12" style="display: none;">
-                            <label class="section-label" style="margin-bottom: 6px;">Datapoint Shape</label>
-                            <select id="datapointShape" onchange="updatePreview()" class="full-width-select">
+                    </div>
+                    <!-- Datapoint Shape (Line/Scatter) -->
+                    <div id="lineshapeSettings" class="sidebar-control" style="display: none;">
+                        <div class="sidebar-control-row">
+                            <span class="label-text">Shape</span>
+                            <select id="datapointShape" onchange="updatePreview()" class="full-width-select-sm" style="flex: 1;">
                                 <option value="circle">Circle</option>
                                 <option value="square">Square</option>
                                 <option value="diamond">Diamond</option>
                                 <option value="triangle">Triangle</option>
                             </select>
                         </div>
-                </div>
-            </div>
-
-            <!-- Right Column: Chart Area and Buttons -->
-            <div class="right-column">
-                <!-- Chart Area -->
-                <div class="chart-area">
-                    <div class="chart-container-wrapper">
-                        <div class="chart-container" id="chartContainer">
-                            <svg id="chartSvg" style="display: none;"></svg>
-                            <div class="empty-state" id="emptyState">
-                                <div class="empty-icon"><img src="images/data.png" alt="Chart icon" style="width: 27px; height: auto; opacity: 0.6;"></div>
-                                <div>Add data to see preview</div>
-                            </div>
+                    </div>
+                    <!-- Chart Size (Pie only) -->
+                    <div class="sidebar-control" id="chartSizeSliderGroup" style="display: none;">
+                        <div class="sidebar-control-row">
+                            <span class="label-text">Chart Size</span>
+                            <input type="range" id="chartSizeSlider" min="50" max="100" value="90" step="5" oninput="updateChartSizeDisplay(this.value)" class="slider-compact">
+                            <span class="value-display" id="chartSizeDisplay">90%</span>
+                        </div>
+                    </div>
+                    <!-- Chart Width (Bar/Line) -->
+                    <div class="sidebar-control" id="chartWidthSliderGroup">
+                        <div class="sidebar-control-row">
+                            <span class="label-text">Chart Width</span>
+                            <input type="range" id="chartWidthSlider" min="50" max="100" value="90" step="5" oninput="updateChartWidthDisplay(this.value)" class="slider-compact">
+                            <span class="value-display" id="chartWidthDisplay">90%</span>
+                        </div>
+                    </div>
+                    <!-- Chart Height (Bar/Line) -->
+                    <div class="sidebar-control" id="chartHeightSliderGroup">
+                        <div class="sidebar-control-row">
+                            <span class="label-text">Chart Height</span>
+                            <input type="range" id="chartHeightSlider" min="50" max="100" value="90" step="5" oninput="updateChartHeightDisplay(this.value)" class="slider-compact">
+                            <span class="value-display" id="chartHeightDisplay">90%</span>
+                        </div>
+                    </div>
+                    <!-- Line Roughness -->
+                    <div class="sidebar-control">
+                        <div class="sidebar-control-row">
+                            <span class="label-text">Line Roughness</span>
+                            <input type="range" id="roughnessSlider" min="0" max="5" value="2" step="0.5" oninput="updateRoughnessDisplay(this.value); updatePreview()" class="slider-compact">
+                            <span class="value-display" id="roughnessDisplay">2.0</span>
                         </div>
                     </div>
                 </div>
 
-                <!-- Animate Buttons -->
-                <div class="animate-btn-container flex-gap12 flex-center">
-                    <button class="animate-btn" onclick="animateChart()" id="animateBtn" disabled>
-                        ▶ Animate Chart
-                    </button>
-                    <button class="animate-btn" id="downloadGifBtn" disabled>
-                        Download as GIF
-                    </button>
+                <!-- Animation Section -->
+                <div class="sidebar-section">
+                    <div class="sidebar-section-label">
+                        <span class="sidebar-section-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg></span>
+                        Animation
+                    </div>
+                    <div class="sidebar-control">
+                        <div class="sidebar-control-row">
+                            <span class="label-text">Duration</span>
+                            <input type="range" id="durationSlider" min="300" max="5000" value="800" step="100" oninput="updateDurationDisplay(this.value); updatePreview()" class="slider-compact">
+                            <span class="value-display" id="durationDisplay">0.8s</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Export Buttons -->
+                <div class="export-buttons">
+                    <button class="btn-primary" onclick="animateChart()" id="animateBtn" disabled>Animate</button>
+                    <button class="btn-primary" id="downloadGifBtn" disabled style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">Download GIF</button>
+                </div>
+            </div>
+
+            <!-- RIGHT - Preview -->
+            <div class="preview-section">
+                <div class="preview-content-wrapper">
+                    <div class="chart-container" id="chartContainer">
+                        <svg id="chartSvg" style="display: none;"></svg>
+                        <div class="empty-state" id="emptyState">
+                            <div class="empty-icon"><img src="images/data.png" alt="Chart icon" style="width: 27px; height: auto; opacity: 0.6;"></div>
+                            <div>Add data to see preview</div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
